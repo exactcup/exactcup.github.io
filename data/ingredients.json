@@ -1,0 +1,51 @@
+{
+  "_note": "gramsPerCup = grams in one US customary cup (236.588 ml). Values follow common baking references (King Arthur Baking weight chart and standard sources). VERIFY against authoritative sources before public promotion.",
+  "categories": {
+    "flour": "Flours & Starches",
+    "sugar": "Sugars & Syrups",
+    "dairy": "Dairy & Fats",
+    "baking": "Baking Ingredients",
+    "grain": "Grains & Misc"
+  },
+  "ingredients": [
+    { "slug": "all-purpose-flour", "name": "All-Purpose Flour", "category": "flour", "gramsPerCup": 120, "aliases": ["plain flour", "ap flour"] },
+    { "slug": "bread-flour", "name": "Bread Flour", "category": "flour", "gramsPerCup": 120, "aliases": ["strong flour"] },
+    { "slug": "cake-flour", "name": "Cake Flour", "category": "flour", "gramsPerCup": 120, "aliases": [] },
+    { "slug": "whole-wheat-flour", "name": "Whole Wheat Flour", "category": "flour", "gramsPerCup": 113, "aliases": ["wholemeal flour"] },
+    { "slug": "self-rising-flour", "name": "Self-Rising Flour", "category": "flour", "gramsPerCup": 113, "aliases": ["self raising flour"] },
+    { "slug": "almond-flour", "name": "Almond Flour", "category": "flour", "gramsPerCup": 96, "aliases": ["ground almonds", "almond meal"] },
+    { "slug": "cornstarch", "name": "Cornstarch", "category": "flour", "gramsPerCup": 112, "aliases": ["corn flour", "cornflour"] },
+    { "slug": "cocoa-powder", "name": "Cocoa Powder", "category": "flour", "gramsPerCup": 85, "aliases": ["unsweetened cocoa"] },
+
+    { "slug": "granulated-sugar", "name": "Granulated Sugar", "category": "sugar", "gramsPerCup": 200, "aliases": ["white sugar", "caster sugar"] },
+    { "slug": "brown-sugar", "name": "Brown Sugar (packed)", "category": "sugar", "gramsPerCup": 213, "aliases": ["light brown sugar", "dark brown sugar"] },
+    { "slug": "powdered-sugar", "name": "Powdered Sugar", "category": "sugar", "gramsPerCup": 113, "aliases": ["confectioners sugar", "icing sugar"] },
+    { "slug": "honey", "name": "Honey", "category": "sugar", "gramsPerCup": 340, "aliases": [] },
+    { "slug": "maple-syrup", "name": "Maple Syrup", "category": "sugar", "gramsPerCup": 322, "aliases": [] },
+    { "slug": "corn-syrup", "name": "Corn Syrup", "category": "sugar", "gramsPerCup": 328, "aliases": [] },
+
+    { "slug": "butter", "name": "Butter", "category": "dairy", "gramsPerCup": 227, "aliases": [] },
+    { "slug": "milk", "name": "Milk", "category": "dairy", "gramsPerCup": 240, "aliases": ["whole milk"] },
+    { "slug": "heavy-cream", "name": "Heavy Cream", "category": "dairy", "gramsPerCup": 232, "aliases": ["double cream", "whipping cream"] },
+    { "slug": "sour-cream", "name": "Sour Cream", "category": "dairy", "gramsPerCup": 230, "aliases": [] },
+    { "slug": "cream-cheese", "name": "Cream Cheese", "category": "dairy", "gramsPerCup": 232, "aliases": [] },
+    { "slug": "yogurt", "name": "Yogurt", "category": "dairy", "gramsPerCup": 245, "aliases": ["yoghurt", "greek yogurt"] },
+    { "slug": "vegetable-oil", "name": "Vegetable Oil", "category": "dairy", "gramsPerCup": 218, "aliases": ["canola oil"] },
+    { "slug": "olive-oil", "name": "Olive Oil", "category": "dairy", "gramsPerCup": 216, "aliases": [] },
+    { "slug": "coconut-oil", "name": "Coconut Oil", "category": "dairy", "gramsPerCup": 218, "aliases": [] },
+    { "slug": "peanut-butter", "name": "Peanut Butter", "category": "dairy", "gramsPerCup": 256, "aliases": [] },
+
+    { "slug": "chocolate-chips", "name": "Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["choc chips"] },
+    { "slug": "shredded-coconut", "name": "Shredded Coconut", "category": "baking", "gramsPerCup": 80, "aliases": ["desiccated coconut"] },
+    { "slug": "raisins", "name": "Raisins", "category": "baking", "gramsPerCup": 145, "aliases": [] },
+    { "slug": "chopped-nuts", "name": "Chopped Nuts", "category": "baking", "gramsPerCup": 120, "aliases": ["walnuts", "pecans"] },
+    { "slug": "rolled-oats", "name": "Rolled Oats", "category": "grain", "gramsPerCup": 90, "aliases": ["old fashioned oats"] },
+
+    { "slug": "white-rice", "name": "White Rice (uncooked)", "category": "grain", "gramsPerCup": 185, "aliases": ["long grain rice"] },
+    { "slug": "quinoa", "name": "Quinoa (uncooked)", "category": "grain", "gramsPerCup": 170, "aliases": [] },
+    { "slug": "cornmeal", "name": "Cornmeal", "category": "grain", "gramsPerCup": 122, "aliases": ["polenta"] },
+    { "slug": "breadcrumbs", "name": "Breadcrumbs (dry)", "category": "grain", "gramsPerCup": 108, "aliases": [] },
+    { "slug": "water", "name": "Water", "category": "grain", "gramsPerCup": 237, "aliases": [] },
+    { "slug": "salt", "name": "Table Salt", "category": "grain", "gramsPerCup": 273, "aliases": [] }
+  ]
+}
