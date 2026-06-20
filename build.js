@@ -8,6 +8,11 @@ const path = require("path");
 const ROOT = __dirname;
 const OUT = path.join(ROOT, "dist");
 const DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "ingredients.json"), "utf8"));
+const BLURBS = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(ROOT, "data", "blurbs.json"), "utf8")); }
+  catch (e) { return {}; }
+})();
+DATA.ingredients.forEach((i) => { if (BLURBS[i.slug]) i.blurb = BLURBS[i.slug]; });
 
 const SITE = {
   brand: "ExactCup",
@@ -163,6 +168,7 @@ function ingredientPage(ing) {
 <h2>${esc(ing.name)} conversion chart</h2>
 ${conversionTable(gpc)}
 <p class="note">Based on ${g2(gpc)} g per US cup. Weights vary with brand and measuring method — for precise baking, use a scale.</p>
+${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>${esc(ing.blurb)}</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
