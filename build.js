@@ -214,6 +214,7 @@ function homePage() {
     ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
     ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
     ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
+    ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
     ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ];
   const body = `
@@ -379,6 +380,40 @@ function volumePage() {
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "volume" } }) };
 }
 
+function portionPage() {
+  const FOODS = [
+    ["white-rice", "White Rice (uncooked)", 75, "Uncooked weight. Side dish: about half (~50 g)."],
+    ["pasta", "Pasta (dried)", 100, "Dried weight. Side dish: about half (50–75 g)."],
+    ["potatoes", "Potatoes (raw)", 200, "Raw, peeled. Side dish: about half (100–150 g)."],
+    ["couscous", "Couscous (dry)", 80, "Dry weight. Side dish: about half (~50 g)."],
+    ["quinoa", "Quinoa (dry)", 75, "Dry weight. Side dish: about half (~45 g)."],
+    ["bulgur", "Bulgur (dry)", 75, "Dry weight. Side dish: about half."],
+    ["dried-lentils", "Dried Lentils", 100, "Dry weight. Soup/side: 50–60 g."],
+    ["egg-noodles", "Egg Noodles (dry)", 100, "Dry weight. Side dish: about half (~56 g)."],
+    ["mashed-potatoes", "Mashed Potatoes", 250, "Raw potato weight before mashing. Side: ~125–150 g."],
+    ["polenta-cornmeal", "Polenta / Cornmeal (dry)", 80, "Dry weight. Side dish: about half (~45 g)."],
+  ];
+  const title = "How Much Rice/Pasta Per Person? Portion Calculator | ExactCup";
+  const description = "How much rice, pasta, potatoes or couscous per person? Free portion calculator for meal planning — pick a food and number of people for exact amounts.";
+  const canonical = "/portion-calculator/";
+  const opts = FOODS.map(([slug, name]) => `<option value="${slug}">${esc(name)}</option>`).join("");
+  const rows = FOODS.map(([slug, name, g]) => `<tr><td>${esc(name)}</td><td class="num">${g} g</td></tr>`).join("");
+  const body = `
+<h1>Portion Calculator — How Much Per Person?</h1>
+<p class="lead">No more cooking too much (or too little). Pick a food and how many people you're feeding.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="food">Food</label><select id="food">${opts}</select></div>
+    <div class="field" style="max-width:160px"><label for="people">People</label><input id="people" type="number" inputmode="numeric" value="4" min="1" step="1"></div>
+  </div>
+  <div class="result"><div class="big" id="portion-out">—</div><div class="sub" id="portion-note"></div></div>
+</div>
+<h2>Per-person serving guide (main dish)</h2>
+<table><thead><tr><th>Food</th><th>Per person</th></tr></thead><tbody>${rows}</tbody></table>
+<p class="note">Main-dish portions based on standard meal-planning guidance (WRAP / Love Food Hate Waste). Side dishes are roughly half. Adjust for big appetites or leftovers.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -390,7 +425,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage()];
+  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage()];
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
 

@@ -207,6 +207,22 @@
     });
   }
 
+  function initPortion(c) {
+    var food = $("food"), people = $("people"), out = $("portion-out"), note = $("portion-note");
+    if (!food || !people) return;
+    var map = {};
+    c.foods.forEach(function (f) { map[f.slug] = f; });
+    function calc() {
+      var f = map[food.value], n = parseFloat(people.value);
+      if (!f || isNaN(n) || n <= 0) { out.textContent = "—"; if (note) note.textContent = ""; return; }
+      out.textContent = round(f.g * n, 0) + " g  (" + f.g + " g/person)";
+      if (note) note.textContent = f.note || "";
+    }
+    food.addEventListener("change", calc);
+    people.addEventListener("input", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -217,4 +233,5 @@
   else if (t === "airfryer") initAirfryer();
   else if (t === "pansize") initPansize(c);
   else if (t === "volume") initVolume();
+  else if (t === "portion") initPortion(c);
 })();

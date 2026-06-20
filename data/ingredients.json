@@ -46,6 +46,46 @@
     { "slug": "cornmeal", "name": "Cornmeal", "category": "grain", "gramsPerCup": 122, "aliases": ["polenta"] },
     { "slug": "breadcrumbs", "name": "Breadcrumbs (dry)", "category": "grain", "gramsPerCup": 108, "aliases": [] },
     { "slug": "water", "name": "Water", "category": "grain", "gramsPerCup": 237, "aliases": [] },
-    { "slug": "salt", "name": "Table Salt", "category": "grain", "gramsPerCup": 273, "aliases": [] }
+    { "slug": "salt", "name": "Table Salt", "category": "grain", "gramsPerCup": 273, "aliases": [] },
+
+    { "slug": "caster-sugar", "name": "Caster Sugar", "category": "sugar", "gramsPerCup": 190, "aliases": ["superfine sugar", "baker's special sugar", "castor sugar"] },
+    { "slug": "coconut-sugar", "name": "Coconut Sugar", "category": "sugar", "gramsPerCup": 154, "aliases": ["coconut palm sugar", "coco sugar"] },
+    { "slug": "molasses", "name": "Molasses", "category": "sugar", "gramsPerCup": 340, "aliases": ["black treacle"] },
+    { "slug": "golden-syrup", "name": "Golden Syrup", "category": "sugar", "gramsPerCup": 340, "aliases": ["light treacle", "cane syrup"] },
+    { "slug": "agave-nectar", "name": "Agave Nectar", "category": "sugar", "gramsPerCup": 336, "aliases": ["agave syrup"] },
+    { "slug": "pitted-dates-chopped", "name": "Pitted Dates (Chopped)", "category": "sugar", "gramsPerCup": 149, "aliases": ["chopped dates", "pitted dates"] },
+    { "slug": "dried-cranberries", "name": "Dried Cranberries", "category": "sugar", "gramsPerCup": 114, "aliases": ["craisins", "sweetened dried cranberries"] },
+
+    { "slug": "sweetened-condensed-milk", "name": "Sweetened Condensed Milk", "category": "dairy", "gramsPerCup": 306, "aliases": ["condensed milk"] },
+    { "slug": "evaporated-milk", "name": "Evaporated Milk", "category": "dairy", "gramsPerCup": 226, "aliases": ["unsweetened condensed milk"] },
+    { "slug": "buttermilk", "name": "Buttermilk", "category": "dairy", "gramsPerCup": 227, "aliases": ["cultured buttermilk"] },
+    { "slug": "ricotta-cheese", "name": "Ricotta Cheese", "category": "dairy", "gramsPerCup": 227, "aliases": ["ricotta"] },
+    { "slug": "mascarpone", "name": "Mascarpone", "category": "dairy", "gramsPerCup": 227, "aliases": ["mascarpone cheese", "italian cream cheese"] },
+    { "slug": "cottage-cheese", "name": "Cottage Cheese", "category": "dairy", "gramsPerCup": 226, "aliases": ["curd cheese"] },
+    { "slug": "grated-parmesan", "name": "Grated Parmesan", "category": "dairy", "gramsPerCup": 100, "aliases": ["grated parmigiano", "parmesan cheese"] },
+    { "slug": "shredded-cheddar", "name": "Shredded Cheddar", "category": "dairy", "gramsPerCup": 113, "aliases": ["grated cheddar", "cheddar cheese"] },
+    { "slug": "shredded-mozzarella", "name": "Shredded Mozzarella", "category": "dairy", "gramsPerCup": 113, "aliases": ["grated mozzarella", "mozzarella cheese"] },
+    { "slug": "pumpkin-puree", "name": "Pumpkin Puree", "category": "dairy", "gramsPerCup": 227, "aliases": ["pumpkin purée", "canned pumpkin"] },
+    { "slug": "applesauce", "name": "Applesauce", "category": "dairy", "gramsPerCup": 255, "aliases": ["apple sauce", "apple puree"] },
+    { "slug": "mashed-banana", "name": "Mashed Banana", "category": "dairy", "gramsPerCup": 227, "aliases": ["banana puree"] },
+
+    { "slug": "rye-flour", "name": "Rye Flour", "category": "flour", "gramsPerCup": 106, "aliases": ["dark rye flour", "whole rye flour"] },
+    { "slug": "oat-flour", "name": "Oat Flour", "category": "flour", "gramsPerCup": 92, "aliases": ["ground oats"] },
+    { "slug": "coconut-flour", "name": "Coconut Flour", "category": "flour", "gramsPerCup": 128, "aliases": [] },
+    { "slug": "semolina", "name": "Semolina", "category": "flour", "gramsPerCup": 163, "aliases": ["semolina flour", "durum semolina"] },
+    { "slug": "tapioca-flour", "name": "Tapioca Flour", "category": "flour", "gramsPerCup": 113, "aliases": ["tapioca starch"] },
+    { "slug": "arrowroot-powder", "name": "Arrowroot Powder", "category": "flour", "gramsPerCup": 128, "aliases": ["arrowroot flour", "arrowroot starch"] },
+
+    { "slug": "pecan-halves", "name": "Pecan Halves", "category": "baking", "gramsPerCup": 105, "aliases": ["pecans"] },
+    { "slug": "whole-almonds", "name": "Whole Almonds", "category": "baking", "gramsPerCup": 142, "aliases": ["almonds"] },
+    { "slug": "sesame-seeds", "name": "Sesame Seeds", "category": "baking", "gramsPerCup": 142, "aliases": ["sesame"] },
+    { "slug": "chia-seeds", "name": "Chia Seeds", "category": "baking", "gramsPerCup": 148, "aliases": ["chia"] },
+    { "slug": "ground-flaxseed", "name": "Ground Flaxseed", "category": "baking", "gramsPerCup": 100, "aliases": ["flax meal", "ground flax", "milled flaxseed", "flaxseed meal"] },
+    { "slug": "poppy-seeds", "name": "Poppy Seeds", "category": "baking", "gramsPerCup": 144, "aliases": ["poppyseed"] },
+
+    { "slug": "panko-breadcrumbs", "name": "Panko Breadcrumbs", "category": "grain", "gramsPerCup": 50, "aliases": ["panko", "japanese breadcrumbs"] },
+    { "slug": "steel-cut-oats", "name": "Steel-Cut Oats", "category": "grain", "gramsPerCup": 140, "aliases": ["pinhead oats", "irish oats"] },
+    { "slug": "couscous-dry", "name": "Couscous (Dry)", "category": "grain", "gramsPerCup": 175, "aliases": ["dry couscous"] },
+    { "slug": "bulgur-dry", "name": "Bulgur (Dry)", "category": "grain", "gramsPerCup": 140, "aliases": ["dry bulgur", "bulgur wheat", "cracked wheat"] }
   ]
 }
