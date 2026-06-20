@@ -15,6 +15,8 @@ const SITE = {
   baseUrl: "https://exactcup.github.io",
   tagline: "Accurate cooking measurement converters",
   year: 2026,
+  // Google Search Console verification token (META method). Set via GOOGLE_SITE_VERIFICATION env or here.
+  googleVerify: process.env.GOOGLE_SITE_VERIFICATION || "",
 };
 
 // ---------- helpers ----------
@@ -96,6 +98,7 @@ function layout(opts) {
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(url)}">
 <meta name="robots" content="index,follow,max-image-preview:large">
+${SITE.googleVerify ? `<meta name="google-site-verification" content="${esc(SITE.googleVerify)}">` : ""}
 <style>${CSS}</style>
 ${ld}
 </head>
