@@ -15,8 +15,8 @@ const SITE = {
   baseUrl: "https://exactcup.github.io",
   tagline: "Accurate cooking measurement converters",
   year: 2026,
-  // Google Search Console verification token (META method). Set via GOOGLE_SITE_VERIFICATION env or here.
-  googleVerify: process.env.GOOGLE_SITE_VERIFICATION || "",
+  // Google Search Console verification token (META method). Public value, safe to commit.
+  googleVerify: process.env.GOOGLE_SITE_VERIFICATION || "OVnKY9jVyIyKPGL2wpvNqm9oeGChGYS8wqvzK7KxaXw",
 };
 
 // ---------- helpers ----------
