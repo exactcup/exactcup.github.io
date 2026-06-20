@@ -223,6 +223,26 @@
     calc();
   }
 
+  function initPizza() {
+    var balls = $("balls"), bw = $("ball-weight"), hyd = $("hydration"),
+      salt = $("salt-pct"), yeast = $("yeast-pct"), oil = $("oil-pct");
+    if (!balls || !bw) return;
+    function set(id, v, d) { var el = $(id); if (el) el.textContent = isFinite(v) ? round(v, d) + " g" : "—"; }
+    function calc() {
+      var n = parseFloat(balls.value), w = parseFloat(bw.value);
+      var h = parseFloat(hyd.value) || 0, s = parseFloat(salt.value) || 0,
+        y = parseFloat(yeast.value) || 0, o = oil ? parseFloat(oil.value) || 0 : 0;
+      if (isNaN(n) || isNaN(w) || n <= 0 || w <= 0) { ["out-flour","out-water","out-salt","out-yeast","out-oil","out-total"].forEach(function(i){set(i,NaN);}); return; }
+      var total = n * w;
+      var flour = total / (1 + h / 100 + s / 100 + y / 100 + o / 100);
+      set("out-flour", flour, 0); set("out-water", flour * h / 100, 0);
+      set("out-salt", flour * s / 100, 1); set("out-yeast", flour * y / 100, 1);
+      set("out-oil", flour * o / 100, 1); set("out-total", total, 0);
+    }
+    [balls, bw, hyd, salt, yeast, oil].forEach(function (el) { if (el) el.addEventListener("input", calc); });
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -234,4 +254,5 @@
   else if (t === "pansize") initPansize(c);
   else if (t === "volume") initVolume();
   else if (t === "portion") initPortion(c);
+  else if (t === "pizza") initPizza();
 })();

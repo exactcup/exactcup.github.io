@@ -221,6 +221,7 @@ function homePage() {
     ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
     ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
     ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
+    ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
     ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ];
   const body = `
@@ -420,6 +421,36 @@ function portionPage() {
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
 }
 
+function pizzaDoughPage() {
+  const title = "Pizza Dough Calculator — Flour, Water, Salt & Yeast by Baker's % | ExactCup";
+  const description = "Free pizza dough calculator. Enter how many dough balls, their weight and hydration, and get exact flour, water, salt, yeast and oil amounts in grams.";
+  const canonical = "/pizza-dough-calculator/";
+  const faq = [
+    ["What hydration should pizza dough be?", "Neapolitan dough is typically 60–65% hydration; New-York style around 62–65%; high-hydration/airy doughs can reach 70%+. Beginners should start near 62%."],
+    ["How much does a pizza dough ball weigh?", "A typical 12-inch pizza uses a 250–280 g ball. Personal pizzas use ~180–220 g, large pizzas ~300 g."],
+    ["How much salt and yeast go in pizza dough?", "Salt is usually about 2–3% of the flour weight, and instant dry yeast roughly 0.2–0.5% for a slow rise (more for a fast same-day dough)."],
+  ];
+  const jsonLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) };
+  const f = (lab, id, val, step) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" value="${val}" step="${step || "any"}" min="0"></div>`;
+  const r = (lab, id) => `<tr><td>${lab}</td><td class="num" id="${id}">—</td></tr>`;
+  const body = `
+<h1>Pizza Dough Calculator</h1>
+<p class="lead">Get exact dough quantities using baker's percentages. Set your dough balls and hydration — I'll do the flour, water, salt, yeast and oil.</p>
+<div class="calc">
+  <div class="row">${f("Dough balls", "balls", 4, 1)}${f("Weight each (g)", "ball-weight", 250, 5)}${f("Hydration (%)", "hydration", 62)}</div>
+  <div class="row" style="margin-top:10px">${f("Salt (%)", "salt-pct", 2.5)}${f("Yeast (%)", "yeast-pct", 0.3)}${f("Oil (%)", "oil-pct", 0)}</div>
+  <table style="margin-top:14px"><thead><tr><th>Ingredient</th><th>Amount</th></tr></thead><tbody>
+  ${r("Flour", "out-flour")}${r("Water", "out-water")}${r("Salt", "out-salt")}${r("Yeast", "out-yeast")}${r("Oil", "out-oil")}
+  <tr><td><strong>Total dough</strong></td><td class="num" id="out-total"><strong>—</strong></td></tr>
+  </tbody></table>
+</div>
+<p class="note">Percentages are baker's percentages (relative to flour weight) — the standard way pizzaioli and bakers scale dough. Adjust hydration up for a lighter, airier crust; down for an easier-to-handle dough.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
+<p style="margin-top:16px">Need to weigh by cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "pizza" } }) };
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -431,7 +462,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage()];
+  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage()];
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
 
