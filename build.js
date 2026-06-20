@@ -232,6 +232,8 @@ ${tools.map(([h, t, d]) => `<a class="card" href="${h}"><div class="t">${esc(t)}
 </div>
 <h2>Popular ingredient converters</h2>
 <div class="chips">${popular().map((i) => `<a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a>`).join("")}</div>
+<h2>Conversion charts by category</h2>
+<div class="chips">${Object.keys(DATA.categories).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
 <h2>Why weigh ingredients?</h2>
 <p>Measuring by volume (cups) is convenient but imprecise — packed vs. sifted flour can differ by 30%. Weighing in grams is how professional bakers get consistent results. These converters bridge the two so you can follow any recipe, anywhere.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body }) };
@@ -421,6 +423,29 @@ function portionPage() {
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
 }
 
+function categoryPage(key) {
+  const items = DATA.ingredients.filter((i) => i.category === key);
+  if (!items.length) return null;
+  const cname = catName(key);
+  const canonical = `/${key}-conversion-chart/`;
+  const title = `${cname} Conversion Chart — Cups to Grams | ExactCup`;
+  const description = `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
+  const rows = items.map((i) =>
+    `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
+  ).join("");
+  const jsonLd = {
+    "@context": "https://schema.org", "@type": "Table",
+    about: `${cname} cups to grams conversion chart`,
+  };
+  const body = `
+<h1>${esc(cname)} Conversion Chart</h1>
+<p class="lead">Grams per cup for common ${esc(cname.toLowerCase())}. Click any ingredient for a full converter and chart.</p>
+<table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
+<p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>
+<p style="margin-top:16px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
+}
+
 function pizzaDoughPage() {
   const title = "Pizza Dough Calculator — Flour, Water, Salt & Yeast by Baker's % | ExactCup";
   const description = "Free pizza dough calculator. Enter how many dough balls, their weight and hydration, and get exact flour, water, salt, yeast and oil amounts in grams.";
@@ -463,6 +488,7 @@ function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
   const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage()];
+  Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
 
