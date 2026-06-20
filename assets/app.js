@@ -150,6 +150,63 @@
     });
   }
 
+  function initAirfryer() {
+    var of = $("oven-f"), ot = $("oven-time"), af = $("af-temp"), at = $("af-time");
+    if (!of || !ot) return;
+    function calc() {
+      var f = parseFloat(of.value), tm = parseFloat(ot.value);
+      af.textContent = isNaN(f) ? "—" : Math.round(f - 25) + " °F";
+      at.textContent = isNaN(tm) ? "—" : round(tm * 0.8, 0) + " min";
+    }
+    of.addEventListener("input", calc);
+    ot.addEventListener("input", calc);
+    calc();
+  }
+
+  function initPansize(c) {
+    var from = $("pan-from"), to = $("pan-to"), out = $("pan-out"), note = $("pan-note");
+    if (!from || !to) return;
+    var areas = {};
+    c.pans.forEach(function (p) { areas[p.id] = p.area; });
+    function calc() {
+      var a1 = areas[from.value], a2 = areas[to.value];
+      if (!a1 || !a2) { out.textContent = "—"; return; }
+      var r = a2 / a1;
+      out.textContent = "×" + round(r, 2);
+      var pct = Math.round((r - 1) * 100);
+      note.textContent = r === 1 ? "Same size — no change needed." :
+        "Your new pan holds " + (pct > 0 ? pct + "% more" : (-pct) + "% less") +
+        ". Multiply each ingredient by " + round(r, 2) + ". Keep the temperature the same; " +
+        (r > 1 ? "a thinner batter may bake a little faster" : "a deeper batter may need a few extra minutes") + " — check for doneness.";
+    }
+    from.addEventListener("change", calc);
+    to.addEventListener("change", calc);
+    calc();
+  }
+
+  function initVolume() {
+    // base unit: ml
+    var U = { cups: 236.588, tbsp: 14.7868, tsp: 4.92892, floz: 29.5735, ml: 1, l: 1000 };
+    var ids = Object.keys(U), lock = false;
+    function setAll(ml, except) {
+      lock = true;
+      ids.forEach(function (id) {
+        if (id === except) return;
+        var el = $(id); if (!el) return;
+        el.value = isFinite(ml) ? round(ml / U[id], 3) : "";
+      });
+      lock = false;
+    }
+    ids.forEach(function (id) {
+      var el = $(id); if (!el) return;
+      el.addEventListener("input", function () {
+        if (lock) return;
+        var v = parseFloat(el.value);
+        setAll(isNaN(v) ? NaN : v * U[id], id);
+      });
+    });
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -157,4 +214,7 @@
   else if (t === "scaler") initScaler();
   else if (t === "oven") initOven();
   else if (t === "butter") initButter();
+  else if (t === "airfryer") initAirfryer();
+  else if (t === "pansize") initPansize(c);
+  else if (t === "volume") initVolume();
 })();

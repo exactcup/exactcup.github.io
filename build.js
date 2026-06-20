@@ -209,8 +209,11 @@ function homePage() {
   const canonical = "/";
   const tools = [
     ["/cups-to-grams/", "Cups to Grams", "Convert any ingredient — flour, sugar, butter & 30+ more."],
+    ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
     ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
     ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
+    ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
+    ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
     ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ];
   const body = `
@@ -294,6 +297,88 @@ function butterPage() {
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "butter" } }) };
 }
 
+function airFryerPage() {
+  const title = "Air Fryer Conversion Calculator — Oven to Air Fryer Time & Temp | ExactCup";
+  const description = "Convert any oven recipe to an air fryer instantly. Lower the temperature by 25°F and reduce the time by about 20%. Free calculator with a conversion chart.";
+  const canonical = "/air-fryer-conversion-calculator/";
+  const faq = [
+    ["How do you convert oven temperature to an air fryer?", "Lower the oven temperature by 25°F (about 15°C) and reduce the cooking time by roughly 20%. Always check for doneness early."],
+    ["Do you preheat an air fryer?", "Most air fryers benefit from a 2-3 minute preheat, though many small models don't require it. Check your manual."],
+    ["Can you put foil in an air fryer?", "Yes, but don't block the airflow — keep foil weighted down and away from the heating element, and never cover the whole basket."],
+  ];
+  const chart = [[350, 325, 20, 16], [375, 350, 25, 20], [400, 375, 30, 24], [425, 400, 35, 28], [450, 425, 40, 32]]
+    .map(([of, af, ot, at]) => `<tr><td class="num">${of}°F / ${ot}min</td><td class="num">${af}°F</td><td class="num">${at} min</td></tr>`).join("");
+  const jsonLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) };
+  const body = `
+<h1>Air Fryer Conversion Calculator</h1>
+<p class="lead">Got an oven recipe? Enter its temperature and time to get the air-fryer settings. Rule of thumb: <strong>−25°F and about 20% less time</strong>.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="oven-f">Oven temp (°F)</label><input id="oven-f" type="number" inputmode="decimal" value="400" step="any"></div>
+    <div class="field"><label for="oven-time">Oven time (min)</label><input id="oven-time" type="number" inputmode="decimal" value="30" step="any"></div>
+  </div>
+  <div class="result"><div class="big"><span id="af-temp">—</span> · <span id="af-time">—</span></div><div class="sub">Air fryer temperature &amp; time</div></div>
+</div>
+<h2>Oven to air fryer chart</h2>
+<table><thead><tr><th>Oven (temp / time)</th><th>Air fryer temp</th><th>Air fryer time</th></tr></thead><tbody>${chart}</tbody></table>
+<p class="note">Air fryers run hotter and circulate air, so food cooks faster. Check 5 minutes before the calculated time the first time you make a recipe, then adjust.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "airfryer" } }) };
+}
+
+function panSizePage() {
+  const PANS = [
+    ["r6", '6" round', Math.PI * 9], ["r7", '7" round', Math.PI * 12.25], ["r8", '8" round', Math.PI * 16],
+    ["r9", '9" round', Math.PI * 20.25], ["r10", '10" round', Math.PI * 25], ["s8", '8×8" square', 64],
+    ["s9", '9×9" square', 81], ["r11x7", '11×7" rectangle', 77], ["r9x13", '9×13" rectangle', 117],
+    ["jelly", '10×15" jelly roll', 150], ["loaf85", '8.5×4.5" loaf', 38.25], ["loaf9", '9×5" loaf', 45],
+  ];
+  const opts = (sel) => PANS.map(([id, name]) => `<option value="${id}"${id === sel ? " selected" : ""}>${esc(name)}</option>`).join("");
+  const title = "Cake Pan Size Converter — Swap Pan Sizes & Adjust Recipes | ExactCup";
+  const description = "Need a different pan? This converter shows how to scale your recipe when swapping cake pan sizes (e.g. 9×13 to 8×8), based on pan area. Free instant calculator.";
+  const canonical = "/pan-size-converter/";
+  const rows = PANS.map(([id, name, area]) => `<tr><td>${esc(name)}</td><td class="num">${g2(area)} sq in</td></tr>`).join("");
+  const body = `
+<h1>Cake Pan Size Converter</h1>
+<p class="lead">Only have a different pan? Pick what the recipe calls for and what you've got — I'll tell you how to scale the ingredients.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="pan-from">Recipe calls for</label><select id="pan-from">${opts("r9x13")}</select></div>
+    <div class="field"><label for="pan-to">You want to use</label><select id="pan-to">${opts("s8")}</select></div>
+  </div>
+  <div class="result"><div class="big" id="pan-out">—</div><div class="sub" id="pan-note">Ingredient multiplier</div></div>
+</div>
+<h2>Common pan sizes (by area)</h2>
+<table><thead><tr><th>Pan</th><th>Area</th></tr></thead><tbody>${rows}</tbody></table>
+<p class="note">This scales by pan area (and so by batter volume). For big jumps, also adjust bake time and check doneness — depth changes how heat reaches the center.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "pansize", pans: PANS.map(([id, , area]) => ({ id, area })) } }) };
+}
+
+function volumePage() {
+  const title = "Cups to Tablespoons to Teaspoons Converter (+ mL, fl oz) | ExactCup";
+  const description = "Free volume converter for cooking: cups, tablespoons, teaspoons, fluid ounces, milliliters and liters. Type any field and the rest update instantly.";
+  const canonical = "/volume-converter/";
+  const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  const body = `
+<h1>Volume Converter (Cups · Tbsp · Tsp · mL)</h1>
+<p class="lead">Convert cooking volumes any direction. 1 cup = 16 tablespoons = 48 teaspoons = 8 fl oz ≈ 237 mL. Type any box.</p>
+<div class="calc">
+  <div class="row">${f("Cups", "cups", "1")}${f("Tablespoons", "tbsp", "16")}${f("Teaspoons", "tsp", "48")}</div>
+  <div class="row" style="margin-top:10px">${f("Fluid ounces", "floz", "8")}${f("Milliliters", "ml", "237")}${f("Liters", "l", "0.237")}</div>
+</div>
+<p class="note">These are volume conversions (US customary). To convert a volume to grams, the ingredient matters — use the <a href="/cups-to-grams/">cups to grams converter</a>.</p>
+<h2>Quick reference</h2>
+<table><thead><tr><th>Cups</th><th>Tbsp</th><th>Tsp</th><th>mL</th></tr></thead><tbody>
+<tr><td>1 cup</td><td class="num">16</td><td class="num">48</td><td class="num">237</td></tr>
+<tr><td>¾ cup</td><td class="num">12</td><td class="num">36</td><td class="num">177</td></tr>
+<tr><td>½ cup</td><td class="num">8</td><td class="num">24</td><td class="num">118</td></tr>
+<tr><td>⅓ cup</td><td class="num">5⅓</td><td class="num">16</td><td class="num">79</td></tr>
+<tr><td>¼ cup</td><td class="num">4</td><td class="num">12</td><td class="num">59</td></tr>
+</tbody></table>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "volume" } }) };
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -305,7 +390,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage()];
+  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage()];
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
 
