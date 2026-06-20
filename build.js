@@ -154,7 +154,7 @@ function ingredientPage(ing) {
     mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
   };
   const body = `
-<nav style="font-size:13px;color:var(--muted);margin-bottom:6px"><a href="/cups-to-grams/">Cups to Grams</a> › ${esc(ing.name)}</nav>
+<nav style="font-size:13px;color:var(--muted);margin-bottom:6px"><a href="/cups-to-grams/">Cups to Grams</a> › <a href="/${ing.category}-conversion-chart/">${esc(catName(ing.category))}</a> › ${esc(ing.name)}</nav>
 <h1>${esc(ing.name)}: Cups to Grams</h1>
 <p class="lead">1 cup of ${ing.name.toLowerCase()} weighs about <strong>${g2(gpc)} grams</strong>. Convert any amount instantly below.</p>
 <div class="calc">
@@ -173,7 +173,8 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
 <div class="chips">${related.map((r) => `<a href="/cups-to-grams/${r.slug}/">${esc(r.name)}</a>`).join("")}</div>
-<p style="margin-top:18px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
+<p style="margin-top:10px"><a href="/${ing.category}-conversion-chart/">See the full ${esc(catName(ing.category).toLowerCase())} conversion chart →</a></p>
+<p style="margin-top:8px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "ingredient", gramsPerCup: gpc } }) };
 }
 
@@ -184,7 +185,7 @@ function masterPage() {
   const cats = {};
   DATA.ingredients.forEach((i) => { (cats[i.category] = cats[i.category] || []).push(i); });
   const lists = Object.keys(cats).map((k) =>
-    `<h3>${esc(catName(k))}</h3><div class="chips">${cats[k].map((i) => `<a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a>`).join("")}</div>`
+    `<h3><a href="/${k}-conversion-chart/">${esc(catName(k))}</a></h3><div class="chips">${cats[k].map((i) => `<a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a>`).join("")}</div>`
   ).join("");
   const opts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
   const cfg = { type: "master", ingredients: DATA.ingredients.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
@@ -442,6 +443,8 @@ function categoryPage(key) {
 <p class="lead">Grams per cup for common ${esc(cname.toLowerCase())}. Click any ingredient for a full converter and chart.</p>
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>
+<h2>Other conversion charts</h2>
+<div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
 <p style="margin-top:16px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
 }
