@@ -41,6 +41,33 @@ function popular() {
     .map(ingBySlug).filter(Boolean);
 }
 
+// ---------- structured data (JSON-LD) helpers ----------
+// BreadcrumbList from [name, relativeUrl] pairs (last item is the current page).
+function breadcrumbLd(items) {
+  return {
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
+    itemListElement: items.map(([name, rel], i) => ({
+      "@type": "ListItem", position: i + 1, name,
+      item: SITE.baseUrl + rel,
+    })),
+  };
+}
+// WebApplication entry for a free client-side calculator tool.
+function appLd(name, description, canonical) {
+  return {
+    "@context": "https://schema.org", "@type": "WebApplication",
+    name, description, url: SITE.baseUrl + canonical,
+    applicationCategory: "UtilitiesApplication", operatingSystem: "Any",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  };
+}
+function faqLd(faq) {
+  return {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+  };
+}
+
 const CSS = `
 :root{--bg:#fff;--fg:#1f2328;--muted:#5b6470;--line:#e6e8eb;--accent:#c2410c;--accent2:#fff7ed;--card:#fafafa;--radius:12px}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
@@ -88,7 +115,8 @@ footer.site a{color:var(--muted)}
 function layout(opts) {
   const { title, description, canonical, bodyHtml, jsonLd, cfg } = opts;
   const url = SITE.baseUrl + canonical;
-  const ld = jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : "";
+  const ldList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const ld = ldList.map((o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("");
   const cfgScript = cfg ? `<script type="application/json" id="cfg">${JSON.stringify(cfg)}</script><script src="/assets/app.js" defer></script>` : "";
   return `<!doctype html>
 <html lang="en">
@@ -149,10 +177,14 @@ function ingredientPage(ing) {
     [`How many grams is 1 tablespoon of ${ing.name.toLowerCase()}?`, `1 tablespoon of ${ing.name.toLowerCase()} is about ${g2(gpc / 16)} grams (a cup is 16 tablespoons).`],
     [`How many cups is 100 grams of ${ing.name.toLowerCase()}?`, `100 grams of ${ing.name.toLowerCase()} is about ${g2(100 / gpc)} cups.`],
   ];
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "FAQPage",
-    mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
-  };
+  const jsonLd = [
+    faqLd(faq),
+    breadcrumbLd([
+      ["Cups to Grams", "/cups-to-grams/"],
+      [catName(ing.category), `/${ing.category}-conversion-chart/`],
+      [ing.name, canonical],
+    ]),
+  ];
   const body = `
 <nav style="font-size:13px;color:var(--muted);margin-bottom:6px"><a href="/cups-to-grams/">Cups to Grams</a> › <a href="/${ing.category}-conversion-chart/">${esc(catName(ing.category))}</a> › ${esc(ing.name)}</nav>
 <h1>${esc(ing.name)}: Cups to Grams</h1>
@@ -237,7 +269,12 @@ ${tools.map(([h, t, d]) => `<a class="card" href="${h}"><div class="t">${esc(t)}
 <div class="chips">${Object.keys(DATA.categories).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
 <h2>Why weigh ingredients?</h2>
 <p>Measuring by volume (cups) is convenient but imprecise — packed vs. sifted flour can differ by 30%. Weighing in grams is how professional bakers get consistent results. These converters bridge the two so you can follow any recipe, anywhere.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body }) };
+  const jsonLd = {
+    "@context": "https://schema.org", "@type": "WebSite",
+    name: SITE.brand, url: SITE.baseUrl + "/",
+    description: SITE.tagline,
+  };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
 }
 
 function scalerPage() {
@@ -261,7 +298,7 @@ function scalerPage() {
   <div style="margin-top:12px"><label>Scaled recipe</label><pre id="scaled-out" style="white-space:pre-wrap;background:var(--accent2);border:1px solid #fed7aa;border-radius:12px;padding:14px;margin:0">—</pre></div>
 </div>
 <p class="note">Tip: scaling works for most ingredients, but baking times, pan sizes, and leavening (baking soda/powder) don't always scale linearly. Adjust with judgment for big changes.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "scaler" } }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Recipe Scaler", description, canonical), cfg: { type: "scaler" } }) };
 }
 
 function ovenPage() {
@@ -283,7 +320,7 @@ function ovenPage() {
 <h2>Oven temperature chart</h2>
 <table><thead><tr><th>Fahrenheit</th><th>Celsius</th><th>Gas mark</th></tr></thead><tbody>${chart}</tbody></table>
 <p class="note">For fan/convection ovens, reduce the Celsius temperature by about 20°C (or ~25°F) from conventional recipes.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "oven" } }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Oven Temperature Converter", description, canonical), cfg: { type: "oven" } }) };
 }
 
 function butterPage() {
@@ -305,7 +342,7 @@ function butterPage() {
 <tr><td>2 sticks (1 cup)</td><td class="num">16</td><td class="num">227 g</td><td class="num">8 oz</td></tr>
 </tbody></table>
 <p class="note">Based on US butter: 1 cup = 227 g, 1 stick = 113.5 g. European butter is often sold in 250 g blocks.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "butter" } }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Butter Converter", description, canonical), cfg: { type: "butter" } }) };
 }
 
 function airFryerPage() {
@@ -319,7 +356,7 @@ function airFryerPage() {
   ];
   const chart = [[350, 325, 20, 16], [375, 350, 25, 20], [400, 375, 30, 24], [425, 400, 35, 28], [450, 425, 40, 32]]
     .map(([of, af, ot, at]) => `<tr><td class="num">${of}°F / ${ot}min</td><td class="num">${af}°F</td><td class="num">${at} min</td></tr>`).join("");
-  const jsonLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) };
+  const jsonLd = [faqLd(faq), appLd("Air Fryer Conversion Calculator", description, canonical)];
   const body = `
 <h1>Air Fryer Conversion Calculator</h1>
 <p class="lead">Got an oven recipe? Enter its temperature and time to get the air-fryer settings. Rule of thumb: <strong>−25°F and about 20% less time</strong>.</p>
@@ -363,7 +400,7 @@ function panSizePage() {
 <h2>Common pan sizes (by area)</h2>
 <table><thead><tr><th>Pan</th><th>Area</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">This scales by pan area (and so by batter volume). For big jumps, also adjust bake time and check doneness — depth changes how heat reaches the center.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "pansize", pans: PANS.map(([id, , area]) => ({ id, area })) } }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Cake Pan Size Converter", description, canonical), cfg: { type: "pansize", pans: PANS.map(([id, , area]) => ({ id, area })) } }) };
 }
 
 function volumePage() {
@@ -387,7 +424,7 @@ function volumePage() {
 <tr><td>⅓ cup</td><td class="num">5⅓</td><td class="num">16</td><td class="num">79</td></tr>
 <tr><td>¼ cup</td><td class="num">4</td><td class="num">12</td><td class="num">59</td></tr>
 </tbody></table>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "volume" } }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Volume Converter", description, canonical), cfg: { type: "volume" } }) };
 }
 
 function portionPage() {
@@ -421,7 +458,7 @@ function portionPage() {
 <h2>Per-person serving guide (main dish)</h2>
 <table><thead><tr><th>Food</th><th>Per person</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Main-dish portions based on standard meal-planning guidance (WRAP / Love Food Hate Waste). Side dishes are roughly half. Adjust for big appetites or leftovers.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Portion Calculator", description, canonical), cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
 }
 
 function categoryPage(key) {
@@ -434,11 +471,12 @@ function categoryPage(key) {
   const rows = items.map((i) =>
     `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
   ).join("");
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "Table",
-    about: `${cname} cups to grams conversion chart`,
-  };
+  const jsonLd = breadcrumbLd([
+    ["Cups to Grams", "/cups-to-grams/"],
+    [cname, canonical],
+  ]);
   const body = `
+<nav style="font-size:13px;color:var(--muted);margin-bottom:6px"><a href="/cups-to-grams/">Cups to Grams</a> › ${esc(cname)}</nav>
 <h1>${esc(cname)} Conversion Chart</h1>
 <p class="lead">Grams per cup for common ${esc(cname.toLowerCase())}. Click any ingredient for a full converter and chart.</p>
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
@@ -458,7 +496,7 @@ function pizzaDoughPage() {
     ["How much does a pizza dough ball weigh?", "A typical 12-inch pizza uses a 250–280 g ball. Personal pizzas use ~180–220 g, large pizzas ~300 g."],
     ["How much salt and yeast go in pizza dough?", "Salt is usually about 2–3% of the flour weight, and instant dry yeast roughly 0.2–0.5% for a slow rise (more for a fast same-day dough)."],
   ];
-  const jsonLd = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) };
+  const jsonLd = [faqLd(faq), appLd("Pizza Dough Calculator", description, canonical)];
   const f = (lab, id, val, step) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" value="${val}" step="${step || "any"}" min="0"></div>`;
   const r = (lab, id) => `<tr><td>${lab}</td><td class="num" id="${id}">—</td></tr>`;
   const body = `
