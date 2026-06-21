@@ -4,6 +4,18 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
+
+// Honest sitemap lastmod: date of the last git commit (when content actually
+// changed). Falls back to today only if git is unavailable. Avoids churning the
+// date on no-op rebuilds, which keeps the freshness signal trustworthy.
+const LASTMOD = (() => {
+  try {
+    return execSync("git log -1 --format=%cs", { cwd: __dirname }).toString().trim();
+  } catch (e) {
+    return new Date().toISOString().slice(0, 10);
+  }
+})();
 
 const ROOT = __dirname;
 const OUT = path.join(ROOT, "dist");
@@ -538,7 +550,7 @@ function build() {
   fs.copyFileSync(path.join(ROOT, "assets", "app.js"), path.join(OUT, "assets", "app.js"));
 
   // sitemap + robots
-  const urls = pages.map((p) => `<url><loc>${SITE.baseUrl}${p.canonical}</loc><changefreq>monthly</changefreq></url>`).join("\n");
+  const urls = pages.map((p) => `<url><loc>${SITE.baseUrl}${p.canonical}</loc><lastmod>${LASTMOD}</lastmod><changefreq>monthly</changefreq></url>`).join("\n");
   fs.writeFileSync(path.join(OUT, "sitemap.xml"),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   fs.writeFileSync(path.join(OUT, "robots.txt"),
