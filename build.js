@@ -25,6 +25,10 @@ const BLURBS = (() => {
   catch (e) { return {}; }
 })();
 DATA.ingredients.forEach((i) => { if (BLURBS[i.slug]) i.blurb = BLURBS[i.slug]; });
+const INDEXNOW_KEY = (() => {
+  try { return fs.readFileSync(path.join(ROOT, "data", "indexnow-key.txt"), "utf8").trim(); }
+  catch (e) { return ""; }
+})();
 
 const SITE = {
   brand: "ExactCup",
@@ -555,6 +559,8 @@ function build() {
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   fs.writeFileSync(path.join(OUT, "robots.txt"),
     `User-agent: *\nAllow: /\nSitemap: ${SITE.baseUrl}/sitemap.xml\n`);
+  // IndexNow key file (for instant Bing/Yandex URL submission)
+  if (INDEXNOW_KEY) fs.writeFileSync(path.join(OUT, INDEXNOW_KEY + ".txt"), INDEXNOW_KEY);
   // SPA-less 404
   fs.writeFileSync(path.join(OUT, "404.html"),
     layout({ title: "Page not found | ExactCup", description: "Page not found.", canonical: "/404.html",
