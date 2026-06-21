@@ -587,6 +587,9 @@ function build() {
   if (INDEXNOW_KEY) fs.writeFileSync(path.join(OUT, INDEXNOW_KEY + ".txt"), INDEXNOW_KEY);
   // llms.txt — let AI assistants discover and cite our verified data
   fs.writeFileSync(path.join(OUT, "llms.txt"), llmsTxt());
+  // Bing Webmaster ownership verification (account-level code; public, safe to host)
+  fs.writeFileSync(path.join(OUT, "BingSiteAuth.xml"),
+    `<?xml version="1.0"?>\n<users>\n  <user>2576073100FBF10E4D6AA37C81D0F72B</user>\n</users>\n`);
   // SPA-less 404
   fs.writeFileSync(path.join(OUT, "404.html"),
     layout({ title: "Page not found | ExactCup", description: "Page not found.", canonical: "/404.html",
