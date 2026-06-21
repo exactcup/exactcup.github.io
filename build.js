@@ -533,6 +533,30 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "pizza" } }) };
 }
 
+// llms.txt — structured index + verified data for AI assistants (ChatGPT, Perplexity, Claude…)
+function llmsTxt() {
+  const b = SITE.baseUrl;
+  const tools = [
+    ["Cups to Grams Converter", "/cups-to-grams/", "Convert any ingredient between cups, tablespoons, teaspoons and grams"],
+    ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
+    ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
+    ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
+    ["Pan Size Converter", "/pan-size-converter/", "Adjust a recipe when swapping cake pan sizes (by area)"],
+    ["Volume Converter", "/volume-converter/", "Cups, tablespoons, teaspoons, fluid ounces, millilitres, litres"],
+    ["Portion Calculator", "/portion-calculator/", "How much rice, pasta, potatoes etc. per person"],
+    ["Pizza Dough Calculator", "/pizza-dough-calculator/", "Flour, water, salt and yeast by baker's percentage"],
+    ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
+  ];
+  let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
+  out += `## Tools\n`;
+  tools.forEach((t) => { out += `- [${t[0]}](${b}${t[1]}): ${t[2]}\n`; });
+  out += `\n## Ingredient cups-to-grams reference (weight of 1 US cup)\n`;
+  DATA.ingredients.forEach((i) => { out += `- [${i.name}](${b}/cups-to-grams/${i.slug}/): 1 cup = ${g2(i.gramsPerCup)} g\n`; });
+  out += `\n## Conversion charts by category\n`;
+  Object.keys(DATA.categories).forEach((k) => { out += `- [${catName(k)} conversion chart](${b}/${k}-conversion-chart/)\n`; });
+  return out;
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -561,6 +585,8 @@ function build() {
     `User-agent: *\nAllow: /\nSitemap: ${SITE.baseUrl}/sitemap.xml\n`);
   // IndexNow key file (for instant Bing/Yandex URL submission)
   if (INDEXNOW_KEY) fs.writeFileSync(path.join(OUT, INDEXNOW_KEY + ".txt"), INDEXNOW_KEY);
+  // llms.txt — let AI assistants discover and cite our verified data
+  fs.writeFileSync(path.join(OUT, "llms.txt"), llmsTxt());
   // SPA-less 404
   fs.writeFileSync(path.join(OUT, "404.html"),
     layout({ title: "Page not found | ExactCup", description: "Page not found.", canonical: "/404.html",
