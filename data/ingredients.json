@@ -86,6 +86,13 @@
     { "slug": "panko-breadcrumbs", "name": "Panko Breadcrumbs", "category": "grain", "gramsPerCup": 50, "aliases": ["panko", "japanese breadcrumbs"] },
     { "slug": "steel-cut-oats", "name": "Steel-Cut Oats", "category": "grain", "gramsPerCup": 140, "aliases": ["pinhead oats", "irish oats"] },
     { "slug": "couscous-dry", "name": "Couscous (Dry)", "category": "grain", "gramsPerCup": 175, "aliases": ["dry couscous"] },
-    { "slug": "bulgur-dry", "name": "Bulgur (Dry)", "category": "grain", "gramsPerCup": 140, "aliases": ["dry bulgur", "bulgur wheat", "cracked wheat"] }
+    { "slug": "bulgur-dry", "name": "Bulgur (Dry)", "category": "grain", "gramsPerCup": 140, "aliases": ["dry bulgur", "bulgur wheat", "cracked wheat"] },
+    { "slug": "pearl-barley", "name": "Pearl Barley (Dry)", "category": "grain", "gramsPerCup": 213, "aliases": ["pearled barley", "dry barley"] },
+
+    { "slug": "vegetable-shortening", "name": "Vegetable Shortening", "category": "dairy", "gramsPerCup": 184, "aliases": ["shortening", "crisco"] },
+    { "slug": "tahini", "name": "Tahini", "category": "dairy", "gramsPerCup": 256, "aliases": ["sesame paste", "tahini paste"] },
+    { "slug": "almond-butter", "name": "Almond Butter", "category": "dairy", "gramsPerCup": 272, "aliases": ["almond nut butter"] },
+
+    { "slug": "white-chocolate-chips", "name": "White Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["white choc chips", "white chocolate morsels"] }
   ]
 }
