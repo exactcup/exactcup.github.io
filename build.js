@@ -123,6 +123,10 @@ td.num{font-variant-numeric:tabular-nums}
 details{border:1px solid var(--line);border-radius:9px;padding:6px 14px;margin:8px 0}
 summary{font-weight:600;cursor:pointer;padding:6px 0}
 .note{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px;margin:14px 0}
+.btn{display:inline-block;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn:hover{background:#9a3412}
+.bp-del{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:17px;line-height:1;padding:0}
+.bp-del:hover{border-color:var(--accent);color:var(--accent)}
 footer.site{border-top:1px solid var(--line);margin-top:36px;padding:22px 0;color:var(--muted);font-size:14px}
 footer.site a{color:var(--muted)}
 @media(max-width:520px){h1{font-size:25px}nav a{margin-left:10px}}
@@ -271,6 +275,7 @@ function homePage() {
     ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
     ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
     ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
+    ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
     ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ];
   const body = `
@@ -533,6 +538,57 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "pizza" } }) };
 }
 
+function bakersPercentagePage() {
+  const title = "Baker's Percentage Calculator — Bread Formula by Weight | ExactCup";
+  const description = "Free baker's percentage calculator. Enter your flour weight and ingredients to get baker's percentages instantly, or scale any bread recipe up or down by changing the flour weight.";
+  const canonical = "/bakers-percentage-calculator/";
+  const faq = [
+    ["What is baker's percentage?", "Baker's percentage (also called baker's math) expresses every ingredient in a recipe as a percentage of the total flour weight. Flour is always 100%, and everything else is measured relative to it. It lets bakers compare and scale formulas regardless of batch size."],
+    ["How do you calculate baker's percentage?", "Divide the weight of an ingredient by the total flour weight and multiply by 100. For example, 350 g water with 500 g flour is 350 ÷ 500 × 100 = 70% (a 70% hydration dough). Salt of 10 g on 500 g flour is 2%."],
+    ["What is hydration in bread baking?", "Hydration is the water (or other liquid) expressed as a baker's percentage of the flour. A lean bread is usually 60–75% hydration; higher hydration gives a more open, airy crumb but stickier dough that is harder to handle."],
+    ["Why can baker's percentages add up to more than 100%?", "Because flour alone is the 100% reference, not the whole recipe. Adding water (≈65%), salt (≈2%) and yeast (≈1%) gives a formula total around 168% — that's normal. The total simply tells you the dough weight relative to the flour."],
+  ];
+  const jsonLd = [faqLd(faq), appLd("Baker's Percentage Calculator", description, canonical)];
+  // Seed a classic lean-bread formula at 500 g flour.
+  const cfg = { type: "bakers", rows: [
+    { name: "Water", pct: 70 },
+    { name: "Salt", pct: 2 },
+    { name: "Instant yeast", pct: 1 },
+  ] };
+  const ref = [
+    ["Flour", "100% (the reference)"],
+    ["Water — lean bread", "60–75%"],
+    ["Salt", "1.8–2.2%"],
+    ["Instant dry yeast", "0.5–1%"],
+    ["Fresh (cake) yeast", "1.5–3%"],
+    ["Sourdough starter / levain", "15–25%"],
+    ["Sugar — enriched dough", "5–12%"],
+    ["Butter or oil — enriched dough", "5–20%"],
+    ["Milk (in place of water)", "60–70%"],
+  ].map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${esc(v)}</td></tr>`).join("");
+  const body = `
+<h1>Baker's Percentage Calculator</h1>
+<p class="lead">Work in baker's math like a pro. Set your flour weight, type ingredient weights <em>or</em> percentages, and everything stays in sync. Change the flour to scale the whole recipe.</p>
+<div class="calc">
+  <div class="field" style="max-width:240px;margin-bottom:12px"><label for="bp-flour">Total flour weight (g) = 100%</label><input id="bp-flour" type="number" inputmode="decimal" value="500" min="0" step="any"></div>
+  <table><thead><tr><th>Ingredient</th><th>Weight (g)</th><th>Baker's %</th><th></th></tr></thead><tbody id="bp-rows"></tbody></table>
+  <button id="bp-add" type="button" class="btn" style="margin-top:4px">+ Add ingredient</button>
+  <div class="result"><div class="big" id="bp-total">—</div><div class="sub" id="bp-hyd">—</div></div>
+</div>
+<p class="note">Edit any weight to see its percentage, or any percentage to get the weight. Adjust the flour weight to scale the entire formula up or down — the percentages (and so the dough's character) stay identical.</p>
+<h2>How baker's percentage works</h2>
+<p>Baker's percentage is the standard way bakers write and scale formulas. Every ingredient is measured as a percentage of the <strong>total flour weight</strong>, which is fixed at 100%. The formula is simple:</p>
+<p class="note" style="border-left-color:var(--accent)"><strong>Ingredient % = (ingredient weight ÷ total flour weight) × 100</strong></p>
+<p>So a dough with 1000 g flour and 650 g water is at 65% hydration, whether you bake one loaf or fifty. To scale, you only change the flour weight — every other ingredient follows from its percentage. This is why professional recipes are written in percentages, not cups.</p>
+<h2>Typical baker's percentages</h2>
+<table><thead><tr><th>Ingredient</th><th>Typical baker's %</th></tr></thead><tbody>${ref}</tbody></table>
+<p class="note">Ranges are typical starting points for common breads — adjust to your flour, climate and the crumb you want. Salt is almost always near 2% of the flour; hydration is the main lever for crumb structure.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
+<p style="margin-top:16px">Making pizza? The <a href="/pizza-dough-calculator/">pizza dough calculator</a> applies baker's math to a target number of dough balls. Weighing flour from cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
+}
+
 // llms.txt — structured index + verified data for AI assistants (ChatGPT, Perplexity, Claude…)
 function llmsTxt() {
   const b = SITE.baseUrl;
@@ -545,6 +601,7 @@ function llmsTxt() {
     ["Volume Converter", "/volume-converter/", "Cups, tablespoons, teaspoons, fluid ounces, millilitres, litres"],
     ["Portion Calculator", "/portion-calculator/", "How much rice, pasta, potatoes etc. per person"],
     ["Pizza Dough Calculator", "/pizza-dough-calculator/", "Flour, water, salt and yeast by baker's percentage"],
+    ["Baker's Percentage Calculator", "/bakers-percentage-calculator/", "Build and scale any bread formula using baker's math (every ingredient as a percentage of flour)"],
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
@@ -568,7 +625,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage()];
+  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

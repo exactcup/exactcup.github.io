@@ -243,6 +243,66 @@
     calc();
   }
 
+  function initBakers(c) {
+    var flour = $("bp-flour"), tbody = $("bp-rows"), addBtn = $("bp-add"),
+      totalEl = $("bp-total"), hydEl = $("bp-hyd");
+    if (!flour || !tbody) return;
+    function fnum(el) { var v = parseFloat(el.value); return isNaN(v) ? NaN : v; }
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+    function rowHtml(name, pct) {
+      return '<tr>' +
+        '<td><input class="bp-name" type="text" value="' + esc(name) + '" placeholder="ingredient"></td>' +
+        '<td><input class="bp-wt" type="number" inputmode="decimal" step="any" min="0"></td>' +
+        '<td><input class="bp-pct" type="number" inputmode="decimal" step="any" min="0" value="' + (pct != null && pct !== "" ? pct : "") + '"></td>' +
+        '<td><button type="button" class="bp-del" aria-label="Remove ingredient" title="Remove">×</button></td>' +
+        '</tr>';
+    }
+    function rows() { return tbody.querySelectorAll("tr"); }
+    function updateTotals() {
+      var f = fnum(flour);
+      var totalW = isFinite(f) ? f : 0, totalPct = isFinite(f) ? 100 : 0, any = isFinite(f);
+      [].forEach.call(rows(), function (tr) {
+        var wt = fnum(tr.querySelector(".bp-wt")), pct = fnum(tr.querySelector(".bp-pct"));
+        if (isFinite(wt)) { totalW += wt; any = true; }
+        if (isFinite(pct)) totalPct += pct;
+      });
+      if (totalEl) totalEl.textContent = any ? round(totalW, 0) + " g total dough" : "—";
+      if (hydEl) hydEl.textContent = isFinite(f) ? "Formula total: " + round(totalPct, 1) + "% of flour" : "Enter a flour weight to begin";
+    }
+    function recalcWeightsFromPct() {
+      var f = fnum(flour);
+      [].forEach.call(rows(), function (tr) {
+        var pct = fnum(tr.querySelector(".bp-pct")), wt = tr.querySelector(".bp-wt");
+        wt.value = (isFinite(f) && isFinite(pct)) ? round(f * pct / 100, 1) : "";
+      });
+      updateTotals();
+    }
+    tbody.addEventListener("input", function (e) {
+      var t = e.target, tr = t.parentNode && t.parentNode.parentNode, f = fnum(flour);
+      if (!tr) return;
+      if (t.className.indexOf("bp-wt") > -1) {
+        var wt = fnum(t), pctEl = tr.querySelector(".bp-pct");
+        pctEl.value = (isFinite(f) && f > 0 && isFinite(wt)) ? round(wt / f * 100, 2) : "";
+        updateTotals();
+      } else if (t.className.indexOf("bp-pct") > -1) {
+        var pct = fnum(t), wtEl = tr.querySelector(".bp-wt");
+        wtEl.value = (isFinite(f) && isFinite(pct)) ? round(f * pct / 100, 1) : "";
+        updateTotals();
+      }
+    });
+    tbody.addEventListener("click", function (e) {
+      if (e.target.className.indexOf("bp-del") > -1) {
+        var tr = e.target.parentNode.parentNode;
+        tr.parentNode.removeChild(tr);
+        updateTotals();
+      }
+    });
+    flour.addEventListener("input", recalcWeightsFromPct);
+    if (addBtn) addBtn.addEventListener("click", function () { tbody.insertAdjacentHTML("beforeend", rowHtml("", "")); });
+    (c.rows || []).forEach(function (r) { tbody.insertAdjacentHTML("beforeend", rowHtml(r.name, r.pct)); });
+    recalcWeightsFromPct();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -255,4 +315,5 @@
   else if (t === "volume") initVolume();
   else if (t === "portion") initPortion(c);
   else if (t === "pizza") initPizza();
+  else if (t === "bakers") initBakers(c);
 })();
