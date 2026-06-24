@@ -93,6 +93,12 @@
     { "slug": "tahini", "name": "Tahini", "category": "dairy", "gramsPerCup": 256, "aliases": ["sesame paste", "tahini paste"] },
     { "slug": "almond-butter", "name": "Almond Butter", "category": "dairy", "gramsPerCup": 272, "aliases": ["almond nut butter"] },
 
-    { "slug": "white-chocolate-chips", "name": "White Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["white choc chips", "white chocolate morsels"] }
+    { "slug": "white-chocolate-chips", "name": "White Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["white choc chips", "white chocolate morsels"] },
+
+    { "slug": "walnuts-chopped", "name": "Walnuts (Chopped)", "category": "baking", "gramsPerCup": 113, "aliases": ["walnuts", "chopped walnuts"] },
+    { "slug": "graham-cracker-crumbs", "name": "Graham Cracker Crumbs", "category": "grain", "gramsPerCup": 100, "aliases": ["graham crumbs", "crushed graham crackers"] },
+    { "slug": "hazelnuts", "name": "Hazelnuts (Whole)", "category": "baking", "gramsPerCup": 142, "aliases": ["filberts", "whole hazelnuts"] },
+    { "slug": "cashews", "name": "Cashews (Whole)", "category": "baking", "gramsPerCup": 113, "aliases": ["whole cashews", "cashew nuts"] },
+    { "slug": "pine-nuts", "name": "Pine Nuts", "category": "baking", "gramsPerCup": 142, "aliases": ["pignoli", "pinoli"] }
   ]
 }
