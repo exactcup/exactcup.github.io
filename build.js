@@ -47,7 +47,8 @@ function esc(s) {
 const OZ = 28.349523125;
 const FRACTIONS = [
   ["1/8", 0.125], ["1/4", 0.25], ["1/3", 1 / 3], ["1/2", 0.5],
-  ["2/3", 2 / 3], ["3/4", 0.75], ["1", 1], ["1 1/2", 1.5], ["2", 2],
+  ["2/3", 2 / 3], ["3/4", 0.75], ["1", 1], ["1 1/4", 1.25], ["1 1/3", 4 / 3],
+  ["1 1/2", 1.5], ["1 3/4", 1.75], ["2", 2], ["3", 3],
 ];
 function g2(n) { return Math.round(n * 10) / 10; }
 function ingBySlug(slug) { return DATA.ingredients.find((i) => i.slug === slug); }
@@ -192,10 +193,13 @@ function ingredientPage(ing) {
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup of ${ing.name.toLowerCase()} = ${g2(gpc)} g. Free instant cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
+  const low = ing.name.toLowerCase();
   const faq = [
-    [`How many grams is 1 cup of ${ing.name.toLowerCase()}?`, `1 US cup of ${ing.name.toLowerCase()} weighs about ${g2(gpc)} grams.`],
-    [`How many grams is 1 tablespoon of ${ing.name.toLowerCase()}?`, `1 tablespoon of ${ing.name.toLowerCase()} is about ${g2(gpc / 16)} grams (a cup is 16 tablespoons).`],
-    [`How many cups is 100 grams of ${ing.name.toLowerCase()}?`, `100 grams of ${ing.name.toLowerCase()} is about ${g2(100 / gpc)} cups.`],
+    [`How many grams is 1 cup of ${low}?`, `1 US cup of ${low} weighs about ${g2(gpc)} grams.`],
+    [`How many grams is 1/2 cup of ${low}?`, `Half a US cup of ${low} is about ${g2(gpc / 2)} grams — half of the ${g2(gpc)} g in a full cup.`],
+    [`How many grams is 1/4 cup of ${low}?`, `A quarter US cup of ${low} is about ${g2(gpc / 4)} grams (4 tablespoons).`],
+    [`How many grams is 1 tablespoon of ${low}?`, `1 tablespoon of ${low} is about ${g2(gpc / 16)} grams (a cup is 16 tablespoons).`],
+    [`How many cups is 100 grams of ${low}?`, `100 grams of ${low} is about ${g2(100 / gpc)} cups.`],
   ];
   const jsonLd = [
     faqLd(faq),
