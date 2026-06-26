@@ -187,6 +187,18 @@ function conversionTable(gpc) {
   return `<table><thead><tr><th>Cups</th><th>Grams</th><th>Ounces</th><th>Tablespoons</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Round gram amounts people actually search ("250g flour in cups").
+const GRAM_AMOUNTS = [10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 500];
+// Cups to 2 dp (reverse direction reads better as a decimal than a fraction).
+function cups2(n) { return Math.round(n * 100) / 100; }
+function gramsToCupsTable(gpc) {
+  const rows = GRAM_AMOUNTS.map((g) => {
+    const cups = g / gpc;
+    return `<tr><td>${g} g</td><td class="num">${cups2(cups)} cups</td><td class="num">${g2(cups * 16)} tbsp</td><td class="num">${g2(g / OZ)} oz</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Grams</th><th>Cups</th><th>Tablespoons</th><th>Ounces</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function ingredientPage(ing) {
   const gpc = ing.gramsPerCup;
   const related = DATA.ingredients.filter((i) => i.category === ing.category && i.slug !== ing.slug).slice(0, 6);
@@ -199,7 +211,9 @@ function ingredientPage(ing) {
     [`How many grams is 1/2 cup of ${low}?`, `Half a US cup of ${low} is about ${g2(gpc / 2)} grams — half of the ${g2(gpc)} g in a full cup.`],
     [`How many grams is 1/4 cup of ${low}?`, `A quarter US cup of ${low} is about ${g2(gpc / 4)} grams (4 tablespoons).`],
     [`How many grams is 1 tablespoon of ${low}?`, `1 tablespoon of ${low} is about ${g2(gpc / 16)} grams (a cup is 16 tablespoons).`],
-    [`How many cups is 100 grams of ${low}?`, `100 grams of ${low} is about ${g2(100 / gpc)} cups.`],
+    [`How many cups is 100 grams of ${low}?`, `100 grams of ${low} is about ${cups2(100 / gpc)} cups.`],
+    [`How many cups is 250 grams of ${low}?`, `250 grams of ${low} is about ${cups2(250 / gpc)} cups (at ${g2(gpc)} g per cup).`],
+    [`How many cups is 500 grams of ${low}?`, `500 grams of ${low} is about ${cups2(500 / gpc)} cups.`],
   ];
   const jsonLd = [
     faqLd(faq),
@@ -224,6 +238,9 @@ function ingredientPage(ing) {
 <h2>${esc(ing.name)} conversion chart</h2>
 ${conversionTable(gpc)}
 <p class="note">Based on ${g2(gpc)} g per US cup. Weights vary with brand and measuring method — for precise baking, use a scale.</p>
+<h2>Grams to cups: ${esc(ing.name.toLowerCase())}</h2>
+<p>Working backwards from a weight? Here is how common gram amounts of ${ing.name.toLowerCase()} convert to cups (at ${g2(gpc)} g per cup).</p>
+${gramsToCupsTable(gpc)}
 ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>${esc(ing.blurb)}</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
