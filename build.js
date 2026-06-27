@@ -276,11 +276,66 @@ function masterPage() {
 </div>
 <h2>Browse all ingredients</h2>
 ${lists}
+<p style="margin-top:10px">Working backwards from a weight? Use the <a href="/grams-to-cups/">grams to cups converter</a>.</p>
 <p class="note">Why ingredient matters: 1 cup of all-purpose flour ≈ 120 g, but 1 cup of granulated sugar ≈ 200 g and 1 cup of honey ≈ 340 g. Always convert by ingredient, not by a single ratio.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: {
     "@context": "https://schema.org", "@type": "WebApplication", name: "Cups to Grams Converter",
     applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   }, cfg }) };
+}
+
+// Reverse hub: grams -> cups. Mirrors the master converter but weight-first,
+// targeting the large "Ng <ingredient> in cups" / "grams to cups" query class.
+function gramsToCupsPage() {
+  const title = "Grams to Cups Converter — Every Baking Ingredient | ExactCup";
+  const description = "Free grams to cups converter for flour, sugar, butter and 30+ ingredients. Enter a weight in grams and get the exact cups — because every ingredient converts differently.";
+  const canonical = "/grams-to-cups/";
+  const cats = {};
+  DATA.ingredients.forEach((i) => { (cats[i.category] = cats[i.category] || []).push(i); });
+  const lists = Object.keys(cats).map((k) =>
+    `<h3><a href="/${k}-conversion-chart/">${esc(catName(k))}</a></h3><div class="chips">${cats[k].map((i) => `<a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a>`).join("")}</div>`
+  ).join("");
+  const opts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
+  // "100 g in cups" across popular ingredients — shows why the answer depends on the ingredient.
+  const refRows = popular().map((i) =>
+    `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${cups2(100 / i.gramsPerCup)} cups</td></tr>`
+  ).join("");
+  const faq = [
+    ["How do I convert grams to cups?", "Divide the weight in grams by the weight of one cup of that ingredient. For example, 1 cup of all-purpose flour is about 120 g, so 240 g of flour is 240 ÷ 120 = 2 cups. Pick your ingredient above and the calculator does the math for you."],
+    ["Is grams to cups the same for every ingredient?", "No — this is the key thing. A cup of flour weighs about 120 g, but a cup of granulated sugar is about 200 g and a cup of honey about 340 g. So 100 g is a very different number of cups depending on the ingredient. Always convert by ingredient, never with a single ratio."],
+    ["How many cups is 100 grams?", "It depends on the ingredient: 100 g of all-purpose flour is about 0.83 cups, 100 g of granulated sugar about 0.5 cups, and 100 g of butter about 0.44 cups. Choose your ingredient above for an exact figure."],
+    ["How many cups is 250 grams of flour?", "About 2.08 cups of all-purpose flour, based on 120 g per cup. For sugar (200 g per cup) 250 g is about 1.25 cups."],
+    ["Why does my recipe give weights in grams?", "Weighing is more accurate than measuring by volume — packed versus sifted flour can differ by 30%. Recipes written in grams remove that guesswork. This converter lets you turn those gram weights back into cups when you don't have a scale."],
+  ];
+  const jsonLd = [
+    appLd("Grams to Cups Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Grams to Cups", canonical]]),
+  ];
+  const cfg = { type: "rmaster", ingredients: DATA.ingredients.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
+  const body = `
+<h1>Grams to Cups Converter</h1>
+<p class="lead">Got a weight in grams and no kitchen scale? Pick your ingredient and turn grams into cups instantly — accurately, because a cup of flour and a cup of sugar are <em>not</em> the same weight.</p>
+<div class="calc">
+  <div class="field" style="margin-bottom:10px"><label for="ingredient">Ingredient</label><select id="ingredient">${opts}</select></div>
+  <div class="row">
+    <div class="field"><label for="grams">Grams</label><input id="grams" type="number" inputmode="decimal" value="100" min="0" step="any"></div>
+    <div class="field" style="max-width:150px"><label for="unit">Convert to</label><select id="unit"><option value="cups">cups</option><option value="tbsp">tablespoons</option><option value="tsp">teaspoons</option></select></div>
+    <div class="field"><label for="amount">Amount</label><input id="amount" type="number" inputmode="decimal" step="any"></div>
+  </div>
+  <div class="result"><div class="big" id="out-amount">—</div><div class="sub" id="out-oz">—</div></div>
+</div>
+<h2>Why 100 g isn't always the same number of cups</h2>
+<p>Grams measure weight; cups measure volume. The same weight fills a different number of cups for each ingredient because their densities differ. Here is what <strong>100 g</strong> looks like across some common ingredients:</p>
+<table><thead><tr><th>Ingredient</th><th>100 g in cups</th></tr></thead><tbody>${refRows}</tbody></table>
+<p class="note">For a full grams-to-cups chart of any single ingredient (10 g up to 500 g), open its page below.</p>
+<h2>Pick an ingredient</h2>
+${lists}
+<h2>Prefer to go the other way?</h2>
+<p>Use the <a href="/cups-to-grams/">cups to grams converter</a> to turn a cup measurement into grams, or jump to a category chart above. Looking for butter in sticks? Try the <a href="/butter-converter/">butter converter</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
 }
 
 function homePage() {
@@ -289,6 +344,7 @@ function homePage() {
   const canonical = "/";
   const tools = [
     ["/cups-to-grams/", "Cups to Grams", "Convert any ingredient — flour, sugar, butter & 30+ more."],
+    ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
     ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
     ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
     ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
@@ -615,6 +671,7 @@ function llmsTxt() {
   const b = SITE.baseUrl;
   const tools = [
     ["Cups to Grams Converter", "/cups-to-grams/", "Convert any ingredient between cups, tablespoons, teaspoons and grams"],
+    ["Grams to Cups Converter", "/grams-to-cups/", "Reverse direction: enter a weight in grams and get cups, by ingredient"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
     ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
@@ -646,7 +703,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

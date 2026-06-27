@@ -84,6 +84,38 @@
     recompute();
   }
 
+  // Reverse master: weight-first (grams -> cups), used by /grams-to-cups/.
+  function initRMaster(c) {
+    var sel = $("ingredient");
+    if (!sel) return;
+    var map = {};
+    c.ingredients.forEach(function (i) { map[i.slug] = i; });
+    function current() { return map[sel.value] || c.ingredients[0]; }
+    var grams = $("grams"), unit = $("unit"), amount = $("amount");
+    var outA = $("out-amount"), outOz = $("out-oz");
+    function factorFor(gpc, u) { return u === "tbsp" ? gpc / 16 : u === "tsp" ? gpc / 48 : gpc; }
+    function recompute() {
+      var gpc = current().gramsPerCup, g = parseFloat(grams.value);
+      if (isNaN(g)) { if (outA) outA.textContent = "—"; if (outOz) outOz.textContent = "—"; if (amount) amount.value = ""; return; }
+      var u = unit ? unit.value : "cups", a = g / factorFor(gpc, u);
+      if (amount) amount.value = round(a, 3);
+      if (outA) outA.textContent = round(a, 3) + " " + u;
+      if (outOz) outOz.textContent = round(g / OZ, 2) + " oz";
+    }
+    sel.addEventListener("change", recompute);
+    grams.addEventListener("input", recompute);
+    if (unit) unit.addEventListener("change", recompute);
+    if (amount) amount.addEventListener("input", function () {
+      var gpc = current().gramsPerCup, a = parseFloat(amount.value);
+      if (isNaN(a)) return;
+      var u = unit ? unit.value : "cups", g = a * factorFor(gpc, u);
+      grams.value = round(g, 1);
+      if (outA) outA.textContent = round(a, 3) + " " + u;
+      if (outOz) outOz.textContent = round(g / OZ, 2) + " oz";
+    });
+    recompute();
+  }
+
   function initScaler() {
     var orig = $("orig-serv"), want = $("want-serv"), list = $("ingredients-list"), out = $("scaled-out");
     if (!orig || !want) return;
@@ -307,6 +339,7 @@
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
   else if (t === "master") initMaster(c);
+  else if (t === "rmaster") initRMaster(c);
   else if (t === "scaler") initScaler();
   else if (t === "oven") initOven();
   else if (t === "butter") initButter();
