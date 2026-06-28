@@ -335,6 +335,36 @@
     recalcWeightsFromPct();
   }
 
+  function initYeast() {
+    var amount = $("y-amount"), unit = $("y-unit"), from = $("y-from");
+    if (!amount || !from) return;
+    // Strength-equivalent weight ratio: instant 1 : active dry 1.25 : fresh 3.
+    var W = { active: 1.25, instant: 1, fresh: 3 };
+    var TSP_G = 3.1, PACKET_G = 7; // dry yeast: ~3.1 g/tsp, 7 g/packet
+    function set(id, txt) { var el = $(id); if (el) el.textContent = txt; }
+    function calc() {
+      var a = parseFloat(amount.value);
+      var u = unit ? unit.value : "g";
+      var f = from.value;
+      var gSrc = isNaN(a) ? NaN : a * (u === "tsp" ? TSP_G : u === "packet" ? PACKET_G : 1);
+      ["active", "instant", "fresh"].forEach(function (type) {
+        var g = isFinite(gSrc) ? gSrc * (W[type] / W[f]) : NaN;
+        set("y-" + type + "-g", isFinite(g) ? round(g, 2) + " g" : "—");
+        if (type === "fresh") {
+          // fresh yeast is measured by weight, not spoons/packets
+          set("y-fresh-t", "—"); set("y-fresh-p", "—");
+        } else {
+          set("y-" + type + "-t", isFinite(g) ? round(g / TSP_G, 2) + " tsp" : "—");
+          set("y-" + type + "-p", isFinite(g) ? round(g / PACKET_G, 2) : "—");
+        }
+      });
+    }
+    amount.addEventListener("input", calc);
+    if (unit) unit.addEventListener("change", calc);
+    from.addEventListener("change", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -349,4 +379,5 @@
   else if (t === "portion") initPortion(c);
   else if (t === "pizza") initPizza();
   else if (t === "bakers") initBakers(c);
+  else if (t === "yeast") initYeast();
 })();

@@ -353,6 +353,7 @@ function homePage() {
     ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
     ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
     ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
+    ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
     ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ];
   const body = `
@@ -666,6 +667,61 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
 }
 
+function yeastPage() {
+  const title = "Yeast Converter — Active Dry, Instant & Fresh Yeast | ExactCup";
+  const description = "Free yeast converter: swap active dry, instant (rapid-rise) and fresh (cake) yeast by weight. 1 packet = 7 g = 2¼ tsp. Get grams, teaspoons and packets instantly.";
+  const canonical = "/yeast-converter/";
+  const faq = [
+    ["How much instant yeast equals active dry yeast?", "Instant yeast is a little more active than active dry, so by weight you use about 20–25% less: roughly 0.8 g of instant for every 1 g of active dry (and 1.25 g of active dry for every 1 g of instant). For everyday home baking, King Arthur and the major US brands say you can also just swap them 1:1 — with active dry, add about 15 minutes to the rise time. Use the strength-based amount when a precise or commercial formula matters."],
+    ["How do I convert fresh yeast to dry yeast?", "Fresh (cake) yeast is much weaker by weight because it contains water. Multiply the fresh amount by about 0.4 to get active dry yeast, or by about 0.33 (one third) to get instant yeast. So 30 g of fresh yeast ≈ 12 g active dry ≈ 10 g instant."],
+    ["How much yeast is in a packet?", "A standard packet (sachet) of dry yeast is 7 g, which is ¼ oz or about 2¼ teaspoons. This is true for both active dry and instant yeast. One 7 g packet is enough to raise up to about 4 cups (500 g) of flour."],
+    ["Can I substitute active dry for instant yeast 1:1?", "Yes — for normal recipes King Arthur Baking, Red Star and Fleischmann's all say active dry and instant are interchangeable one-for-one by weight or volume. The only differences: active dry rises a little slower (add ~15 min), and in a bread machine you should reduce instant by 25% when it replaces active dry. This converter uses the strength-equivalent amounts (instant ≈ 25% stronger) for when you want the exact leavening power matched."],
+    ["Do I need to dissolve active dry yeast first?", "Modern active dry yeast can usually be mixed straight into the flour, but many bakers still 'bloom' it in warm (about 105–110°F / 40–43°C) liquid for 5–10 minutes to check it's alive. Instant yeast never needs blooming — add it directly to the dry ingredients. Fresh yeast is crumbled into the dough or dissolved in a little warm liquid."],
+  ];
+  const jsonLd = [faqLd(faq), appLd("Yeast Converter", description, canonical)];
+  // Strength-equivalent weight ratio: instant 1 : active dry 1.25 : fresh 3.
+  const factors = [
+    ["Active dry → Instant", "0.8"],
+    ["Instant → Active dry", "1.25"],
+    ["Fresh → Active dry", "0.42"],
+    ["Fresh → Instant", "0.33"],
+    ["Active dry → Fresh", "2.4"],
+    ["Instant → Fresh", "3.0"],
+  ].map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">× ${v}</td></tr>`).join("");
+  const body = `
+<h1>Yeast Converter</h1>
+<p class="lead">Swap between <strong>active dry</strong>, <strong>instant</strong> (rapid-rise) and <strong>fresh</strong> (cake) yeast. Enter how much you have and which type — get the equivalent of all three in grams, teaspoons and packets.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="y-amount">Amount</label><input id="y-amount" type="number" inputmode="decimal" value="7" min="0" step="any"></div>
+    <div class="field" style="max-width:150px"><label for="y-unit">Unit</label><select id="y-unit"><option value="g">grams</option><option value="tsp">teaspoons</option><option value="packet">packets (7 g)</option></select></div>
+    <div class="field"><label for="y-from">Yeast you have</label><select id="y-from"><option value="active">Active dry yeast</option><option value="instant">Instant / rapid-rise</option><option value="fresh">Fresh / cake yeast</option></select></div>
+  </div>
+  <table style="margin-top:14px"><thead><tr><th>Equivalent in…</th><th>Grams</th><th>Teaspoons</th><th>Packets</th></tr></thead><tbody>
+    <tr><td>Active dry</td><td class="num" id="y-active-g">—</td><td class="num" id="y-active-t">—</td><td class="num" id="y-active-p">—</td></tr>
+    <tr><td>Instant / rapid-rise</td><td class="num" id="y-instant-g">—</td><td class="num" id="y-instant-t">—</td><td class="num" id="y-instant-p">—</td></tr>
+    <tr><td>Fresh / cake</td><td class="num" id="y-fresh-g">—</td><td class="num" id="y-fresh-t">—</td><td class="num" id="y-fresh-p">—</td></tr>
+  </tbody></table>
+</div>
+<p class="note">Teaspoons and packets are for the dry yeasts (≈ 3.1 g per tsp, 7 g per packet). Fresh yeast is soft and crumbly, so it is best measured by weight.</p>
+<h2>Yeast conversion factors (by weight)</h2>
+<p>These factors match the <em>leavening power</em> of each yeast — instant yeast is roughly 25% more active than active dry, and fresh yeast is about a third as strong as instant because of its water content.</p>
+<table><thead><tr><th>Convert</th><th>Multiply by</th></tr></thead><tbody>${factors}</tbody></table>
+<p class="note">Based on the standard strength ratio instant : active dry : fresh ≈ 1 : 1.25 : 3 by weight.</p>
+<h2>The simple 1:1 rule for active dry and instant</h2>
+<p>For everyday baking you don't have to be exact. King Arthur Baking, Red Star and Fleischmann's all say <strong>active dry and instant yeast can be swapped one-for-one</strong> by weight or volume. The practical differences:</p>
+<ul>
+<li><strong>Active dry rises a little slower</strong> — add about 15 minutes to each rise.</li>
+<li><strong>In a bread machine</strong>, reduce instant yeast by 25% when it replaces active dry.</li>
+<li><strong>Instant goes in dry</strong>; active dry can be bloomed in warm liquid first (optional with modern yeast).</li>
+</ul>
+<p>The calculator above uses the strength-equivalent amounts (instant ≈ 25% less than active dry) for when you want the leavening power matched precisely — for example in a tested, weighed formula.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
+<p style="margin-top:16px">Building a bread formula? Use the <a href="/bakers-percentage-calculator/">baker's percentage calculator</a> or the <a href="/pizza-dough-calculator/">pizza dough calculator</a>. Need to weigh flour from cups? Try the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "yeast" } }) };
+}
+
 // llms.txt — structured index + verified data for AI assistants (ChatGPT, Perplexity, Claude…)
 function llmsTxt() {
   const b = SITE.baseUrl;
@@ -680,6 +736,7 @@ function llmsTxt() {
     ["Portion Calculator", "/portion-calculator/", "How much rice, pasta, potatoes etc. per person"],
     ["Pizza Dough Calculator", "/pizza-dough-calculator/", "Flour, water, salt and yeast by baker's percentage"],
     ["Baker's Percentage Calculator", "/bakers-percentage-calculator/", "Build and scale any bread formula using baker's math (every ingredient as a percentage of flour)"],
+    ["Yeast Converter", "/yeast-converter/", "Convert between active dry, instant and fresh yeast by weight (ratio 1 : 1.25 : 3); 1 packet = 7 g = 2¼ tsp"],
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
@@ -703,7 +760,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
