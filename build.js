@@ -4,6 +4,7 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const { execSync } = require("child_process");
 
 // Honest sitemap lastmod: date of the last git commit (when content actually
@@ -16,6 +17,17 @@ const LASTMOD = (() => {
     return new Date().toISOString().slice(0, 10);
   }
 })();
+const TODAY = new Date().toISOString().slice(0, 10);
+
+// Per-page <lastmod>: each page carries the date its OWN content last changed,
+// not one global date for the whole site. We hash each page's meaningful content
+// (title/description/body/JSON-LD/cfg — deliberately excluding the shared
+// header/footer/CSS chrome) and keep a committed manifest of hash→date. A page's
+// date only advances when that page's hash changes, so adding/editing one page no
+// longer churns the freshness signal for all the others. PAGE_CONTENT is filled
+// by layout() as pages render; the manifest is read/written in build().
+const DATES_FILE = path.join(__dirname, "data", "page-dates.json");
+const PAGE_CONTENT = {};
 
 const ROOT = __dirname;
 const OUT = path.join(ROOT, "dist");
@@ -135,6 +147,8 @@ footer.site a{color:var(--muted)}
 
 function layout(opts) {
   const { title, description, canonical, bodyHtml, jsonLd, cfg } = opts;
+  // Capture the page's meaningful content for per-page lastmod hashing (see DATES_FILE).
+  PAGE_CONTENT[canonical] = JSON.stringify([title, description, bodyHtml, jsonLd, cfg]);
   const url = SITE.baseUrl + canonical;
   const ldList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   const ld = ldList.map((o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("");
@@ -769,8 +783,30 @@ function build() {
   fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
   fs.copyFileSync(path.join(ROOT, "assets", "app.js"), path.join(OUT, "assets", "app.js"));
 
+  // Per-page lastmod: compare each page's content hash to the committed manifest.
+  // Unchanged page -> keep its stored date. Changed/new page -> today's date.
+  // First-ever run (no manifest yet) seeds every page with the last-commit date
+  // (LASTMOD) so this bootstrap deploy doesn't falsely flag the whole site as
+  // "changed today"; honest per-page divergence begins on the next content edit.
+  const bootstrap = !fs.existsSync(DATES_FILE);
+  let prevDates = {};
+  try { prevDates = JSON.parse(fs.readFileSync(DATES_FILE, "utf8")); } catch (e) {}
+  const pageDates = {};
+  pages.forEach((p) => {
+    const content = PAGE_CONTENT[p.canonical] != null ? PAGE_CONTENT[p.canonical] : p.html;
+    const h = crypto.createHash("sha1").update(content).digest("hex").slice(0, 12);
+    const prev = prevDates[p.canonical];
+    const d = (prev && prev.h === h) ? prev.d : (bootstrap ? LASTMOD : TODAY);
+    pageDates[p.canonical] = { h, d };
+  });
+  // Persist the manifest back to source (sorted for clean diffs) so the dates are
+  // stable and reproducible across CI rebuilds. Commit it alongside content changes.
+  const sortedManifest = {};
+  Object.keys(pageDates).sort().forEach((k) => { sortedManifest[k] = pageDates[k]; });
+  fs.writeFileSync(DATES_FILE, JSON.stringify(sortedManifest, null, 0) + "\n");
+
   // sitemap + robots
-  const urls = pages.map((p) => `<url><loc>${SITE.baseUrl}${p.canonical}</loc><lastmod>${LASTMOD}</lastmod><changefreq>monthly</changefreq></url>`).join("\n");
+  const urls = pages.map((p) => `<url><loc>${SITE.baseUrl}${p.canonical}</loc><lastmod>${(pageDates[p.canonical] || {}).d || LASTMOD}</lastmod><changefreq>monthly</changefreq></url>`).join("\n");
   fs.writeFileSync(path.join(OUT, "sitemap.xml"),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   fs.writeFileSync(path.join(OUT, "robots.txt"),
