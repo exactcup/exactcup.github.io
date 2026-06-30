@@ -213,9 +213,23 @@ function gramsToCupsTable(gpc) {
   return `<table><thead><tr><th>Grams</th><th>Cups</th><th>Tablespoons</th><th>Ounces</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Genuinely-relevant tool links per ingredient category. Also flows crawl
+// equity from the most-crawled cluster (ingredient pages) to the tool pages,
+// which are otherwise only linked from the homepage. Every tool page appears in
+// at least one category list so the whole tool set gets internal inlinks.
+const CATEGORY_TOOLS = {
+  flour: [["/pizza-dough-calculator/", "Pizza Dough Calculator"], ["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/yeast-converter/", "Yeast Converter"]],
+  sugar: [["/recipe-scaler/", "Recipe Scaler"], ["/volume-converter/", "Volume Converter"]],
+  dairy: [["/butter-converter/", "Butter Converter"], ["/recipe-scaler/", "Recipe Scaler"]],
+  baking: [["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/oven-temperature-converter/", "Oven Temperature Converter"], ["/air-fryer-conversion-calculator/", "Air Fryer Converter"], ["/pan-size-converter/", "Pan Size Converter"]],
+  grain: [["/portion-calculator/", "Portion Calculator"], ["/recipe-scaler/", "Recipe Scaler"]],
+};
+
 function ingredientPage(ing) {
   const gpc = ing.gramsPerCup;
   const related = DATA.ingredients.filter((i) => i.category === ing.category && i.slug !== ing.slug).slice(0, 6);
+  // Reverse hub is relevant to every ingredient; category tools add depth.
+  const toolLinks = [["/grams-to-cups/", "Grams to Cups Converter"], ...(CATEGORY_TOOLS[ing.category] || [])];
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup of ${ing.name.toLowerCase()} = ${g2(gpc)} g. Free instant cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
@@ -261,7 +275,9 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
 <div class="chips">${related.map((r) => `<a href="/cups-to-grams/${r.slug}/">${esc(r.name)}</a>`).join("")}</div>
 <p style="margin-top:10px"><a href="/${ing.category}-conversion-chart/">See the full ${esc(catName(ing.category).toLowerCase())} conversion chart →</a></p>
-<p style="margin-top:8px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
+<h2>Related tools</h2>
+<div class="chips">${toolLinks.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join("")}</div>
+<p style="margin-top:10px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "ingredient", gramsPerCup: gpc } }) };
 }
 
