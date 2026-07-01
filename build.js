@@ -201,6 +201,25 @@ function conversionTable(gpc) {
   return `<table><thead><tr><th>Cups</th><th>Grams</th><th>Ounces</th><th>Tablespoons</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Butter is sold in US sticks — a huge distinct query class ("1 1/2 sticks of
+// butter in grams", "2 sticks in cups"). Only rendered on the butter page.
+// 1 stick = 1/2 cup = 8 tbsp = gpc/2 grams (113.5 g at 227 g/cup).
+const BUTTER_STICKS = [
+  ["½ stick", 0.5, "¼ cup"],
+  ["1 stick", 1, "½ cup"],
+  ["1½ sticks", 1.5, "¾ cup"],
+  ["2 sticks", 2, "1 cup"],
+  ["3 sticks", 3, "1½ cups"],
+  ["4 sticks (1 lb)", 4, "2 cups"],
+];
+function butterSticksTable(gpc) {
+  const rows = BUTTER_STICKS.map(([label, s, cup]) => {
+    const g = s * gpc / 2;
+    return `<tr><td>${label}</td><td>${cup}</td><td class="num">${g2(s * 8)}</td><td class="num">${g2(g)} g</td><td class="num">${g2(g / OZ)} oz</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Sticks</th><th>Cups</th><th>Tbsp</th><th>Grams</th><th>Ounces</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 // Round gram amounts people actually search ("250g flour in cups").
 const GRAM_AMOUNTS = [10, 25, 50, 75, 100, 125, 150, 200, 250, 300, 500];
 // Cups to 2 dp (reverse direction reads better as a decimal than a fraction).
@@ -231,7 +250,9 @@ function ingredientPage(ing) {
   // Reverse hub is relevant to every ingredient; category tools add depth.
   const toolLinks = [["/grams-to-cups/", "Grams to Cups Converter"], ...(CATEGORY_TOOLS[ing.category] || [])];
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
-  const description = `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup of ${ing.name.toLowerCase()} = ${g2(gpc)} g. Free instant cups-to-grams converter with a full conversion chart.`;
+  const description = ing.slug === "butter"
+    ? `How many grams is a cup of butter? 1 cup = ${g2(gpc)} g, 1 stick = ${g2(gpc / 2)} g, 1/2 cup = ${g2(gpc / 2)} g. Free butter converter with a full cups, sticks, tablespoons and grams chart.`
+    : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup of ${ing.name.toLowerCase()} = ${g2(gpc)} g. Free instant cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
   const faq = [
@@ -243,6 +264,14 @@ function ingredientPage(ing) {
     [`How many cups is 250 grams of ${low}?`, `250 grams of ${low} is about ${cups2(250 / gpc)} cups (at ${g2(gpc)} g per cup).`],
     [`How many cups is 500 grams of ${low}?`, `500 grams of ${low} is about ${cups2(500 / gpc)} cups.`],
   ];
+  if (ing.slug === "butter") {
+    faq.push(
+      [`How many grams is 1 stick of butter?`, `1 US stick of butter is 1/2 cup — about ${g2(gpc / 2)} grams (8 tablespoons, 4 oz).`],
+      [`How many grams is 1 1/2 sticks of butter?`, `1 1/2 sticks of butter is 3/4 cup — about ${g2(gpc * 0.75)} grams (12 tablespoons).`],
+      [`How many grams is 2 sticks of butter?`, `2 sticks of butter is 1 cup — about ${g2(gpc)} grams (16 tablespoons, 8 oz).`],
+      [`How many sticks of butter is 1 cup?`, `1 cup of butter is 2 sticks — each US stick is 1/2 cup, or about ${g2(gpc / 2)} grams.`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
@@ -265,7 +294,11 @@ function ingredientPage(ing) {
 </div>
 <h2>${esc(ing.name)} conversion chart</h2>
 ${conversionTable(gpc)}
-<p class="note">Based on ${g2(gpc)} g per US cup. Weights vary with brand and measuring method — for precise baking, use a scale.</p>
+<p class="note">Based on ${g2(gpc)} g per US cup. Weights vary with brand and measuring method — for precise baking, use a scale.</p>${ing.slug === "butter" ? `
+<h2>Butter sticks to grams and cups</h2>
+<p>US butter is sold in sticks. One stick is 1/2 cup (8 tablespoons) and weighs about ${g2(gpc / 2)} grams. Here is how the common stick amounts convert.</p>
+${butterSticksTable(gpc)}
+<p class="note">1 US stick = 1/2 cup = 8 tbsp = ${g2(gpc / 2)} g = 4 oz. A 1 lb box holds 4 sticks (2 cups). European butter is usually sold in 250 g blocks instead of sticks.</p>` : ""}
 <h2>Grams to cups: ${esc(ing.name.toLowerCase())}</h2>
 <p>Working backwards from a weight? Here is how common gram amounts of ${ing.name.toLowerCase()} convert to cups (at ${g2(gpc)} g per cup).</p>
 ${gramsToCupsTable(gpc)}
