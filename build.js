@@ -257,15 +257,22 @@ function ingredientPage(ing) {
   const low = ing.name.toLowerCase();
   const faq = [
     [`How many grams is 1 cup of ${low}?`, `1 US cup of ${low} weighs about ${g2(gpc)} grams.`],
+    [`How many grams is 3/4 cup of ${low}?`, `Three quarters of a US cup of ${low} is about ${g2(gpc * 0.75)} grams (12 tablespoons).`],
+    [`How many grams is 2/3 cup of ${low}?`, `2/3 of a US cup of ${low} is about ${g2(gpc * 2 / 3)} grams.`],
     [`How many grams is 1/2 cup of ${low}?`, `Half a US cup of ${low} is about ${g2(gpc / 2)} grams — half of the ${g2(gpc)} g in a full cup.`],
+    [`How many grams is 1/3 cup of ${low}?`, `A third of a US cup of ${low} is about ${g2(gpc / 3)} grams.`],
     [`How many grams is 1/4 cup of ${low}?`, `A quarter US cup of ${low} is about ${g2(gpc / 4)} grams (4 tablespoons).`],
     [`How many grams is 1 tablespoon of ${low}?`, `1 tablespoon of ${low} is about ${g2(gpc / 16)} grams (a cup is 16 tablespoons).`],
+    [`How many grams is 1 1/4 cups of ${low}?`, `1 1/4 US cups of ${low} weigh about ${g2(gpc * 1.25)} grams.`],
+    [`How many grams is 1 1/2 cups of ${low}?`, `1 1/2 US cups of ${low} weigh about ${g2(gpc * 1.5)} grams — one full cup (${g2(gpc)} g) plus half a cup (${g2(gpc / 2)} g).`],
+    [`How many grams is 2 cups of ${low}?`, `2 US cups of ${low} weigh about ${g2(gpc * 2)} grams.`],
     [`How many cups is 100 grams of ${low}?`, `100 grams of ${low} is about ${cups2(100 / gpc)} cups.`],
     [`How many cups is 250 grams of ${low}?`, `250 grams of ${low} is about ${cups2(250 / gpc)} cups (at ${g2(gpc)} g per cup).`],
     [`How many cups is 500 grams of ${low}?`, `500 grams of ${low} is about ${cups2(500 / gpc)} cups.`],
   ];
   if (ing.slug === "butter") {
     faq.push(
+      [`How many grams is 1 cup of melted butter?`, `The same as solid: melting does not change the weight, so 1 cup of butter is about ${g2(gpc)} grams whether melted or solid (1/2 cup melted is about ${g2(gpc / 2)} g). For accuracy, measure the butter solid, then melt it.`],
       [`How many grams is 1 stick of butter?`, `1 US stick of butter is 1/2 cup — about ${g2(gpc / 2)} grams (8 tablespoons, 4 oz).`],
       [`How many grams is 1 1/2 sticks of butter?`, `1 1/2 sticks of butter is 3/4 cup — about ${g2(gpc * 0.75)} grams (12 tablespoons).`],
       [`How many grams is 2 sticks of butter?`, `2 sticks of butter is 1 cup — about ${g2(gpc)} grams (16 tablespoons, 8 oz).`],
