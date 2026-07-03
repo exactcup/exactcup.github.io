@@ -237,7 +237,7 @@ function gramsToCupsTable(gpc) {
 // which are otherwise only linked from the homepage. Every tool page appears in
 // at least one category list so the whole tool set gets internal inlinks.
 const CATEGORY_TOOLS = {
-  flour: [["/pizza-dough-calculator/", "Pizza Dough Calculator"], ["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/yeast-converter/", "Yeast Converter"]],
+  flour: [["/pizza-dough-calculator/", "Pizza Dough Calculator"], ["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/sourdough-hydration-calculator/", "Sourdough Hydration Calculator"], ["/yeast-converter/", "Yeast Converter"]],
   sugar: [["/recipe-scaler/", "Recipe Scaler"], ["/volume-converter/", "Volume Converter"]],
   dairy: [["/butter-converter/", "Butter Converter"], ["/recipe-scaler/", "Recipe Scaler"]],
   baking: [["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/oven-temperature-converter/", "Oven Temperature Converter"], ["/air-fryer-conversion-calculator/", "Air Fryer Converter"], ["/pan-size-converter/", "Pan Size Converter"]],
@@ -424,6 +424,7 @@ function homePage() {
     ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
     ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
     ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
+    ["/sourdough-hydration-calculator/", "Sourdough Hydration", "True dough hydration with the starter counted right."],
     ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ];
   const body = `
@@ -733,7 +734,7 @@ function bakersPercentagePage() {
 <p class="note">Ranges are typical starting points for common breads — adjust to your flour, climate and the crumb you want. Salt is almost always near 2% of the flour; hydration is the main lever for crumb structure.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
-<p style="margin-top:16px">Making pizza? The <a href="/pizza-dough-calculator/">pizza dough calculator</a> applies baker's math to a target number of dough balls. Weighing flour from cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
+<p style="margin-top:16px">Making pizza? The <a href="/pizza-dough-calculator/">pizza dough calculator</a> applies baker's math to a target number of dough balls. Baking sourdough? The <a href="/sourdough-hydration-calculator/">sourdough hydration calculator</a> counts the flour and water in your starter. Weighing flour from cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
 }
 
@@ -792,6 +793,53 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "yeast" } }) };
 }
 
+function sourdoughPage() {
+  const title = "Sourdough Hydration Calculator (Starter Included) | ExactCup";
+  const description = "Free sourdough hydration calculator. Enter flour, water and starter — at any starter hydration — to get your dough's true hydration, salt % and prefermented flour, plus the exact water for a target hydration.";
+  const canonical = "/sourdough-hydration-calculator/";
+  const faq = [
+    ["What is sourdough hydration?", "Hydration is the total water in your dough expressed as a baker's percentage of the total flour — including the water and flour inside your starter. A dough with 550 g total flour and 400 g total water is at 400 ÷ 550 × 100 ≈ 73% hydration. Higher hydration gives a more open, moist crumb; lower hydration gives a tighter crumb and easier-to-handle dough."],
+    ["Do you include the starter when calculating hydration?", "Yes — for the true (overall) hydration you must count the starter's contents. A starter kept at 100% hydration is half flour and half water by weight, so adding 100 g of it adds 50 g flour and 50 g water to the dough. Ignoring the starter overstates your hydration on stiff starters and understates the flour in the recipe. This calculator splits the starter for you at whatever hydration you keep it."],
+    ["What hydration should sourdough bread be?", "Most sourdough loaves are between 65% and 80% hydration. Around 65–70% is the easiest to shape and a good starting point; 75%+ gives a more open crumb but a stickier, harder-to-handle dough. Whole-wheat and rye flours absorb more water, so doughs with them are usually pushed a few points higher."],
+    ["What hydration is a sourdough starter?", "Most bakers keep their starter at 100% hydration — fed with equal weights of flour and water. Stiff starters (like an Italian lievito madre) are kept around 50–65% hydration, and some bakers use liquid starters above 100%. Enter whatever ratio you feed yours; the math adjusts automatically."],
+    ["How much salt goes in sourdough bread?", "Salt is typically about 2% of the total flour weight (a range of 1.8–2.2% is common) — that's 10–11 g for a dough with 550 g of total flour. The calculator shows your salt percentage against total flour, including the flour in the starter."],
+    ["How do I change my dough's hydration?", "Enter your target percentage in the calculator and it returns exactly how much water the recipe needs: required water = target % × total flour − water already in the starter. Add the difference (or hold back water during mixing if you're above target)."],
+  ];
+  const jsonLd = [faqLd(faq), appLd("Sourdough Hydration Calculator", description, canonical)];
+  const f = (lab, id, val, max) => `<div class="field"${max ? ` style="max-width:${max}px"` : ""}><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" value="${val}" min="0" step="any"></div>`;
+  const r = (lab, id) => `<tr><td>${lab}</td><td class="num" id="${id}">—</td></tr>`;
+  const ref = [
+    ["65–68%", "Beginner-friendly: easy to shape, tighter crumb, good sandwich loaves"],
+    ["70–75%", "The classic range for everyday artisan sourdough"],
+    ["76–82%", "Open, airy crumb; sticky dough that needs confident handling"],
+    ["83%+", "Ciabatta-style very wet doughs; usually pan-baked or heavily floured"],
+  ].map(([k, v]) => `<tr><td class="num">${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
+  const body = `
+<h1>Sourdough Hydration Calculator</h1>
+<p class="lead">Get your dough's <strong>true hydration</strong> — with the flour and water inside your starter counted correctly, at any starter hydration. Plus salt percentage, prefermented flour and the exact water for a target hydration.</p>
+<div class="calc">
+  <div class="row">${f("Flour (g)", "sd-flour", 500)}${f("Water (g)", "sd-water", 350)}${f("Starter (g)", "sd-starter", 100)}</div>
+  <div class="row" style="margin-top:10px">${f("Starter hydration (%)", "sd-shyd", 100)}${f("Salt (g)", "sd-salt", 10)}</div>
+  <div class="result"><div class="big" id="sd-hyd">—</div><div class="sub">true hydration, starter included</div></div>
+  <table style="margin-top:14px"><tbody>
+  ${r("Total flour (incl. starter)", "sd-tf")}${r("Total water (incl. starter)", "sd-tw")}${r("Salt (baker's %)", "sd-saltpct")}${r("Prefermented flour", "sd-pff")}${r("Total dough weight", "sd-dough")}
+  </tbody></table>
+  <div class="row" style="margin-top:14px">${f("Target hydration (%)", "sd-target", 75, 200)}<div class="field"><label>Water needed for target</label><div class="num" id="sd-target-out" style="padding:10px 2px;font-weight:600">—</div></div></div>
+</div>
+<p class="note">A 100%-hydration starter is equal parts flour and water by weight, so 100 g of it contributes 50 g flour + 50 g water. Keep a stiff starter? Set its hydration and the split adjusts.</p>
+<h2>How sourdough hydration is calculated</h2>
+<p>Hydration is a baker's percentage: <strong>total water ÷ total flour × 100</strong>. The catch with sourdough is that your starter is part flour, part water. For a starter of weight S at hydration h:</p>
+<p class="note" style="border-left-color:var(--accent)"><strong>starter flour = S ÷ (1 + h/100) &nbsp;·&nbsp; starter water = S − starter flour</strong></p>
+<p>So 500 g flour + 350 g water + 100 g of 100%-hydration starter is really 550 g flour and 400 g water — <strong>72.7% hydration</strong>, not the 70% you'd get by ignoring the starter. The difference grows with bigger starter amounts and stiff starters.</p>
+<h2>What hydration should you aim for?</h2>
+<table><thead><tr><th>Hydration</th><th>What you get</th></tr></thead><tbody>${ref}</tbody></table>
+<p class="note">Flour matters as much as the number: whole-wheat and rye absorb more water, and strong bread flour handles high hydration far better than all-purpose. When trying a new flour, change hydration a few points at a time.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
+<p style="margin-top:16px">Building the full formula? Use the <a href="/bakers-percentage-calculator/">baker's percentage calculator</a>. Swapping yeast types in a hybrid dough? See the <a href="/yeast-converter/">yeast converter</a>. Weighing flour from cups? Try the <a href="/cups-to-grams/bread-flour/">bread flour</a> or <a href="/cups-to-grams/whole-wheat-flour/">whole wheat flour</a> converters.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "sourdough" } }) };
+}
+
 // llms.txt — structured index + verified data for AI assistants (ChatGPT, Perplexity, Claude…)
 function llmsTxt() {
   const b = SITE.baseUrl;
@@ -807,6 +855,7 @@ function llmsTxt() {
     ["Pizza Dough Calculator", "/pizza-dough-calculator/", "Flour, water, salt and yeast by baker's percentage"],
     ["Baker's Percentage Calculator", "/bakers-percentage-calculator/", "Build and scale any bread formula using baker's math (every ingredient as a percentage of flour)"],
     ["Yeast Converter", "/yeast-converter/", "Convert between active dry, instant and fresh yeast by weight (ratio 1 : 1.25 : 3); 1 packet = 7 g = 2¼ tsp"],
+    ["Sourdough Hydration Calculator", "/sourdough-hydration-calculator/", "True dough hydration including the flour and water in the starter (any starter hydration), salt %, prefermented flour and target-hydration water"],
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
@@ -830,7 +879,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

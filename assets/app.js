@@ -365,6 +365,44 @@
     calc();
   }
 
+  function initSourdough() {
+    var flour = $("sd-flour"), water = $("sd-water"), starter = $("sd-starter"),
+      shyd = $("sd-shyd"), salt = $("sd-salt"), target = $("sd-target");
+    if (!flour || !water) return;
+    function set(id, txt) { var el = $(id); if (el) el.textContent = txt; }
+    function num(el) { var v = el ? parseFloat(el.value) : NaN; return isNaN(v) || v < 0 ? 0 : v; }
+    function calc() {
+      var F = num(flour), W = num(water), S = num(starter), saltG = num(salt);
+      var sh = shyd ? parseFloat(shyd.value) : 100;
+      if (!isFinite(sh) || sh < 0) sh = 100;
+      // A starter at hydration sh% is flour + flour*sh/100 by weight.
+      var sf = S / (1 + sh / 100), sw = S - sf;
+      var TF = F + sf, TW = W + sw;
+      if (TF <= 0) {
+        ["sd-hyd", "sd-tf", "sd-tw", "sd-saltpct", "sd-pff", "sd-dough", "sd-target-out"].forEach(function (i) { set(i, "—"); });
+        set("sd-hyd", "Enter flour to begin");
+        return;
+      }
+      set("sd-hyd", round(TW / TF * 100, 1) + "% hydration");
+      set("sd-tf", round(TF, 0) + " g");
+      set("sd-tw", round(TW, 0) + " g");
+      set("sd-saltpct", round(saltG / TF * 100, 2) + "%");
+      set("sd-pff", round(sf / TF * 100, 1) + "%");
+      set("sd-dough", round(F + W + S + saltG, 0) + " g");
+      var T = target ? parseFloat(target.value) : NaN;
+      if (isFinite(T) && T > 0) {
+        var need = T / 100 * TF - sw;
+        if (need < 0) { set("sd-target-out", "0 g — the starter alone is wetter than this target"); }
+        else {
+          var diff = need - W;
+          set("sd-target-out", round(need, 0) + " g (" + (diff >= 0 ? "+" : "") + round(diff, 0) + " g vs. current water)");
+        }
+      } else set("sd-target-out", "—");
+    }
+    [flour, water, starter, shyd, salt, target].forEach(function (el) { if (el) el.addEventListener("input", calc); });
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -380,4 +418,5 @@
   else if (t === "pizza") initPizza();
   else if (t === "bakers") initBakers(c);
   else if (t === "yeast") initYeast();
+  else if (t === "sourdough") initSourdough();
 })();
