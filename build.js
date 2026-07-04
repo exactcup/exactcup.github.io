@@ -70,6 +70,25 @@ function popular() {
     .map(ingBySlug).filter(Boolean);
 }
 
+// Canonical list of every calculator/tool page: [url, short label, homepage description].
+// Used by the homepage grid AND the sitewide footer so every crawled page links to
+// every tool (aids discovery of the tool pages, which lag the ingredient cluster in indexing).
+const ALL_TOOLS = [
+  ["/cups-to-grams/", "Cups to Grams", "Convert any ingredient — flour, sugar, butter & 30+ more."],
+  ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
+  ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
+  ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
+  ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
+  ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
+  ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
+  ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
+  ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
+  ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
+  ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
+  ["/sourdough-hydration-calculator/", "Sourdough Hydration", "True dough hydration with the starter counted right."],
+  ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
+];
+
 // ---------- structured data (JSON-LD) helpers ----------
 // BreadcrumbList from [name, relativeUrl] pairs (last item is the current page).
 function breadcrumbLd(items) {
@@ -142,6 +161,8 @@ summary{font-weight:600;cursor:pointer;padding:6px 0}
 .bp-del:hover{border-color:var(--accent);color:var(--accent)}
 footer.site{border-top:1px solid var(--line);margin-top:36px;padding:22px 0;color:var(--muted);font-size:14px}
 footer.site a{color:var(--muted)}
+footer.site .fcol{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0}
+footer.site .fcol .fh{width:100%;font-weight:600;color:var(--fg);font-size:13px;margin-bottom:2px}
 @media(max-width:520px){h1{font-size:25px}nav a{margin-left:10px}}
 `;
 
@@ -184,7 +205,8 @@ ${bodyHtml}
 </div></main>
 <footer class="site"><div class="wrap">
 <p><strong>${SITE.brand}</strong> — ${SITE.tagline}.</p>
-<p><a href="/">Home</a> · <a href="/cups-to-grams/">All ingredients</a> · <a href="/oven-temperature-converter/">Oven temps</a> · <a href="/butter-converter/">Butter</a></p>
+<nav class="fcol"><span class="fh">Calculators &amp; converters</span>${ALL_TOOLS.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join("")}</nav>
+<nav class="fcol"><span class="fh">Conversion charts</span><a href="/cups-to-grams/">All ingredients</a>${Object.keys(DATA.categories).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</nav>
 <p style="font-size:12px">Conversions are approximate; ingredient weights vary by brand, humidity, and how you measure. For best baking results, weigh with a kitchen scale.</p>
 </div></footer>
 ${cfgScript}
@@ -412,21 +434,7 @@ function homePage() {
   const title = "ExactCup — Free Cooking & Baking Measurement Converters";
   const description = "Free, accurate cooking converters: cups to grams for every ingredient, recipe scaler, oven temperature converter, and butter converter. No sign-up.";
   const canonical = "/";
-  const tools = [
-    ["/cups-to-grams/", "Cups to Grams", "Convert any ingredient — flour, sugar, butter & 30+ more."],
-    ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
-    ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
-    ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
-    ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
-    ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
-    ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
-    ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
-    ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
-    ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
-    ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
-    ["/sourdough-hydration-calculator/", "Sourdough Hydration", "True dough hydration with the starter counted right."],
-    ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
-  ];
+  const tools = ALL_TOOLS;
   const body = `
 <h1>Cooking conversions that are actually accurate</h1>
 <p class="lead">Free kitchen calculators that respect the difference between a cup of flour and a cup of honey. No sign-up, no fluff.</p>
