@@ -876,6 +876,54 @@ function llmsTxt() {
   return out;
 }
 
+// Standalone embeddable widget (iframe target for food blogs). Minimal chrome, own HTML (not layout()).
+function embedWidgetPage() {
+  const canonical = "/embed/cups-to-grams/";
+  const opts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
+  const cfg = { type: "master", ingredients: DATA.ingredients.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
+  const css = `*{box-sizing:border-box}body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2328;background:#fff;padding:12px}
+.ec-w{max-width:400px;margin:0 auto}label{display:block;font-size:12px;color:#5b6470;font-weight:600;margin:8px 0 3px}
+select,input{width:100%;font-size:16px;padding:9px 10px;border:1px solid #e6e8eb;border-radius:8px;font-family:inherit}
+.ec-row{display:flex;gap:8px}.ec-row>div{flex:1}
+.ec-out{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;text-align:center;margin-top:10px}
+.ec-big{font-size:26px;font-weight:800;color:#c2410c}.ec-sub{color:#5b6470;font-size:14px}
+.ec-attr{text-align:center;font-size:12px;color:#5b6470;margin-top:10px}.ec-attr a{color:#c2410c;text-decoration:none;font-weight:600}`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Cups to Grams Converter — ExactCup</title><style>${css}</style></head><body>
+<div class="ec-w">
+<label for="ingredient">Ingredient</label><select id="ingredient">${opts}</select>
+<div class="ec-row" style="margin-top:2px">
+<div><label for="amount">Amount</label><input id="amount" type="number" inputmode="decimal" value="1" min="0" step="any"></div>
+<div><label for="unit">Unit</label><select id="unit"><option value="cups">cups</option><option value="tbsp">tbsp</option><option value="tsp">tsp</option></select></div>
+<div><label for="grams">Grams</label><input id="grams" type="number" inputmode="decimal" step="any"></div>
+</div>
+<div class="ec-out"><div class="ec-big" id="out-grams">—</div><div class="ec-sub" id="out-oz">—</div></div>
+<div class="ec-attr"><a href="${SITE.baseUrl}/cups-to-grams/" target="_blank" rel="noopener">Cups to Grams Converter</a> by ExactCup</div>
+</div>
+<script type="application/json" id="cfg">${JSON.stringify(cfg)}</script><script src="/assets/app.js" defer></script>
+</body></html>`;
+  return { canonical, html };
+}
+
+function embedInfoPage() {
+  const canonical = "/embed/";
+  const title = "Free Embeddable Cups-to-Grams Converter for Your Recipe Blog | ExactCup";
+  const description = "Add a free, accurate cups-to-grams converter to your recipe blog or website. Copy-paste one line of HTML — no sign-up, no cost. Just keep the attribution link.";
+  const snippet = `<iframe src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="Cups to Grams Converter" loading="lazy"></iframe>
+<p style="font-size:13px"><a href="${SITE.baseUrl}/cups-to-grams/">Cups to Grams Converter</a> by ExactCup</p>`;
+  const body = `
+<h1>Free Embeddable Cups-to-Grams Converter</h1>
+<p class="lead">Give your readers an accurate, instant cups&#8596;grams converter right inside your recipe posts. Free, no sign-up &mdash; just copy the snippet below.</p>
+<h2>Live preview</h2>
+<iframe src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid var(--line);border-radius:12px;max-width:440px" title="Cups to Grams Converter preview" loading="lazy"></iframe>
+<h2>Copy this snippet</h2>
+<p>Paste it anywhere in your post&#8217;s HTML:</p>
+<textarea readonly rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(snippet)}</textarea>
+<h2>License</h2>
+<p>Free to embed on any site, commercial or personal. The only condition: <strong>keep the &ldquo;by ExactCup&rdquo; attribution link</strong> shown under the widget. That link is how we keep the tool free. Thanks!</p>
+<p class="note">Covers 80+ ingredients with weights verified against authoritative baking references. The widget updates automatically as we add ingredients &mdash; you never touch the code again.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body }) };
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -887,10 +935,12 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
+  // bare embeddable widget: written to disk but kept OUT of the sitemap (it's noindex)
+  { const ew = embedWidgetPage(); writePage(ew.canonical, ew.html); }
 
   // assets
   fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
