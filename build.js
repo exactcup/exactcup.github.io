@@ -274,7 +274,7 @@ function ingredientPage(ing) {
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = ing.slug === "butter"
     ? `How many grams is a cup of butter? 1 cup = ${g2(gpc)} g, 1 stick = ${g2(gpc / 2)} g, 1/2 cup = ${g2(gpc / 2)} g. Free butter converter with a full cups, sticks, tablespoons and grams chart.`
-    : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup of ${ing.name.toLowerCase()} = ${g2(gpc)} g. Free instant cups-to-grams converter with a full conversion chart.`;
+    : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
   const faq = [
