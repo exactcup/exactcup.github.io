@@ -644,7 +644,10 @@ function categoryPage(key) {
   if (!items.length) return null;
   const cname = catName(key);
   const canonical = `/${key}-conversion-chart/`;
-  const title = `${cname} Conversion Chart — Cups to Grams | ExactCup`;
+  // SEO <title> can surface concrete searchable terms in place of a short/vague category label
+  // (e.g. "Grains & Misc" → "Grains, Rice & Oats"); visible H1/breadcrumb keep the category label.
+  const titleName = { grain: "Grains, Rice & Oats" }[key] || cname;
+  const title = `${titleName} Conversion Chart — Cups to Grams | ExactCup`;
   const description = `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
   const rows = items.map((i) =>
     `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
