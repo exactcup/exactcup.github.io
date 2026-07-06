@@ -646,7 +646,12 @@ function categoryPage(key) {
   const canonical = `/${key}-conversion-chart/`;
   // SEO <title> can surface concrete searchable terms in place of a short/vague category label
   // (e.g. "Grains & Misc" → "Grains, Rice & Oats"); visible H1/breadcrumb keep the category label.
-  const titleName = { grain: "Grains, Rice & Oats" }[key] || cname;
+  // Each override lists only ingredients the chart actually contains, so the title stays honest.
+  const titleName = {
+    grain: "Grains, Rice & Oats",
+    dairy: "Milk, Butter & Cheese",
+    baking: "Chocolate Chips, Nuts & Seeds",
+  }[key] || cname;
   const title = `${titleName} Conversion Chart — Cups to Grams | ExactCup`;
   const description = `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
   const rows = items.map((i) =>
