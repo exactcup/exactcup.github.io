@@ -639,6 +639,41 @@ function portionPage() {
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Portion Calculator", description, canonical), cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
 }
 
+// Per-category FAQ for the conversion-chart hubs. Values are drawn from the verified
+// gram-per-cup weights in ingredients.json (the same numbers rendered in each chart).
+const CATEGORY_FAQ = {
+  flour: [
+    ["How many grams is 1 cup of flour?", "One cup of all-purpose flour weighs about 120 g. Bread flour and cake flour are also 120 g per cup, while whole wheat and self-rising flour are 113 g. Starches differ more: cornstarch is 112 g and coconut flour 128 g."],
+    ["Do all flours weigh the same per cup?", "No. Most wheat flours are close to 120 g per cup, but density varies a lot: almond flour is only 96 g and oat flour 92 g, while semolina is 163 g. Always convert by the specific flour rather than using one ratio."],
+    ["How do you measure a cup of flour accurately?", "Spoon the flour into the cup and level it off with a knife — don't dip the cup and scoop, which packs the flour and can add 20% more weight. For real accuracy, weigh it in grams."],
+    ["Is a cup of bread flour the same as all-purpose flour?", "By weight, yes — both are about 120 g per cup. They differ in protein content, not density, so you can swap the weights directly."],
+  ],
+  sugar: [
+    ["How many grams is 1 cup of sugar?", "One cup of granulated white sugar weighs 200 g. Packed brown sugar is heavier at 213 g, caster sugar is 190 g, and powdered (icing) sugar is much lighter at 113 g."],
+    ["Why does brown sugar weigh more than white sugar?", "Brown sugar is packed into the cup and holds moisture from its molasses, so a cup contains more — about 213 g packed versus 200 g for granulated sugar."],
+    ["How many grams is 1 cup of honey?", "One cup of honey weighs about 340 g. Other liquid sweeteners are similar and heavy: maple syrup 322 g, corn syrup 328 g, golden syrup and molasses 340 g, agave nectar 336 g."],
+    ["How do you measure sticky syrups by the cup?", "Lightly oil or spray the measuring cup first so honey, molasses or maple syrup slide out cleanly, or weigh them straight into the bowl in grams for the most accuracy."],
+  ],
+  dairy: [
+    ["How many grams is 1 cup of milk?", "One cup of milk weighs about 240 g. Most liquid dairy is close to this — buttermilk 227 g, heavy cream 232 g, sour cream 230 g and yogurt 245 g."],
+    ["How many grams is 1 cup of butter?", "One cup of butter weighs 227 g, which is 2 sticks. Half a cup is about 113 g — a single stick."],
+    ["Is a cup of oil the same weight as a cup of butter?", "No. A cup of vegetable, olive or coconut oil weighs about 216–218 g, a little less than butter's 227 g, because liquid oil is less dense than solid fat."],
+    ["How many grams is 1 cup of shredded cheese?", "Shredded cheddar or mozzarella is about 113 g per cup and finely grated parmesan around 100 g. Soft cheeses are much heavier — cream cheese and ricotta are roughly 227–232 g per cup."],
+  ],
+  baking: [
+    ["How many grams is 1 cup of chocolate chips?", "One cup of chocolate chips weighs about 170 g. White chocolate chips are the same weight per cup."],
+    ["How many grams is 1 cup of chopped nuts?", "Chopped nuts are roughly 120 g per cup. Whole almonds, hazelnuts and pine nuts are denser at 142 g, pecan halves lighter at 105 g, and chopped walnuts about 113 g."],
+    ["How many grams is 1 cup of shredded coconut?", "Shredded coconut is very light — about 80 g per cup — so a cup weighs far less than most other baking add-ins."],
+    ["Do seeds weigh the same per cup?", "Roughly. Sesame and poppy seeds are about 142–144 g per cup and chia seeds 148 g, while ground flaxseed is lighter at 100 g."],
+  ],
+  grain: [
+    ["How many grams is 1 cup of uncooked rice?", "One cup of uncooked white rice weighs about 185 g. Quinoa is lighter at 170 g, and couscous about 175 g — all measured dry."],
+    ["How many grams is 1 cup of rolled oats?", "Rolled (old-fashioned) oats weigh about 90 g per cup. Steel-cut oats are much denser at 140 g because the grains are cut, not flattened."],
+    ["How many grams is 1 cup of water?", "One cup of water weighs about 237 g (close to 240 ml, or 8 fluid ounces). Water is the reference most other liquids are measured against."],
+    ["How much does 1 cup of breadcrumbs weigh?", "Dry breadcrumbs are about 108 g per cup, but light, airy panko is only 50 g — so always convert by the specific type of crumb."],
+  ],
+};
+
 function categoryPage(key) {
   const items = DATA.ingredients.filter((i) => i.category === key);
   if (!items.length) return null;
@@ -657,16 +692,22 @@ function categoryPage(key) {
   const rows = items.map((i) =>
     `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
   ).join("");
-  const jsonLd = breadcrumbLd([
+  // Category-specific FAQ — answers the real questions each chart ranks for, and feeds
+  // FAQPage JSON-LD (rich results). Every gram value below is pulled straight from the
+  // verified ingredients.json weights shown in the chart above, so the two never disagree.
+  const faq = CATEGORY_FAQ[key] || [];
+  const jsonLd = [breadcrumbLd([
     ["Cups to Grams", "/cups-to-grams/"],
     [cname, canonical],
-  ]);
+  ])];
+  if (faq.length) jsonLd.push(faqLd(faq));
   const body = `
 <nav style="font-size:13px;color:var(--muted);margin-bottom:6px"><a href="/cups-to-grams/">Cups to Grams</a> › ${esc(cname)}</nav>
 <h1>${esc(cname)} Conversion Chart</h1>
 <p class="lead">Grams per cup for common ${esc(cname.toLowerCase())}. Click any ingredient for a full converter and chart.</p>
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>
+${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
 <p style="margin-top:16px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
