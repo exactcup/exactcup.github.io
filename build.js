@@ -76,6 +76,7 @@ function popular() {
 const ALL_TOOLS = [
   ["/cups-to-grams/", "Cups to Grams", "Convert any ingredient — flour, sugar, butter & 30+ more."],
   ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
+  ["/tablespoons-to-grams/", "Tablespoons to Grams", "How many grams in a tablespoon of any ingredient."],
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
   ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
@@ -424,7 +425,69 @@ function gramsToCupsPage() {
 <h2>Pick an ingredient</h2>
 ${lists}
 <h2>Prefer to go the other way?</h2>
-<p>Use the <a href="/cups-to-grams/">cups to grams converter</a> to turn a cup measurement into grams, or jump to a category chart above. Looking for butter in sticks? Try the <a href="/butter-converter/">butter converter</a>.</p>
+<p>Use the <a href="/cups-to-grams/">cups to grams converter</a> to turn a cup measurement into grams, or the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for spoon amounts. Jump to a category chart above, or looking for butter in sticks? Try the <a href="/butter-converter/">butter converter</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
+}
+
+// Tablespoons -> grams hub. Same ingredient data, unit-first entry point targeting the
+// large "how many grams in a tablespoon of X" / "tbsp to grams" head-term class.
+// Reuses the master widget (type "master") with the unit defaulting to tablespoons.
+function tablespoonsToGramsPage() {
+  const title = "Tablespoons to Grams Converter — By Ingredient | ExactCup";
+  const description = "How many grams in a tablespoon? It depends on the ingredient: 1 tbsp flour ≈ 7.5 g, sugar ≈ 12.5 g, butter ≈ 14.2 g, honey ≈ 21 g. Free tbsp-to-grams converter for 80+ ingredients.";
+  const canonical = "/tablespoons-to-grams/";
+  const cats = {};
+  DATA.ingredients.forEach((i) => { (cats[i.category] = cats[i.category] || []).push(i); });
+  const lists = Object.keys(cats).map((k) =>
+    `<h3><a href="/${k}-conversion-chart/">${esc(catName(k))}</a></h3><div class="chips">${cats[k].map((i) => `<a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a>`).join("")}</div>`
+  ).join("");
+  const opts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
+  // "1 tbsp in grams" across a curated set of common ingredients (1 tbsp = 1 cup / 16).
+  const refSlugs = ["all-purpose-flour", "granulated-sugar", "brown-sugar", "powdered-sugar", "butter", "cocoa-powder", "honey", "milk", "olive-oil", "water"];
+  const refRows = refSlugs.map(ingBySlug).filter(Boolean).map((i) =>
+    `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup / 16)} g</td></tr>`
+  ).join("");
+  const gFlour = g2(ingBySlug("all-purpose-flour").gramsPerCup / 16);
+  const gSugar = g2(ingBySlug("granulated-sugar").gramsPerCup / 16);
+  const gButter = g2(ingBySlug("butter").gramsPerCup / 16);
+  const gHoney = g2(ingBySlug("honey").gramsPerCup / 16);
+  const gCocoa = g2(ingBySlug("cocoa-powder").gramsPerCup / 16);
+  const faq = [
+    ["How many grams is 1 tablespoon?", `There is no single answer — it depends on the ingredient, because a tablespoon is a measure of volume and grams measure weight. One US tablespoon of all-purpose flour is about ${gFlour} g, of granulated sugar about ${gSugar} g, of butter about ${gButter} g, of cocoa powder about ${gCocoa} g and of honey about ${gHoney} g. Pick your ingredient above for an exact figure.`],
+    ["How many grams is 1 tablespoon of butter?", `1 US tablespoon of butter is about ${gButter} g. There are 8 tablespoons in a stick of butter (113.5 g) and 16 tablespoons in a cup.`],
+    ["How many grams is 1 tablespoon of flour?", `1 US tablespoon of all-purpose flour is about ${gFlour} g. Spoon the flour into the tablespoon and level it off rather than scooping, which packs it and adds weight.`],
+    ["How many grams is 1 tablespoon of sugar?", `1 US tablespoon of granulated sugar is about ${gSugar} g. Brown sugar is a little heavier at about ${g2(ingBySlug("brown-sugar").gramsPerCup / 16)} g per tablespoon when lightly packed.`],
+    ["How many tablespoons are in a cup?", "A US cup holds 16 tablespoons, and each tablespoon is 3 teaspoons — so a cup is 48 teaspoons. That is why 1 tablespoon of an ingredient weighs one sixteenth of what a full cup weighs."],
+    ["Is a tablespoon the same size everywhere?", "Not quite. This converter uses the US tablespoon of 14.79 ml. A UK/international metric tablespoon is 15 ml (close enough to ignore) but an Australian tablespoon is 20 ml — about a third larger — so scale accordingly if your recipe is Australian."],
+  ];
+  const jsonLd = [
+    appLd("Tablespoons to Grams Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Tablespoons to Grams", canonical]]),
+  ];
+  const cfg = { type: "master", ingredients: DATA.ingredients.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
+  const body = `
+<h1>Tablespoons to Grams Converter</h1>
+<p class="lead">How many grams is a tablespoon? It depends entirely on what you are measuring. Pick your ingredient and convert tablespoons (or teaspoons and cups) to grams instantly — a tablespoon of flour and a tablespoon of honey are nowhere near the same weight.</p>
+<div class="calc">
+  <div class="field" style="margin-bottom:10px"><label for="ingredient">Ingredient</label><select id="ingredient">${opts}</select></div>
+  <div class="row">
+    <div class="field"><label for="amount">Amount</label><input id="amount" type="number" inputmode="decimal" value="1" min="0" step="any"></div>
+    <div class="field" style="max-width:150px"><label for="unit">Unit</label><select id="unit"><option value="tbsp" selected>tablespoons</option><option value="tsp">teaspoons</option><option value="cups">cups</option></select></div>
+    <div class="field"><label for="grams">Grams</label><input id="grams" type="number" inputmode="decimal" step="any"></div>
+  </div>
+  <div class="result"><div class="big" id="out-grams">—</div><div class="sub" id="out-oz">—</div></div>
+</div>
+<h2>1 tablespoon in grams, by ingredient</h2>
+<p>Grams per tablespoon are just one sixteenth of the grams per cup, so lighter, fluffier ingredients weigh far less per spoon than dense or wet ones. Here is <strong>1 level US tablespoon</strong> for some everyday ingredients:</p>
+<table><thead><tr><th>Ingredient</th><th>1 tbsp in grams</th></tr></thead><tbody>${refRows}</tbody></table>
+<p class="note">1 US tablespoon = 3 teaspoons = 1/16 cup = 14.79 ml. For a full chart of any single ingredient, open its page below.</p>
+<h2>Pick an ingredient</h2>
+${lists}
+<h2>Need a different conversion?</h2>
+<p>Working in cups instead? Use the <a href="/cups-to-grams/">cups to grams converter</a>. Have a weight already? The <a href="/grams-to-cups/">grams to cups converter</a> goes the other way. For pure volume swaps (tbsp ↔ tsp ↔ mL) see the <a href="/volume-converter/">volume converter</a>, and for butter in sticks try the <a href="/butter-converter/">butter converter</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
@@ -903,6 +966,7 @@ function llmsTxt() {
   const tools = [
     ["Cups to Grams Converter", "/cups-to-grams/", "Convert any ingredient between cups, tablespoons, teaspoons and grams"],
     ["Grams to Cups Converter", "/grams-to-cups/", "Reverse direction: enter a weight in grams and get cups, by ingredient"],
+    ["Tablespoons to Grams Converter", "/tablespoons-to-grams/", "How many grams in a tablespoon of any ingredient (1 tbsp = 1/16 cup); tbsp/tsp/cups to grams"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
     ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
@@ -984,7 +1048,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
