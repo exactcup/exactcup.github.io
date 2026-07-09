@@ -764,17 +764,32 @@ function categoryPage(key) {
     [cname, canonical],
   ])];
   if (faq.length) jsonLd.push(faqLd(faq));
+  // Live converter scoped to this category's ingredients — reuses the shared "master"
+  // widget (initMaster reads cfg.ingredients + fixed IDs), so no new JS. Gives the
+  // best-ranking page TYPE a working tool for any amount, not just a static table.
+  const opts = items.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
+  const cfg = { type: "master", ingredients: items.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
   const body = `
 <nav style="font-size:13px;color:var(--muted);margin-bottom:6px"><a href="/cups-to-grams/">Cups to Grams</a> › ${esc(cname)}</nav>
 <h1>${esc(cname)} Conversion Chart</h1>
-<p class="lead">Grams per cup for common ${esc(cname.toLowerCase())}. Click any ingredient for a full converter and chart.</p>
+<p class="lead">Convert any amount of ${esc(cname.toLowerCase())} to grams below, or scan the full chart. Click any ingredient for its own converter.</p>
+<div class="calc">
+  <div class="field" style="margin-bottom:10px"><label for="ingredient">Ingredient</label><select id="ingredient">${opts}</select></div>
+  <div class="row">
+    <div class="field"><label for="amount">Amount</label><input id="amount" type="number" inputmode="decimal" value="1" min="0" step="any"></div>
+    <div class="field" style="max-width:140px"><label for="unit">Unit</label><select id="unit"><option value="cups">cups</option><option value="tbsp">tablespoons</option><option value="tsp">teaspoons</option></select></div>
+    <div class="field"><label for="grams">Grams</label><input id="grams" type="number" inputmode="decimal" step="any"></div>
+  </div>
+  <div class="result"><div class="big" id="out-grams">—</div><div class="sub" id="out-oz">—</div></div>
+</div>
+<h2>${esc(cname)} conversion chart</h2>
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>
 ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
 <p style="margin-top:16px"><a href="/cups-to-grams/">← All ingredient converters</a></p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
 }
 
 function pizzaDoughPage() {
