@@ -403,6 +403,68 @@
     calc();
   }
 
+  // Halving/scaling a single kitchen measurement (used by /recipe-halving-chart/).
+  // Works in teaspoons internally (1 cup = 16 tbsp = 48 tsp) and renders results
+  // the way a cook would measure them: "1/4 cup + 2 tbsp", "2 tbsp + 2 tsp", …
+  function initHalve() {
+    var amt = $("amt"), unit = $("unit");
+    var oh = $("out-half"), ot = $("out-third"), od = $("out-double");
+    if (!amt || !oh) return;
+    // accepts "3/4", "1 1/2", "0.75", "2"
+    function parseAmt(s) {
+      s = (s || "").trim();
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    var TSP_FR = [[0.0625, "1/16"], [0.125, "1/8"], [1 / 6, "1/6"], [0.25, "1/4"], [1 / 3, "1/3"], [0.375, "3/8"], [0.5, "1/2"], [2 / 3, "2/3"], [0.75, "3/4"], [5 / 6, "5/6"], [0.875, "7/8"]];
+    function fmtTspAmt(x) {
+      var whole = Math.floor(x + 1e-9), rest = x - whole, frac = "";
+      if (rest > 0.03) {
+        for (var i = 0; i < TSP_FR.length; i++) if (Math.abs(rest - TSP_FR[i][0]) < 0.02) { frac = TSP_FR[i][1]; break; }
+        if (!frac) return round(x, 2);
+      }
+      return whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+    }
+    function fmtTsp(t) {
+      if (!(t > 0)) return "0";
+      var out = [], whole = Math.floor(t / 48 + 1e-9), rem = t - whole * 48, frac = "";
+      var EXACT = [[36, "3/4"], [32, "2/3"], [24, "1/2"], [16, "1/3"], [12, "1/4"]];
+      for (var i = 0; i < EXACT.length; i++) if (Math.abs(rem - EXACT[i][0]) < 1e-6) { frac = EXACT[i][1]; rem = 0; break; }
+      if (!frac) {
+        // otherwise absorb the largest quarter-based cup fraction (thirds only when exact)
+        var Q = [[36, "3/4"], [24, "1/2"], [12, "1/4"]];
+        for (i = 0; i < Q.length; i++) if (rem >= Q[i][0] - 1e-9) { frac = Q[i][1]; rem -= Q[i][0]; break; }
+      }
+      if (whole || frac) out.push((whole ? whole + (frac ? " " + frac : "") : frac) + " cup" + (whole > 1 || (whole === 1 && frac) ? "s" : ""));
+      var tbsp = Math.floor(rem / 3 + 1e-9);
+      rem -= tbsp * 3;
+      if (tbsp) out.push(tbsp + " tbsp");
+      if (rem > 0.03) out.push(fmtTspAmt(rem) + " tsp");
+      if (!out.length) return "a dash (under 1/16 tsp)";
+      var s = out.join(" + ");
+      // for cup-fraction answers that are also a clean number of tablespoons, say so
+      var tb = t / 3;
+      if (t <= 24 + 1e-6 && Math.abs(tb - Math.round(tb)) < 1e-6 && Math.round(tb) >= 2 && s.indexOf("cup") > -1 && s.indexOf(" + ") > -1) s += " (= " + Math.round(tb) + " tbsp)";
+      return s;
+    }
+    function toTsp(a, u) { return u === "cups" ? a * 48 : u === "tbsp" ? a * 3 : a; }
+    function recompute() {
+      var a = parseAmt(amt.value);
+      if (isNaN(a) || a < 0) { oh.textContent = "—"; ot.textContent = "One third (1/3×): —"; od.textContent = "Double (2×): —"; return; }
+      var t = toTsp(a, unit ? unit.value : "cups");
+      oh.textContent = fmtTsp(t / 2);
+      ot.textContent = "One third (1/3×): " + fmtTsp(t / 3);
+      od.textContent = "Double (2×): " + fmtTsp(t * 2);
+    }
+    amt.addEventListener("input", recompute);
+    if (unit) unit.addEventListener("change", recompute);
+    recompute();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -419,4 +481,5 @@
   else if (t === "bakers") initBakers(c);
   else if (t === "yeast") initYeast();
   else if (t === "sourdough") initSourdough();
+  else if (t === "halve") initHalve();
 })();

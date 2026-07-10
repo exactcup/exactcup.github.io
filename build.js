@@ -79,6 +79,7 @@ const ALL_TOOLS = [
   ["/tablespoons-to-grams/", "Tablespoons to Grams", "How many grams in a tablespoon of any ingredient."],
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
+  ["/recipe-halving-chart/", "Recipe Halving Chart", "Half of 3/4 cup, 1/3 cup & every other measure."],
   ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
   ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
   ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
@@ -493,6 +494,76 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
 }
 
+// Targets the "half of 3/4 cup" / "how to halve a recipe" query class. All values
+// are pure US-unit arithmetic (1 cup = 16 tbsp = 48 tsp) — no ingredient data involved.
+function halvingChartPage() {
+  const title = "What Is Half of 3/4 Cup? Recipe Halving Chart | ExactCup";
+  const description = "Half of 3/4 cup is 6 tbsp (1/4 cup + 2 tbsp); half of 1/3 cup is 2 tbsp + 2 tsp. Free chart with half and one-third of every common kitchen measurement, plus a halve-anything calculator.";
+  const canonical = "/recipe-halving-chart/";
+  // [original, half, one-third] — hand-verified via 1 cup = 48 tsp arithmetic and
+  // kept consistent with the initHalve() formatter in app.js.
+  const ROWS = [
+    ["2 cups", "1 cup", "2/3 cup"],
+    ["1 3/4 cups", "3/4 cup + 2 tbsp", "1/2 cup + 1 tbsp + 1 tsp"],
+    ["1 1/2 cups", "3/4 cup", "1/2 cup"],
+    ["1 1/3 cups", "2/3 cup", "1/4 cup + 3 tbsp + 1/3 tsp"],
+    ["1 1/4 cups", "1/2 cup + 2 tbsp", "1/4 cup + 2 tbsp + 2 tsp"],
+    ["1 cup", "1/2 cup", "1/3 cup"],
+    ["3/4 cup", "1/4 cup + 2 tbsp (= 6 tbsp)", "1/4 cup"],
+    ["2/3 cup", "1/3 cup", "3 tbsp + 1 2/3 tsp"],
+    ["1/2 cup", "1/4 cup", "2 tbsp + 2 tsp"],
+    ["1/3 cup", "2 tbsp + 2 tsp", "1 tbsp + 2 1/3 tsp"],
+    ["1/4 cup", "2 tbsp", "1 tbsp + 1 tsp"],
+    ["1/8 cup (2 tbsp)", "1 tbsp", "2 tsp"],
+    ["1 tbsp", "1 1/2 tsp", "1 tsp"],
+    ["1 tsp", "1/2 tsp", "1/3 tsp"],
+    ["1/2 tsp", "1/4 tsp", "1/6 tsp (generous 1/8)"],
+    ["1/4 tsp", "1/8 tsp", "a pinch (1/12 tsp)"],
+    ["1/8 tsp", "1/16 tsp (a pinch)", "a small pinch"],
+  ];
+  const tableRows = ROWS.map(([o, h, t]) => `<tr><td>${esc(o)}</td><td class="num">${esc(h)}</td><td class="num">${esc(t)}</td></tr>`).join("");
+  const faq = [
+    ["What is half of 3/4 cup?", "Half of 3/4 cup is 6 tablespoons — easiest to measure as 1/4 cup plus 2 tablespoons (about 89 ml). A US cup holds 16 tablespoons, so 3/4 cup is 12 tablespoons and half of that is 6."],
+    ["What is half of 1/3 cup?", "Half of 1/3 cup is 2 tablespoons plus 2 teaspoons (about 39 ml). 1/3 cup equals 5 1/3 tablespoons, so half is 2 2/3 tablespoons — that is 2 tablespoons + 2 teaspoons."],
+    ["What is half of 1/4 cup?", "Half of 1/4 cup is 2 tablespoons (about 30 ml), because 1/4 cup is exactly 4 tablespoons."],
+    ["What is half of 2/3 cup?", "Half of 2/3 cup is 1/3 cup (about 79 ml). Thirds halve neatly: half of 1 1/3 cups is 2/3 cup, and half of 2 2/3 cups is 1 1/3 cups."],
+    ["What is half of 1 1/2 cups?", "Half of 1 1/2 cups is 3/4 cup. In tablespoons: 1 1/2 cups is 24 tablespoons, and half of that is 12 tablespoons, which is 3/4 cup."],
+    ["How do you halve an egg?", "Crack the egg, beat it until the yolk and white are fully blended, then use half by weight or volume. A large egg is about 50 g out of the shell, so half is about 25 g — roughly 1 tablespoon + 2 teaspoons of beaten egg. A kitchen scale makes this painless."],
+    ["Does halving a recipe change the baking time?", "Usually, yes. A half batch in a smaller pan bakes faster — start checking at around two-thirds of the original time. Keep the oven temperature the same. If you keep the original pan, the layer will be thinner and bake faster still."],
+    ["What is the easiest way to halve an awkward measurement?", "Switch to weight. Cup and spoon measures get clumsy in halves and thirds, but grams never do: convert the amount to grams, divide by two, and weigh it. It is both easier and more accurate than juggling spoon fractions."],
+  ];
+  const jsonLd = [
+    appLd("Recipe Halving Calculator", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Recipe Halving Chart", canonical]]),
+  ];
+  const body = `
+<h1>Recipe Halving Chart — Half of Any Measurement</h1>
+<p class="lead">Half of 3/4 cup is 6 tablespoons, but half of 1/3 cup is the genuinely awkward 2 tablespoons + 2 teaspoons. Type any amount to halve it (or take a third, or double it) — or scroll down for the full chart.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="amt">Amount (fractions welcome — 3/4, 1 1/2…)</label><input id="amt" type="text" inputmode="decimal" value="3/4" autocomplete="off"></div>
+    <div class="field" style="max-width:170px"><label for="unit">Unit</label><select id="unit"><option value="cups" selected>cups</option><option value="tbsp">tablespoons</option><option value="tsp">teaspoons</option></select></div>
+  </div>
+  <div class="result"><div class="sub">Half (1/2×)</div><div class="big" id="out-half">—</div><div class="sub" id="out-third">One third (1/3×): —</div><div class="sub" id="out-double">Double (2×): —</div></div>
+</div>
+<h2>Halving chart: half and a third of every common measure</h2>
+<p>Everything on this chart follows from one fact: a US cup holds <strong>16 tablespoons</strong>, and each tablespoon holds <strong>3 teaspoons</strong> (48 teaspoons per cup). Any awkward half converts cleanly into spoons.</p>
+<table><thead><tr><th>Original amount</th><th>Half (1/2×)</th><th>One third (1/3×)</th></tr></thead><tbody>${tableRows}</tbody></table>
+<p class="note">US customary measures. Doubling is the easy direction: double 3/4 cup = 1 1/2 cups, double 2/3 cup = 1 1/3 cups, double 1/3 cup = 2/3 cup.</p>
+<h2>Halving a whole recipe?</h2>
+<p>This page halves one measurement at a time. To cut an entire ingredient list in half in one go, paste it into the <a href="/recipe-scaler/">recipe scaler</a> and set the servings to half — it rescales every line at once.</p>
+<h2>The scale trick for awkward amounts</h2>
+<p>Halves of thirds and thirds of quarters are where volume measures fall apart — and where a kitchen scale shines. Convert the original amount to grams with the <a href="/cups-to-grams/">cups to grams converter</a>, divide by two, and weigh it. 3/4 cup of flour is 90 g, so half is exactly 45 g — no spoon gymnastics.</p>
+<h2>Baking notes when you halve</h2>
+<p>Ingredients scale linearly, but pans and time do not. A half batch wants a pan with about half the area — the <a href="/pan-size-converter/">pan size converter</a> matches pan sizes for you — and it will bake in less time at the same temperature, so start checking early. Eggs are the other snag; see the FAQ below for the clean way to halve one.</p>
+<h2>Need a different conversion?</h2>
+<p>For spoon-and-cup volume swaps (cups &#8596; tbsp &#8596; tsp &#8596; mL) use the <a href="/volume-converter/">volume converter</a>. Working in weights? The <a href="/cups-to-grams/">cups to grams</a> and <a href="/grams-to-cups/">grams to cups</a> converters cover 80+ ingredients.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "halve" } }) };
+}
+
 function homePage() {
   const title = "ExactCup — Free Cooking & Baking Measurement Converters";
   const description = "Free, accurate cooking converters: cups to grams for every ingredient, recipe scaler, oven temperature converter, and butter converter. No sign-up.";
@@ -538,7 +609,8 @@ function scalerPage() {
 1/2 cup butter</textarea></div>
   <div style="margin-top:12px"><label>Scaled recipe</label><pre id="scaled-out" style="white-space:pre-wrap;background:var(--accent2);border:1px solid #fed7aa;border-radius:12px;padding:14px;margin:0">—</pre></div>
 </div>
-<p class="note">Tip: scaling works for most ingredients, but baking times, pan sizes, and leavening (baking soda/powder) don't always scale linearly. Adjust with judgment for big changes.</p>`;
+<p class="note">Tip: scaling works for most ingredients, but baking times, pan sizes, and leavening (baking soda/powder) don't always scale linearly. Adjust with judgment for big changes.</p>
+<p>Just cutting a recipe in half? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half (and a third) of every common cup and spoon measure — like half of 3/4 cup — as amounts you can actually measure.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Recipe Scaler", description, canonical), cfg: { type: "scaler" } }) };
 }
 
@@ -983,6 +1055,7 @@ function llmsTxt() {
     ["Grams to Cups Converter", "/grams-to-cups/", "Reverse direction: enter a weight in grams and get cups, by ingredient"],
     ["Tablespoons to Grams Converter", "/tablespoons-to-grams/", "How many grams in a tablespoon of any ingredient (1 tbsp = 1/16 cup); tbsp/tsp/cups to grams"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
+    ["Recipe Halving Chart", "/recipe-halving-chart/", "Half and one-third of any kitchen measurement (half of 3/4 cup = 6 tbsp; half of 1/3 cup = 2 tbsp + 2 tsp)"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
     ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
     ["Pan Size Converter", "/pan-size-converter/", "Adjust a recipe when swapping cake pan sizes (by area)"],
@@ -1063,7 +1136,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
