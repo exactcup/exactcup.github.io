@@ -83,6 +83,7 @@ const ALL_TOOLS = [
   ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
   ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
   ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
+  ["/cups-to-ml/", "Cups to mL", "How many mL in a cup — US, metric & UK cup sizes."],
   ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
   ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
   ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
@@ -736,8 +737,81 @@ function volumePage() {
 <tr><td>½ cup</td><td class="num">8</td><td class="num">24</td><td class="num">118</td></tr>
 <tr><td>⅓ cup</td><td class="num">5⅓</td><td class="num">16</td><td class="num">79</td></tr>
 <tr><td>¼ cup</td><td class="num">4</td><td class="num">12</td><td class="num">59</td></tr>
-</tbody></table>`;
+</tbody></table>
+<p>Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Volume Converter", description, canonical), cfg: { type: "volume" } }) };
+}
+
+// Targets the "how many ml in a cup" / "3/4 cup in ml" query class. Pure unit
+// arithmetic from the exact US-customary definition (1 cup = 236.5882365 mL);
+// the international cup sizes are fixed legal/standard definitions.
+function cupsToMlPage() {
+  const ML = 236.5882365; // 1 US customary cup, exact by definition (8 × 29.5735295625 mL)
+  const title = "How Many mL in a Cup? Cups to mL Converter & Chart | ExactCup";
+  const description = "1 US cup = 236.6 mL (recipes and labels round to 240 mL); 1/2 cup = 118 mL, 3/4 cup = 177 mL. A metric cup (UK, Australia) is 250 mL. Free converter + full chart.";
+  const canonical = "/cups-to-ml/";
+  const exact = (c) => Math.round(c * ML);
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  const rows = [
+    ["⅛ cup", 1 / 8], ["¼ cup", 1 / 4], ["⅓ cup", 1 / 3], ["½ cup", 1 / 2],
+    ["⅔ cup", 2 / 3], ["¾ cup", 3 / 4], ["1 cup", 1], ["1¼ cups", 1.25],
+    ["1⅓ cups", 4 / 3], ["1½ cups", 1.5], ["1¾ cups", 1.75], ["2 cups", 2],
+    ["3 cups", 3], ["4 cups", 4],
+  ].map(([lab, c]) =>
+    `<tr><td>${lab}</td><td class="num">${rnd(c * 8, 2)}</td><td class="num">${exact(c)} mL</td><td class="num">${Math.round(c * 240)} mL</td></tr>`
+  ).join("\n");
+  const revRows = [50, 100, 125, 150, 200, 250, 300, 375, 400, 500, 750, 1000].map((ml) =>
+    `<tr><td>${ml} mL</td><td class="num">${rnd(ml / ML, 2)} cups</td><td class="num">${rnd(ml / 14.7868, 1)} tbsp</td></tr>`
+  ).join("\n");
+  const faq = [
+    ["How many mL are in a cup?", `A US customary cup is exactly 236.588 mL — in practice, 237 mL, and US nutrition labels and most recipe writers round it to 240 mL. A metric cup, used in the UK, Australia, New Zealand and Canada, is 250 mL. This page (and US recipes generally) uses the US cup.`],
+    ["Is a cup 240 mL or 250 mL?", `Both, depending on where the recipe was written. The US cup is 236.588 mL, rounded to 240 mL on nutrition labels; the metric cup used in the UK, Australia and New Zealand is 250 mL. The difference is only about 5%, which rarely matters for cooking — but for baking large quantities it can add up, so check the recipe's origin.`],
+    ["How many mL is half a cup?", `Half a US cup is ${exact(0.5)} mL (recipes often round it to 120 mL). Half a 250 mL metric cup is 125 mL.`],
+    ["How many mL is 3/4 cup?", `3/4 of a US cup is ${exact(0.75)} mL, commonly rounded to 180 mL. With a 250 mL metric cup it is 187.5 mL.`],
+    ["How many mL is 2/3 cup?", `2/3 of a US cup is ${exact(2 / 3)} mL, commonly rounded to 160 mL.`],
+    ["How many cups is 250 mL?", `250 mL is ${rnd(250 / ML, 2)} US cups — one US cup plus about 2½ teaspoons, so for most recipes you can treat 250 mL as 1 cup. In metric-cup countries (UK, Australia, New Zealand), 250 mL is exactly 1 cup.`],
+    ["How many cups is 500 mL?", `500 mL is ${rnd(500 / ML, 2)} US cups — about 2 cups plus 2 tablespoons — or exactly 2 metric cups.`],
+    ["Are UK and Australian cups the same as US cups?", `No. Modern UK and Australian recipes use the 250 mL metric cup, about 5% larger than the 236.6 mL US cup. Very old British cookbooks may use the imperial cup of 284 mL (10 imperial fluid ounces), and a Japanese cup is 200 mL — so it pays to know where a recipe comes from.`],
+    ["Do millilitres of an ingredient equal grams?", `Only for water and thin water-like liquids (1 mL of water weighs 1 g, so 1 US cup of water is about 237 g). Denser liquids like honey weigh more per mL, and oils slightly less. To convert a cup of any ingredient to grams, use the cups to grams converter.`],
+  ];
+  const jsonLd = [
+    appLd("Cups to mL Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Cups to mL", canonical]]),
+  ];
+  const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  const body = `
+<h1>Cups to mL Converter</h1>
+<p class="lead">1 US cup = 236.588 mL — call it 237 mL, or the 240 mL that recipes and nutrition labels round to. Type either box to convert any amount both ways.</p>
+<div class="calc">
+  <div class="row">${f("Cups", "cups", "1")}${f("Milliliters", "ml", "237")}${f("Fluid ounces", "floz", "8")}</div>
+</div>
+<p class="note">Uses the US customary cup. Converting a UK or Australian recipe? Multiply its cups by 250 mL instead — see the cup-size table below.</p>
+<h2>Cups to mL conversion chart</h2>
+<p>The "exact" column uses the US customary cup (236.588 mL); the "rounded" column uses the 240 mL convention you'll see on US nutrition labels — the version most recipe writers intend.</p>
+<table><thead><tr><th>Cups</th><th>fl oz</th><th>mL (exact)</th><th>mL (rounded)</th></tr></thead><tbody>
+${rows}
+</tbody></table>
+<h2>mL to cups</h2>
+<p>Going the other way — a European recipe lists millilitres and you only have US cup measures:</p>
+<table><thead><tr><th>Millilitres</th><th>US cups</th><th>Tablespoons</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<h2>Not every "cup" is the same size</h2>
+<p>A "cup" is a different legal size depending on the country the recipe was written in:</p>
+<table><thead><tr><th>Cup standard</th><th>Size</th><th>Used in</th></tr></thead><tbody>
+<tr><td>US customary cup</td><td class="num">236.59 mL</td><td>US recipes (this page's converter)</td></tr>
+<tr><td>US legal cup</td><td class="num">240 mL</td><td>US nutrition labels; common recipe rounding</td></tr>
+<tr><td>Metric cup</td><td class="num">250 mL</td><td>UK (modern), Australia, New Zealand, Canada</td></tr>
+<tr><td>Imperial cup</td><td class="num">284.13 mL</td><td>Old pre-metric British cookbooks (10 imp fl oz)</td></tr>
+<tr><td>Japanese cup</td><td class="num">200 mL</td><td>Japan (rice-cooker cups are 180 mL)</td></tr>
+</tbody></table>
+<p class="note">The US-vs-metric gap is ~5% — fine for soups and sauces, worth correcting when you're baking or scaling a recipe up.</p>
+<h2>Need a different conversion?</h2>
+<p>The <a href="/volume-converter/">volume converter</a> also handles tablespoons, teaspoons and litres. Converting to weight instead? Millilitres only equal grams for water — for flour, sugar, butter and 80+ other ingredients use the <a href="/cups-to-grams/">cups to grams converter</a> or the reverse <a href="/grams-to-cups/">grams to cups converter</a>. And if you're halving a recipe, the <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every cup measure in spoons you can actually use.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
 }
 
 function portionPage() {
@@ -1060,6 +1134,7 @@ function llmsTxt() {
     ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
     ["Pan Size Converter", "/pan-size-converter/", "Adjust a recipe when swapping cake pan sizes (by area)"],
     ["Volume Converter", "/volume-converter/", "Cups, tablespoons, teaspoons, fluid ounces, millilitres, litres"],
+    ["Cups to mL Converter", "/cups-to-ml/", "1 US cup = 236.59 mL (240 mL on labels); metric cup (UK/AU/NZ) = 250 mL; imperial cup = 284 mL; Japanese cup = 200 mL; chart for every fraction"],
     ["Portion Calculator", "/portion-calculator/", "How much rice, pasta, potatoes etc. per person"],
     ["Pizza Dough Calculator", "/pizza-dough-calculator/", "Flour, water, salt and yeast by baker's percentage"],
     ["Baker's Percentage Calculator", "/bakers-percentage-calculator/", "Build and scale any bread formula using baker's math (every ingredient as a percentage of flour)"],
@@ -1136,7 +1211,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
