@@ -210,7 +210,7 @@ ${bodyHtml}
 <p><strong>${SITE.brand}</strong> — ${SITE.tagline}.</p>
 <nav class="fcol"><span class="fh">Calculators &amp; converters</span>${ALL_TOOLS.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join("")}</nav>
 <nav class="fcol"><span class="fh">Conversion charts</span><a href="/cups-to-grams/">All ingredients</a>${Object.keys(DATA.categories).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</nav>
-<p style="font-size:12px">Conversions are approximate; ingredient weights vary by brand, humidity, and how you measure. For best baking results, weigh with a kitchen scale.</p>
+<p style="font-size:12px">Conversions are approximate; ingredient weights vary by brand, humidity, and how you measure. For best baking results, weigh with a kitchen scale. Open data: <a href="/ingredient-density-data/">ingredient density dataset</a> (CC BY 4.0) · <a href="/embed/">embed our converter</a>.</p>
 </div></footer>
 ${cfgScript}
 </body>
@@ -1149,6 +1149,7 @@ function llmsTxt() {
   DATA.ingredients.forEach((i) => { out += `- [${i.name}](${b}/cups-to-grams/${i.slug}/): 1 cup = ${g2(i.gramsPerCup)} g\n`; });
   out += `\n## Conversion charts by category\n`;
   Object.keys(DATA.categories).forEach((k) => { out += `- [${catName(k)} conversion chart](${b}/${k}-conversion-chart/)\n`; });
+  out += `\n## Open data\n- [Ingredient Density Dataset](${b}/ingredient-density-data/): grams per US cup for ${DATA.ingredients.length}+ ingredients, CC BY 4.0, downloadable as [CSV](${b}/ingredient-density-data/ingredient-density.csv) or [JSON](${b}/ingredient-density-data/ingredient-density.json). Please cite ExactCup with a link when using the data.\n`;
   return out;
 }
 
@@ -1200,6 +1201,72 @@ function embedInfoPage() {
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body }) };
 }
 
+// Canonical citable home of the ingredient-density data. Serves the CSV/JSON from
+// our own domain (written in build()) and carries schema.org/Dataset JSON-LD so it
+// surfaces in Google Dataset Search — the page people cite/link when they use the data.
+function datasetPage() {
+  const canonical = "/ingredient-density-data/";
+  const title = "Ingredient Density Dataset — Grams per Cup for 80+ Ingredients (Open Data) | ExactCup";
+  const description = "Free open dataset (CC BY 4.0) of cooking ingredient densities: grams per US cup for 80+ ingredients, verified against King Arthur Baking and USDA references. Download as CSV or JSON.";
+  const csvUrl = canonical + "ingredient-density.csv";
+  const jsonUrl = canonical + "ingredient-density.json";
+  const cats = {};
+  DATA.ingredients.forEach((i) => { (cats[i.category] = cats[i.category] || []).push(i); });
+  const tables = Object.keys(cats).map((k) =>
+    `<h3>${esc(catName(k))}</h3><table><thead><tr><th>Ingredient</th><th>Grams per US cup</th><th>Ounces per US cup</th></tr></thead><tbody>${
+      cats[k].map((i) => `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / OZ)} oz</td></tr>`).join("")
+    }</tbody></table>`
+  ).join("");
+  const citation = `ExactCup (${SITE.year}). Ingredient Density Dataset — grams per US cup. ${SITE.baseUrl}${canonical} (CC BY 4.0)`;
+  const jsonLd = [{
+    "@context": "https://schema.org", "@type": "Dataset",
+    name: "Ingredient Density Dataset — Grams per US Cup",
+    description: `Densities of ${DATA.ingredients.length}+ common cooking and baking ingredients expressed as the weight in grams of one US customary cup (236.588 mL). Verified against the King Arthur Baking ingredient weight chart and USDA FoodData Central.`,
+    url: SITE.baseUrl + canonical,
+    sameAs: "https://github.com/exactcup/ingredient-density-dataset",
+    license: "https://creativecommons.org/licenses/by/4.0/",
+    isAccessibleForFree: true,
+    creator: { "@type": "Organization", name: SITE.brand, url: SITE.baseUrl },
+    keywords: ["ingredient density", "cups to grams", "baking measurements", "cooking conversions", "food data"],
+    variableMeasured: "grams per US cup (236.588 mL)",
+    distribution: [
+      { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: SITE.baseUrl + csvUrl },
+      { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: SITE.baseUrl + jsonUrl },
+    ],
+  }, breadcrumbLd([["Ingredient Density Dataset", canonical]])];
+  const body = `
+<h1>Ingredient Density Dataset</h1>
+<p class="lead">The open data behind ExactCup: the weight in <strong>grams of one US cup</strong> (236.588&nbsp;mL) for ${DATA.ingredients.length}+ cooking and baking ingredients. Free to use under CC&nbsp;BY&nbsp;4.0 &mdash; download it, build with it, cite it.</p>
+<p>
+<a class="btn" href="${csvUrl}" download>Download CSV</a>&nbsp;
+<a class="btn" href="${jsonUrl}" download>Download JSON</a>&nbsp;
+<a href="https://github.com/exactcup/ingredient-density-dataset" rel="noopener">GitHub repo &rarr;</a>
+</p>
+<h2>Why this data exists</h2>
+<p>Cups measure volume; grams measure weight. Because every ingredient has a different density, &ldquo;1 cup&rdquo; is a different weight for every ingredient &mdash; a cup of all-purpose flour is about 120&nbsp;g while a cup of honey is about 340&nbsp;g. Reliable volume&#8594;weight conversion therefore needs a per-ingredient density table. This is that table, in the form most useful for cooking: grams per US cup.</p>
+<h2>Method &amp; sources</h2>
+<p>Values follow authoritative baking references &mdash; primarily the <strong>King Arthur Baking Ingredient Weight Chart</strong>, cross-checked against <strong>USDA FoodData Central</strong> and standard culinary references. Real-world weights vary by brand, humidity, and measuring method (packed vs. sifted flour can differ by 30%), so treat these as reliable nominal values (&plusmn;~5%). Fields: <code>slug</code>, <code>name</code>, <code>category</code>, <code>grams_per_us_cup</code>, <code>aliases</code>.</p>
+<h2>The data</h2>
+${tables}
+<h2>License &amp; how to cite</h2>
+<p><strong>CC BY 4.0</strong> &mdash; free to use, share, and adapt, including commercially. The only requirement is attribution: credit ExactCup with a link. Suggested citation:</p>
+<textarea readonly rows="3" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(citation)}</textarea>
+<p class="note">Want the interactive version instead of raw data? Use the <a href="/cups-to-grams/">cups to grams converter</a>, or <a href="/embed/">embed the free converter widget</a> on your own site.</p>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
+}
+
+// CSV/JSON files served from our own domain (same schema as the GitHub dataset repo).
+function datasetFiles() {
+  const rows = DATA.ingredients.map((i) => ({
+    slug: i.slug, name: i.name, category: catName(i.category),
+    grams_per_us_cup: i.gramsPerCup, aliases: i.aliases || [],
+  }));
+  const csvField = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
+  const csv = "slug,name,category,grams_per_us_cup,aliases\n" +
+    rows.map((r) => [r.slug, r.name, r.category, r.grams_per_us_cup, r.aliases.join("; ")].map(csvField).join(",")).join("\n") + "\n";
+  return { csv, json: JSON.stringify(rows, null, 2) + "\n" };
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -1211,7 +1278,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
@@ -1221,6 +1288,11 @@ function build() {
   // assets
   fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
   fs.copyFileSync(path.join(ROOT, "assets", "app.js"), path.join(OUT, "assets", "app.js"));
+
+  // open-data downloads served from our own domain (next to the dataset page)
+  { const df = datasetFiles();
+    fs.writeFileSync(path.join(OUT, "ingredient-density-data", "ingredient-density.csv"), df.csv);
+    fs.writeFileSync(path.join(OUT, "ingredient-density-data", "ingredient-density.json"), df.json); }
 
   // Per-page lastmod: compare each page's content hash to the committed manifest.
   // Unchanged page -> keep its stored date. Changed/new page -> today's date.
