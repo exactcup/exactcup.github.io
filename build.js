@@ -594,6 +594,13 @@ function scalerPage() {
   const title = "Recipe Scaler — Scale Recipes Up or Down by Servings | ExactCup";
   const description = "Free recipe scaler: enter original and desired servings and instantly rescale every ingredient quantity. Handles fractions.";
   const canonical = "/recipe-scaler/";
+  const faq = [
+    ["How do I double a recipe?", "Multiply every ingredient by 2 (this tool does it for you). Most ingredients double cleanly, but taste and adjust strong seasonings — salt, spices, garlic and chilli often need a little less than double. Scale baking soda and baking powder too, but for very large batches add slightly under, as too much leavening can taste soapy."],
+    ["Does the baking time change when I scale a recipe?", "Not in proportion. A bigger or deeper batch takes longer, but rarely twice as long. Keep the oven temperature the same, start checking at the original time, and judge by doneness rather than the clock."],
+    ["What parts of a recipe don't scale linearly?", "Salt, spices, leavening, alcohol and bake time. Pan size matters too: a doubled cake needs more pan area or it overflows — use the pan size converter to pick a pan, so the batter depth (and bake time) stays similar."],
+    ["How do I scale a recipe that uses eggs?", "Eggs come whole, so round to the nearest egg or use half of a beaten egg (about 25 g) when the maths lands between. For example, 1.5× a 2-egg recipe means 3 eggs; 1.5× a 3-egg recipe means 4 eggs plus half a beaten one."],
+    ["Is it better to scale by weight or by cups?", "By weight. Grams scale exactly and avoid the rounding errors of fractional cups — half of ¾ cup is easy to weigh but fiddly to measure. Convert your cups to grams first with the cups to grams converter, then scale."],
+  ];
   const body = `
 <h1>Recipe Scaler</h1>
 <p class="lead">Cooking for more (or fewer) people? Enter the servings and rescale the whole ingredient list at once.</p>
@@ -611,14 +618,23 @@ function scalerPage() {
   <div style="margin-top:12px"><label>Scaled recipe</label><pre id="scaled-out" style="white-space:pre-wrap;background:var(--accent2);border:1px solid #fed7aa;border-radius:12px;padding:14px;margin:0">—</pre></div>
 </div>
 <p class="note">Tip: scaling works for most ingredients, but baking times, pan sizes, and leavening (baking soda/powder) don't always scale linearly. Adjust with judgment for big changes.</p>
-<p>Just cutting a recipe in half? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half (and a third) of every common cup and spoon measure — like half of 3/4 cup — as amounts you can actually measure.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Recipe Scaler", description, canonical), cfg: { type: "scaler" } }) };
+<p>Just cutting a recipe in half? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half (and a third) of every common cup and spoon measure — like half of 3/4 cup — as amounts you can actually measure.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Recipe Scaler", description, canonical), faqLd(faq)], cfg: { type: "scaler" } }) };
 }
 
 function ovenPage() {
   const title = "Oven Temperature Converter — °F to °C to Gas Mark | ExactCup";
   const description = "Convert oven temperatures between Fahrenheit, Celsius and gas mark instantly, with a full conversion chart for common baking temperatures.";
   const canonical = "/oven-temperature-converter/";
+  const faq = [
+    ["What is 350°F in Celsius?", "350°F is 177°C, which recipes almost always round to 180°C — it is also gas mark 4, the most common baking temperature. To convert any temperature yourself: subtract 32, then multiply by 5/9."],
+    ["How do I adjust the temperature for a fan (convection) oven?", "Lower the temperature by about 20°C (25°F) from what a conventional recipe states, because the fan circulates heat and cooks faster. Alternatively keep the temperature and shorten the time by 10–15%. Our chart lists conventional temperatures."],
+    ["What temperature is gas mark 4 (or gas mark 6)?", "Gas mark 4 is 350°F / 180°C and gas mark 6 is 400°F / 200°C. Each gas mark step is 25°F (about 14°C), so gas mark 1 is 275°F and gas mark 8 is 450°F."],
+    ["What do 'slow', 'moderate' and 'hot' oven mean?", "Old recipes describe the oven in words: a slow oven is about 300–325°F (150–170°C), a moderate oven is 350–375°F (180–190°C), and a hot oven is 400–450°F (200–230°C). A very hot oven is 475°F+ (245°C+)."],
+    ["Do I change the oven temperature when I change pan size?", "No — keep the temperature the same and adjust the time instead. A wider, shallower pan bakes faster and a deeper pan slower; use the pan size converter to match pans, then start checking for doneness a few minutes early."],
+  ];
   const chart = [[275, 140, "1"], [300, 150, "2"], [325, 170, "3"], [350, 180, "4"], [375, 190, "5"], [400, 200, "6"], [425, 220, "7"], [450, 230, "8"]]
     .map(([f, c, g]) => `<tr><td class="num">${f}°F</td><td class="num">${c}°C</td><td>Gas ${g}</td></tr>`).join("");
   const body = `
@@ -633,8 +649,10 @@ function ovenPage() {
 </div>
 <h2>Oven temperature chart</h2>
 <table><thead><tr><th>Fahrenheit</th><th>Celsius</th><th>Gas mark</th></tr></thead><tbody>${chart}</tbody></table>
-<p class="note">For fan/convection ovens, reduce the Celsius temperature by about 20°C (or ~25°F) from conventional recipes.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Oven Temperature Converter", description, canonical), cfg: { type: "oven" } }) };
+<p class="note">For fan/convection ovens, reduce the Celsius temperature by about 20°C (or ~25°F) from conventional recipes.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Oven Temperature Converter", description, canonical), faqLd(faq)], cfg: { type: "oven" } }) };
 }
 
 function butterPage() {
@@ -700,6 +718,13 @@ function panSizePage() {
   const title = "Cake Pan Size Converter — Swap Pan Sizes & Adjust Recipes | ExactCup";
   const description = "Need a different pan? This converter shows how to scale your recipe when swapping cake pan sizes (e.g. 9×13 to 8×8), based on pan area. Free instant calculator.";
   const canonical = "/pan-size-converter/";
+  const faq = [
+    ["Can I use a 9×13 pan instead of two 9-inch round pans?", "Almost — a 9×13 pan holds about 117 sq in of batter and two 9-inch rounds hold about 127 sq in combined, so a two-layer 9-inch recipe fits a single 9×13 as a slightly thinner sheet cake. Keep the temperature the same and start checking a few minutes early."],
+    ["How do I swap a round pan for a square pan?", "Compare their areas. An 8-inch square (64 sq in) holds about the same as a 9-inch round (64 sq in), so you can swap those two with no change to the recipe. An 8-inch round is smaller (50 sq in), so moving up to an 8-inch square gives you a thinner bake unless you scale the recipe up."],
+    ["Do I change the bake time when I change pan size?", "Yes. A wider, shallower pan bakes faster; a smaller, deeper pan bakes slower. Leave the oven temperature alone and adjust the time — start checking 5–10 minutes before the original time and go by a clean skewer, not the clock."],
+    ["How full should I fill a cake pan?", "About halfway to two-thirds full. Overfilling makes the batter dome or spill and undercook in the middle; underfilling gives a flat, dry cake. Matching the pan's area to the recipe (what this converter does) keeps the depth right."],
+    ["Why scale by area instead of by diameter?", "Because batter fills area, not width. A 10-inch round isn't 25% bigger than an 8-inch round — it's about 56% bigger, because area grows with the square of the radius. Scaling by area is what keeps the batter depth, and therefore the bake time, consistent."],
+  ];
   const rows = PANS.map(([id, name, area]) => `<tr><td>${esc(name)}</td><td class="num">${g2(area)} sq in</td></tr>`).join("");
   const body = `
 <h1>Cake Pan Size Converter</h1>
@@ -713,14 +738,23 @@ function panSizePage() {
 </div>
 <h2>Common pan sizes (by area)</h2>
 <table><thead><tr><th>Pan</th><th>Area</th></tr></thead><tbody>${rows}</tbody></table>
-<p class="note">This scales by pan area (and so by batter volume). For big jumps, also adjust bake time and check doneness — depth changes how heat reaches the center.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Cake Pan Size Converter", description, canonical), cfg: { type: "pansize", pans: PANS.map(([id, , area]) => ({ id, area })) } }) };
+<p class="note">This scales by pan area (and so by batter volume). For big jumps, also adjust bake time and check doneness — depth changes how heat reaches the center.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Cake Pan Size Converter", description, canonical), faqLd(faq)], cfg: { type: "pansize", pans: PANS.map(([id, , area]) => ({ id, area })) } }) };
 }
 
 function volumePage() {
   const title = "Cups to Tablespoons to Teaspoons Converter (+ mL, fl oz) | ExactCup";
   const description = "Free volume converter for cooking: cups, tablespoons, teaspoons, fluid ounces, milliliters and liters. Type any field and the rest update instantly.";
   const canonical = "/volume-converter/";
+  const faq = [
+    ["How many tablespoons are in a cup?", "16 tablespoons in a US cup. So ½ cup is 8 tablespoons, ⅓ cup is 5 tablespoons plus 1 teaspoon, and ¼ cup is 4 tablespoons. This is handy when you can't find your measuring cups but have measuring spoons."],
+    ["How many teaspoons are in a tablespoon?", "3 teaspoons in 1 tablespoon — the US, UK and metric systems all agree here, which makes a cup 48 teaspoons. The one exception is Australia, where a tablespoon is 20 mL (4 teaspoons) rather than 15 mL."],
+    ["Is a dry measuring cup the same as a liquid one?", "The volume is identical — a US cup is 236.6 mL whether it holds flour or milk. Only the vessel differs: liquid cups have a spout and headroom for pouring, while dry cups are filled to the brim and leveled off. For dry ingredients, weighing is more accurate than either."],
+    ["How many fluid ounces are in a cup?", "8 US fluid ounces in a US cup. Don't confuse fluid ounces (a volume) with ounces (a weight): a cup of flour is 8 fl oz by volume but only about 4.25 oz by weight, because flour is lighter than water."],
+    ["Are US and metric cups the same?", "No. A US cup is 236.6 mL, while the metric cup used in the UK, Australia and New Zealand is 250 mL — about 5% larger. It rarely matters for soups but adds up in baking. See the dedicated cups to mL converter for the full breakdown."],
+  ];
   const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
   const body = `
 <h1>Volume Converter (Cups · Tbsp · Tsp · mL)</h1>
@@ -738,8 +772,10 @@ function volumePage() {
 <tr><td>⅓ cup</td><td class="num">5⅓</td><td class="num">16</td><td class="num">79</td></tr>
 <tr><td>¼ cup</td><td class="num">4</td><td class="num">12</td><td class="num">59</td></tr>
 </tbody></table>
-<p>Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Volume Converter", description, canonical), cfg: { type: "volume" } }) };
+<p>Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Volume Converter", description, canonical), faqLd(faq)], cfg: { type: "volume" } }) };
 }
 
 // Targets the "how many ml in a cup" / "3/4 cup in ml" query class. Pure unit
@@ -830,6 +866,13 @@ function portionPage() {
   const title = "How Much Rice/Pasta Per Person? Portion Calculator | ExactCup";
   const description = "How much rice, pasta, potatoes or couscous per person? Free portion calculator for meal planning — pick a food and number of people for exact amounts.";
   const canonical = "/portion-calculator/";
+  const faq = [
+    ["How much rice per person?", "About 75 g of uncooked rice per person for a main dish, or roughly 50 g as a side. Rice roughly triples in weight as it cooks, so 75 g dry becomes about 200 g on the plate — a generous cup of cooked rice."],
+    ["How much dried pasta per person?", "About 100 g of dried pasta per person for a main course, or 50–75 g as a starter or side. Fresh pasta is heavier and wetter, so use around 115–125 g per person for a main."],
+    ["How much mashed potato per person?", "Around 200–250 g of raw, peeled potato per person makes a generous main-dish serving of mash once you add butter and milk. For a lighter side, 150 g is plenty."],
+    ["How much couscous or quinoa per person?", "About 75–80 g dry per person as a main, or half that as a side. Both roughly triple in volume when cooked, so a little goes a long way — measure dry to avoid over-catering."],
+    ["Are these portions for a main or a side dish?", "The calculator and table show main-dish portions, based on standard meal-planning guidance (WRAP / Love Food Hate Waste). For a side dish alongside meat or other components, use about half. Scale up for big appetites or planned leftovers."],
+  ];
   const opts = FOODS.map(([slug, name]) => `<option value="${slug}">${esc(name)}</option>`).join("");
   const rows = FOODS.map(([slug, name, g]) => `<tr><td>${esc(name)}</td><td class="num">${g} g</td></tr>`).join("");
   const body = `
@@ -844,8 +887,10 @@ function portionPage() {
 </div>
 <h2>Per-person serving guide (main dish)</h2>
 <table><thead><tr><th>Food</th><th>Per person</th></tr></thead><tbody>${rows}</tbody></table>
-<p class="note">Main-dish portions based on standard meal-planning guidance (WRAP / Love Food Hate Waste). Side dishes are roughly half. Adjust for big appetites or leftovers.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Portion Calculator", description, canonical), cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
+<p class="note">Main-dish portions based on standard meal-planning guidance (WRAP / Love Food Hate Waste). Side dishes are roughly half. Adjust for big appetites or leftovers.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Portion Calculator", description, canonical), faqLd(faq)], cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
 }
 
 // Per-category FAQ for the conversion-chart hubs. Values are drawn from the verified
