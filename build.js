@@ -263,17 +263,17 @@ function gramsToCupsTable(gpc) {
 // at least one category list so the whole tool set gets internal inlinks.
 const CATEGORY_TOOLS = {
   flour: [["/pizza-dough-calculator/", "Pizza Dough Calculator"], ["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/sourdough-hydration-calculator/", "Sourdough Hydration Calculator"], ["/yeast-converter/", "Yeast Converter"]],
-  sugar: [["/recipe-scaler/", "Recipe Scaler"], ["/volume-converter/", "Volume Converter"]],
-  dairy: [["/butter-converter/", "Butter Converter"], ["/recipe-scaler/", "Recipe Scaler"]],
+  sugar: [["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"], ["/volume-converter/", "Volume Converter"], ["/cups-to-ml/", "Cups to mL Converter"]],
+  dairy: [["/butter-converter/", "Butter Converter"], ["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"], ["/cups-to-ml/", "Cups to mL Converter"]],
   baking: [["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/oven-temperature-converter/", "Oven Temperature Converter"], ["/air-fryer-conversion-calculator/", "Air Fryer Converter"], ["/pan-size-converter/", "Pan Size Converter"]],
-  grain: [["/portion-calculator/", "Portion Calculator"], ["/recipe-scaler/", "Recipe Scaler"]],
+  grain: [["/portion-calculator/", "Portion Calculator"], ["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"]],
 };
 
 function ingredientPage(ing) {
   const gpc = ing.gramsPerCup;
   const related = DATA.ingredients.filter((i) => i.category === ing.category && i.slug !== ing.slug).slice(0, 6);
-  // Reverse hub is relevant to every ingredient; category tools add depth.
-  const toolLinks = [["/grams-to-cups/", "Grams to Cups Converter"], ...(CATEGORY_TOOLS[ing.category] || [])];
+  // Reverse hub + tablespoon converter are relevant to every ingredient; category tools add depth.
+  const toolLinks = [["/grams-to-cups/", "Grams to Cups Converter"], ["/tablespoons-to-grams/", "Tablespoons to Grams"], ...(CATEGORY_TOOLS[ing.category] || [])];
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = ing.slug === "butter"
     ? `How many grams is a cup of butter? 1 cup = ${g2(gpc)} g, 1 stick = ${g2(gpc / 2)} g, 1/2 cup = ${g2(gpc / 2)} g. Free butter converter with a full cups, sticks, tablespoons and grams chart.`
