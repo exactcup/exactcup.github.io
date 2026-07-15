@@ -77,6 +77,7 @@ const ALL_TOOLS = [
   ["/cups-to-grams/", "Cups to Grams", "Convert any ingredient — flour, sugar, butter & 30+ more."],
   ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
   ["/tablespoons-to-grams/", "Tablespoons to Grams", "How many grams in a tablespoon of any ingredient."],
+  ["/tablespoons-in-a-cup/", "Tablespoons in a Cup", "16 tbsp in a cup — plus every fraction & full chart."],
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
   ["/recipe-halving-chart/", "Recipe Halving Chart", "Half of 3/4 cup, 1/3 cup & every other measure."],
@@ -489,7 +490,7 @@ function tablespoonsToGramsPage() {
 <h2>Pick an ingredient</h2>
 ${lists}
 <h2>Need a different conversion?</h2>
-<p>Working in cups instead? Use the <a href="/cups-to-grams/">cups to grams converter</a>. Have a weight already? The <a href="/grams-to-cups/">grams to cups converter</a> goes the other way. For pure volume swaps (tbsp ↔ tsp ↔ mL) see the <a href="/volume-converter/">volume converter</a>, and for butter in sticks try the <a href="/butter-converter/">butter converter</a>.</p>
+<p>Working in cups instead? Use the <a href="/cups-to-grams/">cups to grams converter</a>. Have a weight already? The <a href="/grams-to-cups/">grams to cups converter</a> goes the other way. Just counting spoons — how many tablespoons are in a cup? See the <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> chart. For pure volume swaps (tbsp ↔ tsp ↔ mL) see the <a href="/volume-converter/">volume converter</a>, and for butter in sticks try the <a href="/butter-converter/">butter converter</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
@@ -772,7 +773,7 @@ function volumePage() {
 <tr><td>⅓ cup</td><td class="num">5⅓</td><td class="num">16</td><td class="num">79</td></tr>
 <tr><td>¼ cup</td><td class="num">4</td><td class="num">12</td><td class="num">59</td></tr>
 </tbody></table>
-<p>Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>
+<p>Just need to know how many tablespoons or teaspoons are in a cup fraction? The <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> page spells out every fraction (including the awkward ⅓ and ⅔ cup). Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Volume Converter", description, canonical), faqLd(faq)], cfg: { type: "volume" } }) };
@@ -845,6 +846,100 @@ ${revRows}
 <p class="note">The US-vs-metric gap is ~5% — fine for soups and sauces, worth correcting when you're baking or scaling a recipe up.</p>
 <h2>Need a different conversion?</h2>
 <p>The <a href="/volume-converter/">volume converter</a> also handles tablespoons, teaspoons and litres. Converting to weight instead? Millilitres only equal grams for water — for flour, sugar, butter and 80+ other ingredients use the <a href="/cups-to-grams/">cups to grams converter</a> or the reverse <a href="/grams-to-cups/">grams to cups converter</a>. And if you're halving a recipe, the <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every cup measure in spoons you can actually use.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
+}
+
+// "How many tablespoons in a cup?" — owns the highest-volume US kitchen-measurement
+// query class (tbsp/tsp in a cup, and every cup fraction). Pure US-unit arithmetic
+// (1 cup = 16 tbsp = 48 tsp = 8 fl oz), so zero data-source risk — every value below is
+// computed from those definitions, not typed by hand. Live widget reuses initVolume (no new JS).
+function tbspInCupPage() {
+  const title = "How Many Tablespoons in a Cup? (16) — Full Conversion Chart | ExactCup";
+  const description = "There are 16 tablespoons in a US cup, and 3 teaspoons in a tablespoon. Free chart for every cup fraction: 1/4 cup = 4 tbsp, 1/3 cup = 5 tbsp + 1 tsp, 1/2 cup = 8 tbsp.";
+  const canonical = "/tablespoons-in-a-cup/";
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  // Render a whole number of teaspoons the way a cook measures it: tbsp + leftover tsp.
+  const tspToSpoons = (tsp) => {
+    const tbsp = Math.floor(tsp / 3), rem = tsp - tbsp * 3;
+    const parts = [];
+    if (tbsp) parts.push(`${tbsp} tbsp`);
+    if (rem) parts.push(`${rem} tsp`);
+    return parts.join(" + ") || "0";
+  };
+  // Cup fractions → tbsp/tsp/fl oz. 48 tsp per cup, 8 fl oz per cup — exact integers for these.
+  const fracs = [
+    ["1/16 cup", 1 / 16], ["1/8 cup", 1 / 8], ["1/4 cup", 1 / 4], ["1/3 cup", 1 / 3],
+    ["1/2 cup", 1 / 2], ["2/3 cup", 2 / 3], ["3/4 cup", 3 / 4], ["1 cup", 1],
+  ];
+  const fracRows = fracs.map(([lab, c]) => {
+    const tsp = Math.round(c * 48);
+    const tbspExact = c * 16;
+    const tbspCell = Number.isInteger(tbspExact) ? `${tbspExact} tbsp` : tspToSpoons(tsp);
+    return `<tr><td>${lab}</td><td class="num">${tbspCell}</td><td class="num">${tsp} tsp</td><td class="num">${rnd(c * 8, 2)} fl oz</td></tr>`;
+  }).join("\n");
+  // Larger US liquid-volume ladder.
+  const ladder = [
+    ["1 teaspoon (tsp)", "⅓ tbsp", "—", "4.93"],
+    ["1 tablespoon (tbsp)", "3 tsp", "½ fl oz", "14.79"],
+    ["1 fluid ounce (fl oz)", "2 tbsp", "1 fl oz", "29.57"],
+    ["¼ cup", "4 tbsp", "2 fl oz", "59"],
+    ["⅓ cup", "5 tbsp + 1 tsp", "2⅔ fl oz", "79"],
+    ["½ cup", "8 tbsp", "4 fl oz", "118"],
+    ["1 cup", "16 tbsp", "8 fl oz", "237"],
+    ["1 pint", "2 cups", "16 fl oz", "473"],
+    ["1 quart", "4 cups", "32 fl oz", "946"],
+    ["1 gallon", "16 cups", "128 fl oz", "3785"],
+  ].map((r) => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]} mL</td></tr>`).join("\n");
+  const faq = [
+    ["How many tablespoons are in a cup?", "There are 16 tablespoons in one US cup. So half a cup is 8 tablespoons, a quarter cup is 4 tablespoons, and three-quarters of a cup is 12 tablespoons. (This is the US customary cup; see the note below on Australian and metric tablespoons.)"],
+    ["How many teaspoons are in a tablespoon?", "There are 3 teaspoons in 1 tablespoon. That also means 48 teaspoons in a cup (16 tablespoons × 3), and 6 teaspoons in a fluid ounce."],
+    ["How many tablespoons are in 1/4 cup?", "A quarter cup is 4 tablespoons, or 12 teaspoons. If you're missing a 1/4-cup measure, just count out 4 level tablespoons."],
+    ["How many tablespoons are in 1/3 cup?", "A third of a cup is 5 tablespoons plus 1 teaspoon (16 teaspoons total). It's the one cup fraction that doesn't divide into a whole number of tablespoons, which is why it trips people up — measure 5 tablespoons and then add a single teaspoon."],
+    ["How many tablespoons are in 1/2 cup?", "Half a cup is 8 tablespoons, or 24 teaspoons — also 4 fluid ounces. A single stick of butter is exactly this: 8 tablespoons or 1/2 cup."],
+    ["How many tablespoons are in 2/3 cup?", "Two-thirds of a cup is 10 tablespoons plus 2 teaspoons (32 teaspoons total) — another fraction that doesn't land on a whole tablespoon. Measure 10 tablespoons, then add 2 teaspoons."],
+    ["How many tablespoons are in 3/4 cup?", "Three-quarters of a cup is 12 tablespoons, or 36 teaspoons — 6 fluid ounces."],
+    ["How many teaspoons are in a cup?", "There are 48 teaspoons in a US cup (16 tablespoons × 3 teaspoons each)."],
+    ["Is an Australian or metric tablespoon the same as a US tablespoon?", "No. A US tablespoon is 14.79 mL (3 US teaspoons), and the UK/European metric tablespoon is 15 mL — close enough to treat as the same. But the Australian tablespoon is 20 mL, equal to 4 teaspoons, so an Australian recipe's cup holds about 12.5 of its own tablespoons. If you're following an Australian recipe with US spoons, use 4 US teaspoons per listed tablespoon."],
+    ["How many tablespoons are in a stick of butter?", "One US stick of butter is 8 tablespoons — that's 1/2 cup or 4 ounces (about 113 g). Two sticks make a full cup. For sticks, grams and ounces in every direction, see the butter converter."],
+  ];
+  const jsonLd = [
+    appLd("Tablespoons in a Cup Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Tablespoons in a Cup", canonical]]),
+  ];
+  const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  const body = `
+<h1>How Many Tablespoons in a Cup?</h1>
+<p class="lead">There are <strong>16 tablespoons in 1 US cup</strong>, and <strong>3 teaspoons in 1 tablespoon</strong> (so 48 teaspoons in a cup). Lost a measuring cup? Type any amount below to convert between cups, tablespoons and teaspoons.</p>
+<div class="calc">
+  <div class="row">${f("Cups", "cups", "1")}${f("Tablespoons", "tbsp", "16")}${f("Teaspoons", "tsp", "48")}</div>
+</div>
+<p class="note">US customary measures. The metric tablespoon (15 mL) is close enough to swap; the Australian 20 mL tablespoon is not — see the FAQ.</p>
+<h2>Tablespoons &amp; teaspoons in every cup fraction</h2>
+<p>The two awkward ones are a third and two-thirds of a cup — they don't divide into whole tablespoons, so the chart spells out the extra teaspoons.</p>
+<table><thead><tr><th>Cup amount</th><th>Tablespoons</th><th>Teaspoons</th><th>Fluid oz</th></tr></thead><tbody>
+${fracRows}
+</tbody></table>
+<h2>Full US volume equivalents</h2>
+<p>From a teaspoon all the way up to a gallon — how the common US kitchen measures nest inside each other:</p>
+<table><thead><tr><th>Measure</th><th>Equals</th><th>Fluid oz</th><th>Millilitres</th></tr></thead><tbody>
+${ladder}
+</tbody></table>
+<p class="note">1 US cup = 8 fl oz = 236.588 mL. mL values are rounded. A US "cup" differs from a metric or imperial cup — see the <a href="/cups-to-ml/">cups to mL converter</a> for those sizes.</p>
+<h2>Quick reference</h2>
+<ul>
+<li><strong>1 cup</strong> = 16 tbsp = 48 tsp = 8 fl oz</li>
+<li><strong>¾ cup</strong> = 12 tbsp = 36 tsp</li>
+<li><strong>⅔ cup</strong> = 10 tbsp + 2 tsp</li>
+<li><strong>½ cup</strong> = 8 tbsp = 24 tsp = 1 stick of butter</li>
+<li><strong>⅓ cup</strong> = 5 tbsp + 1 tsp</li>
+<li><strong>¼ cup</strong> = 4 tbsp = 12 tsp</li>
+<li><strong>1 tbsp</strong> = 3 tsp = ½ fl oz</li>
+</ul>
+<h2>Need a different conversion?</h2>
+<p>This page counts spoons; it doesn't weigh them. Because a tablespoon of flour and a tablespoon of honey weigh very different amounts, use the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for weight, or the <a href="/cups-to-grams/">cups to grams converter</a> for a full cup. Working with metric volumes? The <a href="/volume-converter/">volume converter</a> adds millilitres, fluid ounces and litres, and the <a href="/cups-to-ml/">cups to mL page</a> covers US, metric and imperial cup sizes. Halving a recipe? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every measure in spoons you can actually use.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
@@ -1173,6 +1268,7 @@ function llmsTxt() {
     ["Cups to Grams Converter", "/cups-to-grams/", "Convert any ingredient between cups, tablespoons, teaspoons and grams"],
     ["Grams to Cups Converter", "/grams-to-cups/", "Reverse direction: enter a weight in grams and get cups, by ingredient"],
     ["Tablespoons to Grams Converter", "/tablespoons-to-grams/", "How many grams in a tablespoon of any ingredient (1 tbsp = 1/16 cup); tbsp/tsp/cups to grams"],
+    ["Tablespoons in a Cup", "/tablespoons-in-a-cup/", "How many tablespoons/teaspoons in a cup and every fraction: 1 cup = 16 tbsp = 48 tsp; 1/3 cup = 5 tbsp + 1 tsp; 2/3 cup = 10 tbsp + 2 tsp; 1 tbsp = 3 tsp"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Recipe Halving Chart", "/recipe-halving-chart/", "Half and one-third of any kitchen measurement (half of 3/4 cup = 6 tbsp; half of 1/3 cup = 2 tbsp + 2 tsp)"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
@@ -1323,7 +1419,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
