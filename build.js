@@ -78,6 +78,7 @@ const ALL_TOOLS = [
   ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
   ["/tablespoons-to-grams/", "Tablespoons to Grams", "How many grams in a tablespoon of any ingredient."],
   ["/tablespoons-in-a-cup/", "Tablespoons in a Cup", "16 tbsp in a cup — plus every fraction & full chart."],
+  ["/ounces-in-a-cup/", "Ounces in a Cup", "8 fl oz in a cup — and fluid vs dry ounces, explained."],
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
   ["/recipe-halving-chart/", "Recipe Halving Chart", "Half of 3/4 cup, 1/3 cup & every other measure."],
@@ -845,7 +846,7 @@ ${revRows}
 </tbody></table>
 <p class="note">The US-vs-metric gap is ~5% — fine for soups and sauces, worth correcting when you're baking or scaling a recipe up.</p>
 <h2>Need a different conversion?</h2>
-<p>The <a href="/volume-converter/">volume converter</a> also handles tablespoons, teaspoons and litres. Converting to weight instead? Millilitres only equal grams for water — for flour, sugar, butter and 80+ other ingredients use the <a href="/cups-to-grams/">cups to grams converter</a> or the reverse <a href="/grams-to-cups/">grams to cups converter</a>. And if you're halving a recipe, the <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every cup measure in spoons you can actually use.</p>
+<p>The <a href="/volume-converter/">volume converter</a> also handles tablespoons, teaspoons and litres, and if your recipe uses fluid ounces, see <a href="/ounces-in-a-cup/">how many ounces are in a cup</a>. Converting to weight instead? Millilitres only equal grams for water — for flour, sugar, butter and 80+ other ingredients use the <a href="/cups-to-grams/">cups to grams converter</a> or the reverse <a href="/grams-to-cups/">grams to cups converter</a>. And if you're halving a recipe, the <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every cup measure in spoons you can actually use.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
@@ -939,7 +940,97 @@ ${ladder}
 <li><strong>1 tbsp</strong> = 3 tsp = ½ fl oz</li>
 </ul>
 <h2>Need a different conversion?</h2>
-<p>This page counts spoons; it doesn't weigh them. Because a tablespoon of flour and a tablespoon of honey weigh very different amounts, use the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for weight, or the <a href="/cups-to-grams/">cups to grams converter</a> for a full cup. Working with metric volumes? The <a href="/volume-converter/">volume converter</a> adds millilitres, fluid ounces and litres, and the <a href="/cups-to-ml/">cups to mL page</a> covers US, metric and imperial cup sizes. Halving a recipe? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every measure in spoons you can actually use.</p>
+<p>This page counts spoons; it doesn't weigh them. Because a tablespoon of flour and a tablespoon of honey weigh very different amounts, use the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for weight, or the <a href="/cups-to-grams/">cups to grams converter</a> for a full cup. Working with metric volumes? The <a href="/volume-converter/">volume converter</a> adds millilitres, fluid ounces and litres, and the <a href="/cups-to-ml/">cups to mL page</a> covers US, metric and imperial cup sizes. Recipe in fluid ounces? See <a href="/ounces-in-a-cup/">how many ounces are in a cup</a> — including why dry ounces are a different thing. Halving a recipe? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every measure in spoons you can actually use.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
+}
+
+// "How many ounces in a cup?" — the other giant US kitchen-measurement question class.
+// The fluid-ounce side is pure US-unit arithmetic (1 cup = 8 fl oz, 1 fl oz = 29.5735 mL);
+// the dry-ounce side (weight of a cup) is computed from the verified gramsPerCup values in
+// ingredients.json (1 oz = 28.3495 g), so nothing on this page is typed by hand.
+function ouncesInCupPage() {
+  const OZ_G = 28.3495; // 1 avoirdupois ounce, exact by definition (28.349523125 g)
+  const ML = 236.5882365; // 1 US cup in mL, exact by definition
+  const title = "How Many Ounces in a Cup? (8 fl oz) — Fluid vs Dry Oz | ExactCup";
+  const description = "There are 8 fluid ounces in a US cup: 1/2 cup = 4 fl oz, 3/4 cup = 6 fl oz. Dry ounces are weight — a cup of flour weighs 4.2 oz, sugar 7.1 oz, butter 8 oz.";
+  const canonical = "/ounces-in-a-cup/";
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  // Cup fractions → fl oz / tbsp / mL. 8 fl oz and 16 tbsp per cup.
+  const fracRows = [
+    ["1/8 cup", 1 / 8], ["1/4 cup", 1 / 4], ["1/3 cup", 1 / 3], ["1/2 cup", 1 / 2],
+    ["2/3 cup", 2 / 3], ["3/4 cup", 3 / 4], ["1 cup", 1], ["1 1/2 cups", 1.5], ["2 cups", 2],
+  ].map(([lab, c]) =>
+    `<tr><td>${lab}</td><td class="num">${rnd(c * 8, 2)} fl oz</td><td class="num">${rnd(c * 16, 1)} tbsp</td><td class="num">${Math.round(c * ML)} mL</td></tr>`
+  ).join("\n");
+  // Common fl-oz amounts → cups; call out the named measures (pint/quart/gallon).
+  const named = { 16: "1 pint", 32: "1 quart", 64: "1/2 gallon", 128: "1 gallon" };
+  const revRows = [1, 2, 4, 6, 8, 12, 16, 24, 32, 64, 128].map((oz) => {
+    const c = oz / 8;
+    return `<tr><td>${oz} fl oz</td><td class="num">${rnd(c, 3)} ${c === 1 ? "cup" : "cups"}</td><td>${named[oz] || ""}</td></tr>`;
+  }).join("\n");
+  // Weight of 1 cup for common ingredients — straight from the verified dataset.
+  const wSlugs = ["all-purpose-flour", "granulated-sugar", "brown-sugar", "powdered-sugar", "butter", "milk", "water", "vegetable-oil", "honey", "chocolate-chips", "rolled-oats", "cocoa-powder"];
+  const weightRows = wSlugs.map((slug) => {
+    const i = ingBySlug(slug);
+    return `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${rnd(i.gramsPerCup / OZ_G, 1)} oz</td><td class="num">${g2(i.gramsPerCup)} g</td></tr>`;
+  }).join("\n");
+  const flourCups8oz = rnd(8 * OZ_G / ingBySlug("all-purpose-flour").gramsPerCup, 1);
+  const faq = [
+    ["How many ounces are in a cup?", "There are 8 US fluid ounces in 1 US cup. So half a cup is 4 fl oz, a quarter cup is 2 fl oz, and three-quarters of a cup is 6 fl oz. That's for liquids, measured by volume — for dry ingredients, \"ounces\" on a recipe or package usually means weight, and a cup of flour, sugar or oats each weighs a different number of ounces (see the dry-ounce chart on this page)."],
+    ["How many cups is 8 oz?", "8 fluid ounces of any liquid is exactly 1 cup. But 8 ounces by weight depends on the ingredient: 8 oz of all-purpose flour is about " + flourCups8oz + " cups, while 8 oz of butter is exactly 1 cup (2 sticks). If a recipe says \"8 oz\" of a dry ingredient, it almost always means weight — use a scale, or an ingredient-specific converter."],
+    ["What's the difference between fluid ounces and dry ounces?", "A fluid ounce measures volume (how much space something fills); an ounce measures weight. They only line up for water-like liquids: a fluid ounce of water weighs just about 1 ounce (1.043 oz to be exact). For anything else the two diverge — a cup of flour fills 8 fl oz of space but weighs only about 4.2 oz."],
+    ["How many ounces are in half a cup?", "Half a US cup is 4 fluid ounces, which is also 8 tablespoons or about 118 mL. By weight, half a cup of butter is 4 oz (one stick), but half a cup of flour is only about 2.1 oz."],
+    ["How many ounces are in 1/4 cup?", "A quarter cup is 2 fluid ounces, or 4 tablespoons (about 59 mL)."],
+    ["How many ounces are in 1/3 cup?", "A third of a cup is about 2.67 fluid ounces — 5 tablespoons plus 1 teaspoon, or about 79 mL."],
+    ["How many ounces are in 3/4 cup?", "Three-quarters of a cup is 6 fluid ounces, or 12 tablespoons (about 177 mL)."],
+    ["How many cups is 16 oz?", "16 fluid ounces is 2 cups — that's 1 US pint. By weight, 16 oz is 1 pound, and how many cups that fills depends on the ingredient: a pound of flour is about 3.8 cups, a pound of granulated sugar about 2.3 cups, and a pound of butter exactly 2 cups (4 sticks)."],
+    ["Does a cup of water weigh 8 ounces?", "Almost, but not exactly — a US cup of water weighs about 8.35 oz (236.6 g), because a fluid ounce of water weighs slightly more than a weight ounce. The neat \"a pint's a pound\" rhyme is off by about 4%. Butter is the ingredient where the numbers really do match: 1 cup = 8 oz = 2 sticks."],
+    ["How many cups is an 8 oz block of cream cheese?", "One 8 oz (227 g) block of cream cheese is just about 1 cup — cream cheese weighs roughly 232 g per cup, so a standard block is 0.98 cups. Recipes that call for a cup of cream cheese mean one block."],
+    ["Are UK fluid ounces the same as US fluid ounces?", "Close but not identical. An imperial (UK) fluid ounce is 28.41 mL versus 29.57 mL for the US fluid ounce — about 4% smaller. Old British recipes also use the 10-fl-oz imperial cup and the 20-fl-oz imperial pint, so a UK pint (568 mL) is bigger than a US pint (473 mL)."],
+    ["How many ounces is a coffee cup?", "A \"cup\" on a coffee maker is usually only 5 or 6 fluid ounces, not the 8 fl oz measuring cup — and a typical coffee mug actually holds 8–12 fl oz. Coffee-maker cups are a marketing measure, so don't use them for recipes."],
+  ];
+  const jsonLd = [
+    appLd("Ounces in a Cup Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Ounces in a Cup", canonical]]),
+  ];
+  const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  const body = `
+<h1>How Many Ounces in a Cup?</h1>
+<p class="lead">There are <strong>8 fluid ounces in 1 US cup</strong> — so ½ cup = 4 fl oz and ¼ cup = 2 fl oz. That answer is for liquids. For dry ingredients, "ounces" means <em>weight</em>, and every ingredient weighs something different per cup — both answers are below.</p>
+<div class="calc">
+  <div class="row">${f("Cups", "cups", "1")}${f("Fluid ounces", "floz", "8")}${f("Milliliters", "ml", "237")}</div>
+</div>
+<p class="note">US customary measures: 1 cup = 8 fl oz = 236.588 mL. The converter is for volume (fluid ounces) — for weight, see the dry-ounce chart below.</p>
+<h2>Fluid ounces in every cup fraction</h2>
+<table><thead><tr><th>Cup amount</th><th>Fluid oz</th><th>Tablespoons</th><th>Millilitres</th></tr></thead><tbody>
+${fracRows}
+</tbody></table>
+<h2>Ounces to cups</h2>
+<p>Going the other way — a drink or can size in fluid ounces, converted to cups:</p>
+<table><thead><tr><th>Fluid ounces</th><th>Cups</th><th>Also known as</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<h2>Fluid ounces vs dry ounces — the trap</h2>
+<p>A <strong>fluid ounce</strong> is a volume (space); an <strong>ounce</strong> is a weight. A cup of <em>anything</em> is 8 fl oz of volume, but what it <em>weighs</em> depends entirely on the ingredient. This is why "8 oz of flour" (weight — about ${flourCups8oz} cups) is very different from "8 fl oz of flour" (1 cup — only about 4.2 oz of weight). Here's what 1 cup actually weighs:</p>
+<table><thead><tr><th>Ingredient (1 cup)</th><th>Weight (oz)</th><th>Grams</th></tr></thead><tbody>
+${weightRows}
+</tbody></table>
+<p class="note">Weights from our <a href="/ingredient-density-data/">verified ingredient density dataset</a>. Butter is the tidy one: 1 cup = 8 oz by weight too (2 sticks of 4 oz each). Water is close at 8.35 oz. Everything else diverges.</p>
+<h2>Quick reference</h2>
+<ul>
+<li><strong>1 cup</strong> = 8 fl oz = 16 tbsp = 237 mL</li>
+<li><strong>¾ cup</strong> = 6 fl oz</li>
+<li><strong>⅔ cup</strong> = 5⅓ fl oz</li>
+<li><strong>½ cup</strong> = 4 fl oz</li>
+<li><strong>⅓ cup</strong> = 2⅔ fl oz</li>
+<li><strong>¼ cup</strong> = 2 fl oz</li>
+<li><strong>1 pint</strong> = 16 fl oz = 2 cups · <strong>1 quart</strong> = 32 fl oz = 4 cups · <strong>1 gallon</strong> = 128 fl oz = 16 cups</li>
+</ul>
+<h2>Need a different conversion?</h2>
+<p>Converting a dry ingredient by weight? Use the <a href="/cups-to-grams/">cups to grams converter</a> (or the reverse <a href="/grams-to-cups/">grams to cups</a>) — it covers 80+ ingredients. Counting spoons instead of ounces? See <a href="/tablespoons-in-a-cup/">how many tablespoons are in a cup</a>. Working in millilitres, or with UK/Australian cup sizes? The <a href="/cups-to-ml/">cups to mL page</a> has every cup standard, and the <a href="/volume-converter/">volume converter</a> handles tsp through litres. For butter specifically — sticks, cups, ounces and grams — use the <a href="/butter-converter/">butter converter</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
@@ -1269,6 +1360,7 @@ function llmsTxt() {
     ["Grams to Cups Converter", "/grams-to-cups/", "Reverse direction: enter a weight in grams and get cups, by ingredient"],
     ["Tablespoons to Grams Converter", "/tablespoons-to-grams/", "How many grams in a tablespoon of any ingredient (1 tbsp = 1/16 cup); tbsp/tsp/cups to grams"],
     ["Tablespoons in a Cup", "/tablespoons-in-a-cup/", "How many tablespoons/teaspoons in a cup and every fraction: 1 cup = 16 tbsp = 48 tsp; 1/3 cup = 5 tbsp + 1 tsp; 2/3 cup = 10 tbsp + 2 tsp; 1 tbsp = 3 tsp"],
+    ["Ounces in a Cup", "/ounces-in-a-cup/", "How many ounces in a cup: 1 US cup = 8 fl oz (1/2 cup = 4 fl oz, 3/4 cup = 6 fl oz); fluid oz (volume) vs dry oz (weight) explained — 1 cup of flour weighs 4.2 oz, sugar 7.1 oz, butter 8 oz"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Recipe Halving Chart", "/recipe-halving-chart/", "Half and one-third of any kitchen measurement (half of 3/4 cup = 6 tbsp; half of 1/3 cup = 2 tbsp + 2 tsp)"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
@@ -1419,7 +1511,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), ouncesInCupPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
