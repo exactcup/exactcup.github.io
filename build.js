@@ -79,6 +79,7 @@ const ALL_TOOLS = [
   ["/tablespoons-to-grams/", "Tablespoons to Grams", "How many grams in a tablespoon of any ingredient."],
   ["/tablespoons-in-a-cup/", "Tablespoons in a Cup", "16 tbsp in a cup — plus every fraction & full chart."],
   ["/ounces-in-a-cup/", "Ounces in a Cup", "8 fl oz in a cup — and fluid vs dry ounces, explained."],
+  ["/cups-in-a-quart/", "Cups in a Quart", "4 cups in a quart, 16 in a gallon — the full US ladder."],
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
   ["/recipe-halving-chart/", "Recipe Halving Chart", "Half of 3/4 cup, 1/3 cup & every other measure."],
@@ -774,7 +775,7 @@ function volumePage() {
 <tr><td>⅓ cup</td><td class="num">5⅓</td><td class="num">16</td><td class="num">79</td></tr>
 <tr><td>¼ cup</td><td class="num">4</td><td class="num">12</td><td class="num">59</td></tr>
 </tbody></table>
-<p>Just need to know how many tablespoons or teaspoons are in a cup fraction? The <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> page spells out every fraction (including the awkward ⅓ and ⅔ cup). Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>
+<p>Just need to know how many tablespoons or teaspoons are in a cup fraction? The <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> page spells out every fraction (including the awkward ⅓ and ⅔ cup). Going bigger — pints, quarts and gallons? See <a href="/cups-in-a-quart/">how many cups are in a quart</a> for the full US ladder. Converting cups to millilitres specifically — or cooking from a UK, Australian or Japanese recipe where a "cup" is a different size? See the dedicated <a href="/cups-to-ml/">cups to mL converter &amp; chart</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Volume Converter", description, canonical), faqLd(faq)], cfg: { type: "volume" } }) };
@@ -1030,7 +1031,84 @@ ${weightRows}
 <li><strong>1 pint</strong> = 16 fl oz = 2 cups · <strong>1 quart</strong> = 32 fl oz = 4 cups · <strong>1 gallon</strong> = 128 fl oz = 16 cups</li>
 </ul>
 <h2>Need a different conversion?</h2>
-<p>Converting a dry ingredient by weight? Use the <a href="/cups-to-grams/">cups to grams converter</a> (or the reverse <a href="/grams-to-cups/">grams to cups</a>) — it covers 80+ ingredients. Counting spoons instead of ounces? See <a href="/tablespoons-in-a-cup/">how many tablespoons are in a cup</a>. Working in millilitres, or with UK/Australian cup sizes? The <a href="/cups-to-ml/">cups to mL page</a> has every cup standard, and the <a href="/volume-converter/">volume converter</a> handles tsp through litres. For butter specifically — sticks, cups, ounces and grams — use the <a href="/butter-converter/">butter converter</a>.</p>
+<p>Converting a dry ingredient by weight? Use the <a href="/cups-to-grams/">cups to grams converter</a> (or the reverse <a href="/grams-to-cups/">grams to cups</a>) — it covers 80+ ingredients. Counting spoons instead of ounces? See <a href="/tablespoons-in-a-cup/">how many tablespoons are in a cup</a>. Scaling up past the cup — 32 fl oz to quarts, 128 to gallons? See <a href="/cups-in-a-quart/">how many cups are in a quart</a>. Working in millilitres, or with UK/Australian cup sizes? The <a href="/cups-to-ml/">cups to mL page</a> has every cup standard, and the <a href="/volume-converter/">volume converter</a> handles tsp through litres. For butter specifically — sticks, cups, ounces and grams — use the <a href="/butter-converter/">butter converter</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
+}
+
+// "How many cups in a quart / pint / gallon?" — completes the US-measurement question
+// trilogy (tablespoons-in-a-cup, ounces-in-a-cup). Everything here is US-customary
+// definition arithmetic — 1 gallon = 4 quarts = 8 pints = 16 cups = 128 fl oz, and
+// 1 US cup = 236.5882365 mL exactly — so no ingredient data is involved.
+function cupsInQuartPage() {
+  const CUP_ML = 236.5882365;
+  const title = "How Many Cups in a Quart? (4) — Pints & Gallons Chart | ExactCup";
+  const description = "There are 4 cups in a US quart, 2 cups in a pint and 16 cups in a gallon. Free converter plus charts: quarts to cups, the full gallon ladder, and quarts vs liters.";
+  const canonical = "/cups-in-a-quart/";
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  // The nesting ladder, one row per named US measure. Columns all derive from cups.
+  const ladder = [
+    ["1 cup", 1], ["1 pint", 2], ["1 quart", 4], ["1/2 gallon", 8], ["1 gallon", 16],
+  ].map(([lab, c]) =>
+    `<tr><td>${lab}</td><td class="num">${c} ${c === 1 ? "cup" : "cups"}</td><td class="num">${rnd(c / 2, 2)} pt</td><td class="num">${rnd(c / 4, 2)} qt</td><td class="num">${c * 8} fl oz</td><td class="num">${rnd(c * CUP_ML / 1000, 2)} L</td></tr>`
+  ).join("\n");
+  // Quarts → cups for the amounts people actually look up.
+  const qNamed = { 0.5: "1 pint", 2: "1/2 gallon", 4: "1 gallon", 8: "2 gallons" };
+  const qRows = [0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 8].map((q) => {
+    const c = q * 4;
+    return `<tr><td>${q} ${q === 1 ? "quart" : "quarts"}</td><td class="num">${c} ${c === 1 ? "cup" : "cups"}</td><td class="num">${q * 32} fl oz</td><td class="num">${rnd(c * CUP_ML / 1000, 2)} L</td><td>${qNamed[q] || ""}</td></tr>`;
+  }).join("\n");
+  const impQtCups = rnd(1136.5225 / CUP_ML, 1); // imperial quart (40 imp fl oz) in US cups
+  const dryQtCups = rnd(1101.22 / CUP_ML, 2); // US dry quart (67.2 cu in) in US liquid cups
+  const faq = [
+    ["How many cups are in a quart?", "There are 4 cups in 1 US quart. So 2 quarts is 8 cups, and half a quart (1 pint) is 2 cups. A quart is also 32 fluid ounces, or about 946 mL — just under a liter."],
+    ["How many cups are in a gallon?", "There are 16 cups in 1 US gallon — a gallon is 4 quarts, and each quart is 4 cups. That's also 128 fluid ounces, or about 3.79 liters."],
+    ["How many cups are in a half gallon?", "There are 8 cups in half a gallon — that's 2 quarts, 64 fluid ounces, or about 1.89 liters. A standard half-gallon carton of milk pours 8 full cups."],
+    ["How many cups are in a pint?", "There are 2 cups in 1 US pint (16 fluid ounces). A pint of ice cream is 2 cups — about 4 half-cup scoops."],
+    ["How many pints are in a quart?", "There are 2 pints in 1 quart. The whole ladder doubles and doubles again: 2 cups make a pint, 2 pints make a quart, and 4 quarts make a gallon."],
+    ["How many quarts are in a gallon?", "There are 4 quarts in 1 US gallon — the name literally comes from \"quarter of a gallon.\" That makes 2 quarts in a half gallon and 8 pints in a gallon."],
+    ["How many ounces are in a quart?", "There are 32 fluid ounces in 1 US quart (4 cups × 8 fl oz each). A gallon is 128 fl oz and a pint is 16 fl oz. Note these are fluid ounces (volume) — what a quart weighs depends on what's in it."],
+    ["Is a quart the same as a liter?", "Close, but no. A US liquid quart is 0.946 liters, so a liter is about 5.7% bigger than a quart. If a recipe calls for a quart and you only have metric measures, use 950 mL. (An imperial quart is different again — 1.136 liters.)"],
+    ["How many cups are in 2 quarts?", "2 quarts is 8 cups — the same as half a gallon or 64 fluid ounces. Most large soup and stock recipes land around this size."],
+    ["Is a dry quart the same as a liquid quart?", "No. Berries and produce in the US are often sold by the dry quart, which is about 1.101 liters — roughly " + dryQtCups + " liquid cups, not 4. The 4-cups-per-quart rule on this page is for the liquid quart used in recipes and drinks."],
+    ["Are UK pints and quarts the same as US ones?", "No — imperial measures are bigger. A UK pint is 20 imperial fluid ounces (568 mL, about 2.4 US cups) versus 16 US fl oz for a US pint, and a UK quart is 1.136 liters (about " + impQtCups + " US cups) versus 0.946 liters. That's why a British pint of beer is noticeably larger than an American one."],
+    ["How do I remember cups, pints, quarts and gallons?", "Think in doublings: 2 cups = 1 pint, 2 pints = 1 quart, and 4 quarts = 1 gallon. Many cooks picture the \"gallon man\" diagram — a big G holding four Qs, each Q holding two Ps, each P holding two Cs."],
+  ];
+  const jsonLd = [
+    appLd("Cups in a Quart Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Cups in a Quart", canonical]]),
+  ];
+  const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  const body = `
+<h1>How Many Cups in a Quart?</h1>
+<p class="lead">There are <strong>4 cups in 1 US quart</strong>. The rest of the ladder: <strong>2 cups in a pint</strong>, <strong>8 cups in a half gallon</strong>, and <strong>16 cups in a gallon</strong>. Type any amount below to convert between all four.</p>
+<div class="calc">
+  <div class="row">${f("Cups", "cups", "4")}${f("Pints", "pints", "2")}${f("Quarts", "quarts", "1")}${f("Gallons", "gallons", "0.25")}</div>
+</div>
+<p class="note">US customary liquid measures: 1 quart = 4 cups = 32 fl oz = 946 mL. UK/imperial pints and quarts are larger — see the FAQ.</p>
+<h2>Cups, pints, quarts and gallons</h2>
+<p>Every named US liquid measure, side by side. Each row is the same amount expressed five ways:</p>
+<table><thead><tr><th>Measure</th><th>Cups</th><th>Pints</th><th>Quarts</th><th>Fluid oz</th><th>Liters</th></tr></thead><tbody>
+${ladder}
+</tbody></table>
+<h2>Quarts to cups</h2>
+<table><thead><tr><th>Quarts</th><th>Cups</th><th>Fluid oz</th><th>Liters</th><th>Also known as</th></tr></thead><tbody>
+${qRows}
+</tbody></table>
+<h2>The trick: everything doubles</h2>
+<p>The US liquid ladder is easy to keep in your head because each step (almost) just doubles: <strong>2 cups make a pint, 2 pints make a quart, and 4 quarts make a gallon</strong> — "quart" literally means a quarter of a gallon. Schoolkids learn it as the <em>gallon man</em>: a big G with four Qs inside, two Ps inside each Q, and two Cs inside each P. Multiply it out and you get the numbers on this page: 4 cups per quart, 16 cups per gallon, 8 pints per gallon.</p>
+<h2>Quick reference</h2>
+<ul>
+<li><strong>1 pint</strong> = 2 cups = 16 fl oz ≈ 473 mL</li>
+<li><strong>1 quart</strong> = 2 pints = 4 cups = 32 fl oz ≈ 946 mL</li>
+<li><strong>1/2 gallon</strong> = 2 quarts = 8 cups = 64 fl oz ≈ 1.89 L</li>
+<li><strong>1 gallon</strong> = 4 quarts = 8 pints = 16 cups = 128 fl oz ≈ 3.79 L</li>
+<li><strong>1 liter</strong> ≈ 1.06 quarts ≈ 4.23 cups</li>
+</ul>
+<h2>Need a different conversion?</h2>
+<p>Going smaller instead of bigger? See <a href="/tablespoons-in-a-cup/">how many tablespoons are in a cup</a> (16) or <a href="/ounces-in-a-cup/">how many ounces are in a cup</a> (8 fl oz — plus the fluid-vs-dry-ounce trap). Working in metric? The <a href="/cups-to-ml/">cups to mL page</a> covers US, metric and imperial cup sizes, and the <a href="/volume-converter/">volume converter</a> handles teaspoons through liters. Converting an ingredient to weight — how much a quart of flour or milk actually weighs? That depends on the ingredient: use the <a href="/cups-to-grams/">cups to grams converter</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
@@ -1361,6 +1439,7 @@ function llmsTxt() {
     ["Tablespoons to Grams Converter", "/tablespoons-to-grams/", "How many grams in a tablespoon of any ingredient (1 tbsp = 1/16 cup); tbsp/tsp/cups to grams"],
     ["Tablespoons in a Cup", "/tablespoons-in-a-cup/", "How many tablespoons/teaspoons in a cup and every fraction: 1 cup = 16 tbsp = 48 tsp; 1/3 cup = 5 tbsp + 1 tsp; 2/3 cup = 10 tbsp + 2 tsp; 1 tbsp = 3 tsp"],
     ["Ounces in a Cup", "/ounces-in-a-cup/", "How many ounces in a cup: 1 US cup = 8 fl oz (1/2 cup = 4 fl oz, 3/4 cup = 6 fl oz); fluid oz (volume) vs dry oz (weight) explained — 1 cup of flour weighs 4.2 oz, sugar 7.1 oz, butter 8 oz"],
+    ["Cups in a Quart", "/cups-in-a-quart/", "How many cups in a quart, pint and gallon: 1 quart = 4 cups = 2 pints = 32 fl oz = 0.946 L; 1 gallon = 4 quarts = 16 cups = 128 fl oz; 1 pint = 2 cups; half gallon = 8 cups"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Recipe Halving Chart", "/recipe-halving-chart/", "Half and one-third of any kitchen measurement (half of 3/4 cup = 6 tbsp; half of 1/3 cup = 2 tbsp + 2 tsp)"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
@@ -1511,7 +1590,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), ouncesInCupPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

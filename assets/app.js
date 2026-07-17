@@ -218,7 +218,7 @@
 
   function initVolume() {
     // base unit: ml
-    var U = { cups: 236.588, tbsp: 14.7868, tsp: 4.92892, floz: 29.5735, ml: 1, l: 1000 };
+    var U = { cups: 236.588, tbsp: 14.7868, tsp: 4.92892, floz: 29.5735, ml: 1, l: 1000, pints: 473.176, quarts: 946.353, gallons: 3785.41 };
     var ids = Object.keys(U), lock = false;
     function setAll(ml, except) {
       lock = true;
