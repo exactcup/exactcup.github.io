@@ -78,6 +78,7 @@ const ALL_TOOLS = [
   ["/grams-to-cups/", "Grams to Cups", "Have a weight? Turn grams back into cups by ingredient."],
   ["/tablespoons-to-grams/", "Tablespoons to Grams", "How many grams in a tablespoon of any ingredient."],
   ["/tablespoons-in-a-cup/", "Tablespoons in a Cup", "16 tbsp in a cup — plus every fraction & full chart."],
+  ["/teaspoons-in-a-tablespoon/", "Teaspoons in a Tablespoon", "3 tsp in a tbsp — half measures & world spoon sizes."],
   ["/ounces-in-a-cup/", "Ounces in a Cup", "8 fl oz in a cup — and fluid vs dry ounces, explained."],
   ["/cups-in-a-quart/", "Cups in a Quart", "4 cups in a quart, 16 in a gallon — the full US ladder."],
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
@@ -562,7 +563,7 @@ function halvingChartPage() {
 <h2>Baking notes when you halve</h2>
 <p>Ingredients scale linearly, but pans and time do not. A half batch wants a pan with about half the area — the <a href="/pan-size-converter/">pan size converter</a> matches pan sizes for you — and it will bake in less time at the same temperature, so start checking early. Eggs are the other snag; see the FAQ below for the clean way to halve one.</p>
 <h2>Need a different conversion?</h2>
-<p>For spoon-and-cup volume swaps (cups &#8596; tbsp &#8596; tsp &#8596; mL) use the <a href="/volume-converter/">volume converter</a>. Working in weights? The <a href="/cups-to-grams/">cups to grams</a> and <a href="/grams-to-cups/">grams to cups</a> converters cover 80+ ingredients.</p>
+<p>For spoon-and-cup volume swaps (cups &#8596; tbsp &#8596; tsp &#8596; mL) use the <a href="/volume-converter/">volume converter</a>. Halving spoon amounts specifically — like half of a tablespoon (1&#189; tsp)? The <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> page walks the whole spoon ladder down. Working in weights? The <a href="/cups-to-grams/">cups to grams</a> and <a href="/grams-to-cups/">grams to cups</a> converters cover 80+ ingredients.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "halve" } }) };
@@ -941,7 +942,114 @@ ${ladder}
 <li><strong>1 tbsp</strong> = 3 tsp = ½ fl oz</li>
 </ul>
 <h2>Need a different conversion?</h2>
-<p>This page counts spoons; it doesn't weigh them. Because a tablespoon of flour and a tablespoon of honey weigh very different amounts, use the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for weight, or the <a href="/cups-to-grams/">cups to grams converter</a> for a full cup. Working with metric volumes? The <a href="/volume-converter/">volume converter</a> adds millilitres, fluid ounces and litres, and the <a href="/cups-to-ml/">cups to mL page</a> covers US, metric and imperial cup sizes. Recipe in fluid ounces? See <a href="/ounces-in-a-cup/">how many ounces are in a cup</a> — including why dry ounces are a different thing. Halving a recipe? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every measure in spoons you can actually use.</p>
+<p>This page counts spoons; it doesn't weigh them. Zoomed in on just the spoons — half a tablespoon, dessertspoons, dashes and pinches? See <a href="/teaspoons-in-a-tablespoon/">how many teaspoons are in a tablespoon</a>. Because a tablespoon of flour and a tablespoon of honey weigh very different amounts, use the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for weight, or the <a href="/cups-to-grams/">cups to grams converter</a> for a full cup. Working with metric volumes? The <a href="/volume-converter/">volume converter</a> adds millilitres, fluid ounces and litres, and the <a href="/cups-to-ml/">cups to mL page</a> covers US, metric and imperial cup sizes. Recipe in fluid ounces? See <a href="/ounces-in-a-cup/">how many ounces are in a cup</a> — including why dry ounces are a different thing. Halving a recipe? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every measure in spoons you can actually use.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
+}
+
+// "How many teaspoons in a tablespoon?" — the spoon-level companion to
+// tablespoons-in-a-cup (which is cup-fraction-focused). Owns the tsp↔tbsp question class:
+// half a tablespoon, the tsp-vs-Tbsp abbreviation trap, and spoon sizes worldwide.
+// Pure unit arithmetic (1 US tbsp = 3 tsp; 1 US tsp = 4.92892159375 mL exactly), so zero
+// data-source risk — every value is computed from those definitions, not typed by hand.
+function tspInTbspPage() {
+  const TSP_ML = 4.92892159375; // 1 US teaspoon in mL, exact by definition (1/6 US fl oz)
+  const title = "How Many Teaspoons in a Tablespoon? (3) — Chart & Half Measures | ExactCup";
+  const description = "There are 3 teaspoons in 1 US tablespoon — so 1/2 tbsp = 1 1/2 tsp and 2 tbsp = 6 tsp. Free chart with mL, half measures, and US vs UK vs Australian spoon sizes.";
+  const canonical = "/teaspoons-in-a-tablespoon/";
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  // Tablespoons → teaspoons / fl oz / mL. 3 tsp and 1/2 fl oz per tbsp — exact.
+  const tbspRows = [
+    ["½ tbsp", 0.5, "1½ tsp"], ["1 tbsp", 1, "3 tsp"], ["1½ tbsp", 1.5, "4½ tsp"],
+    ["2 tbsp (⅛ cup)", 2, "6 tsp"], ["3 tbsp", 3, "9 tsp"], ["4 tbsp (¼ cup)", 4, "12 tsp"],
+    ["6 tbsp", 6, "18 tsp"], ["8 tbsp (½ cup)", 8, "24 tsp"], ["12 tbsp (¾ cup)", 12, "36 tsp"],
+    ["16 tbsp (1 cup)", 16, "48 tsp"],
+  ].map(([lab, t, tspLab]) =>
+    `<tr><td>${lab}</td><td class="num">${tspLab}</td><td class="num">${rnd(t / 2, 2)} fl oz</td><td class="num">${rnd(t * 3 * TSP_ML, 1)} mL</td></tr>`
+  ).join("\n");
+  // Teaspoons → tablespoons, with thirds spelled out as fractions where they occur.
+  const tspRows = [
+    [1, "⅓ tbsp"], [2, "⅔ tbsp"], [3, "1 tbsp"], [4, "1 tbsp + 1 tsp"], [5, "1 tbsp + 2 tsp"],
+    [6, "2 tbsp"], [8, "2 tbsp + 2 tsp"], [9, "3 tbsp"], [12, "4 tbsp (¼ cup)"],
+    [24, "8 tbsp (½ cup)"], [48, "16 tbsp (1 cup)"],
+  ].map(([tsp, lab]) =>
+    `<tr><td>${tsp} tsp</td><td>${lab}</td><td class="num">${rnd(tsp * TSP_ML, 1)} mL</td></tr>`
+  ).join("\n");
+  // Halving down the spoon ladder — every half lands on a real measuring spoon.
+  const halfRows = [
+    ["1 tbsp (3 tsp)", "1½ tsp"], ["½ tbsp (1½ tsp)", "¾ tsp"], ["1 tsp", "½ tsp"],
+    ["½ tsp", "¼ tsp"], ["¼ tsp", "⅛ tsp"], ["⅛ tsp", "1/16 tsp — the “pinch” on mini spoon sets"],
+  ].map((r) => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("\n");
+  // Spoon sizes by standard. mL values: US customary computed from TSP_ML; the rest are
+  // defined round numbers (metric/label 5 & 15 mL; Australian tbsp 20 mL; dessertspoon 10 mL).
+  const sizeRows = [
+    ["US customary (this page)", `${rnd(TSP_ML, 2)} mL`, `${rnd(TSP_ML * 3, 2)} mL (3 tsp)`],
+    ["US nutrition labels (FDA)", "5 mL", "15 mL (3 tsp)"],
+    ["Metric — UK, EU, Canada, NZ", "5 mL", "15 mL (3 tsp)"],
+    ["Australia", "5 mL", "20 mL (4 tsp)"],
+  ].map((r) => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join("\n");
+  const faq = [
+    ["How many teaspoons are in a tablespoon?", "There are 3 teaspoons in 1 US tablespoon. The same is true of UK, European, Canadian and New Zealand metric spoons (5 mL and 15 mL). The one exception is Australia, where the tablespoon is 20 mL — 4 teaspoons."],
+    ["How many teaspoons are in half a tablespoon?", "Half a tablespoon is 1 1/2 teaspoons. That's the measurement you need most often when halving a recipe — measure 1 teaspoon plus a 1/2 teaspoon."],
+    ["How many teaspoons are in 2 tablespoons?", "2 tablespoons is 6 teaspoons, which is also 1 fluid ounce or 1/8 cup. In general, multiply tablespoons by 3 to get teaspoons."],
+    ["Does tsp mean teaspoon or tablespoon?", "tsp (or a lowercase t) means teaspoon; tbsp, Tbsp or a capital T means tablespoon. Mixing them up triples the amount (or cuts it to a third) — the most common place it hurts is salt, baking soda and baking powder. If a handwritten recipe just says a capital T, read it as tablespoon."],
+    ["How many milliliters are in a teaspoon and a tablespoon?", "A US teaspoon is 4.93 mL and a US tablespoon is 14.79 mL. In practice, recipes treat them as 5 mL and 15 mL — the exact values used by metric spoons and US nutrition labels — and the difference (about 1.4%) is far too small to matter in cooking."],
+    ["Is an Australian tablespoon different?", "Yes. The Australian tablespoon is 20 mL, which is 4 teaspoons — one-third bigger than a US or metric tablespoon. Following an Australian recipe with US spoons? Use 4 teaspoons (or 1 tablespoon plus 1 teaspoon) for each listed tablespoon. Australian teaspoons are the usual 5 mL."],
+    ["What is a dessertspoon?", "A dessertspoon is a UK, Australian and NZ measure of 10 mL — exactly 2 teaspoons, or two-thirds of a metric tablespoon. It sits between the teaspoon and tablespoon and shows up in older British recipes."],
+    ["Can I use a regular eating spoon instead of a measuring spoon?", "Not for anything that matters. Flatware varies a lot — an eating teaspoon can hold anywhere from about half to one-and-a-half times a measuring teaspoon depending on the set. For salt, leaveners and spices, use actual measuring spoons, leveled off."],
+    ["How much is a dash, a pinch and a smidgen?", "There's no official definition, but the mini measuring-spoon sets sold under those names have settled on: dash = 1/8 teaspoon, pinch = 1/16 teaspoon, smidgen = 1/32 teaspoon. In older recipes they simply meant \"a small amount, to taste.\""],
+    ["How many teaspoons are in 1/4 cup?", "A quarter cup is 12 teaspoons, or 4 tablespoons. A full cup is 48 teaspoons (16 tablespoons). See the tablespoons-in-a-cup chart for every cup fraction."],
+    ["How many teaspoons are in a fluid ounce?", "There are 6 teaspoons (2 tablespoons) in 1 US fluid ounce."],
+    ["How many teaspoons are in a packet of yeast?", "A standard US packet of active dry or instant yeast holds 2 1/4 teaspoons (7 g — about 3/4 tablespoon). See the yeast converter to swap between yeast types."],
+  ];
+  const jsonLd = [
+    appLd("Teaspoons in a Tablespoon Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Teaspoons in a Tablespoon", canonical]]),
+  ];
+  const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  const body = `
+<h1>How Many Teaspoons in a Tablespoon?</h1>
+<p class="lead">There are <strong>3 teaspoons in 1 US tablespoon</strong> — so half a tablespoon is <strong>1½ teaspoons</strong>, and 2 tablespoons make 6 teaspoons. Type any amount below to convert between tablespoons, teaspoons and millilitres.</p>
+<div class="calc">
+  <div class="row">${f("Tablespoons", "tbsp", "1")}${f("Teaspoons", "tsp", "3")}${f("Millilitres", "ml", "14.79")}</div>
+</div>
+<p class="note">US customary spoons (tsp ${rnd(TSP_ML, 2)} mL, tbsp ${rnd(TSP_ML * 3, 2)} mL). Metric 5/15 mL spoons are interchangeable with them; the Australian 20 mL tablespoon is not — see the spoon-sizes table below.</p>
+<h2>Tablespoons to teaspoons chart</h2>
+<table><thead><tr><th>Tablespoons</th><th>Teaspoons</th><th>Fluid oz</th><th>Millilitres</th></tr></thead><tbody>
+${tbspRows}
+</tbody></table>
+<h2>Teaspoons to tablespoons</h2>
+<p>Going the other way, divide by 3. When it doesn't divide evenly, measure the whole tablespoons and add the leftover teaspoons:</p>
+<table><thead><tr><th>Teaspoons</th><th>Tablespoons</th><th>Millilitres</th></tr></thead><tbody>
+${tspRows}
+</tbody></table>
+<h2>Halving spoon measurements</h2>
+<p>Because a tablespoon is 3 teaspoons, every half lands on a spoon you actually own:</p>
+<table><thead><tr><th>Half of…</th><th>…is</th></tr></thead><tbody>
+${halfRows}
+</tbody></table>
+<p>Halving a whole recipe? The <a href="/recipe-halving-chart/">recipe halving chart</a> does this for every cup and spoon measure at once.</p>
+<h2>tsp vs tbsp: don't triple the salt</h2>
+<p>The abbreviations are the real trap: <strong>tsp</strong> (or lowercase <strong>t</strong>) is a teaspoon; <strong>tbsp</strong>, <strong>Tbsp</strong> or capital <strong>T</strong> is a tablespoon — three times as much. Misreading one for the other is how a bake ends up with triple the baking soda. When a recipe is ambiguous, the capital letter means the bigger spoon.</p>
+<h2>Spoon sizes around the world</h2>
+<table><thead><tr><th>Standard</th><th>Teaspoon</th><th>Tablespoon</th></tr></thead><tbody>
+${sizeRows}
+</tbody></table>
+<p class="note">The US customary and 5/15 mL metric spoons differ by ~1.4% — swap them freely. The UK/AU <strong>dessertspoon</strong> is 10 mL = 2 tsp. Only the Australian 20 mL tablespoon needs converting: use 4 tsp per Australian tbsp.</p>
+<h2>Quick reference</h2>
+<ul>
+<li><strong>1 tbsp</strong> = 3 tsp = ½ fl oz = ${rnd(TSP_ML * 3, 2)} mL</li>
+<li><strong>½ tbsp</strong> = 1½ tsp</li>
+<li><strong>1 tsp</strong> = ⅓ tbsp = ${rnd(TSP_ML, 2)} mL</li>
+<li><strong>2 tbsp</strong> = 6 tsp = 1 fl oz = ⅛ cup</li>
+<li><strong>4 tbsp</strong> = 12 tsp = ¼ cup</li>
+<li><strong>16 tbsp</strong> = 48 tsp = 1 cup</li>
+<li><strong>1 dessertspoon</strong> (UK/AU) = 2 tsp = 10 mL</li>
+</ul>
+<h2>Need a different conversion?</h2>
+<p>Scaling up from spoons to cups? See <a href="/tablespoons-in-a-cup/">how many tablespoons are in a cup</a> (16 — with every cup fraction, including the awkward ⅓ and ⅔). This page measures volume, not weight — a tablespoon of flour and a tablespoon of honey weigh very different amounts, so for grams use the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a>. The <a href="/volume-converter/">volume converter</a> adds cups, fluid ounces and litres, and the <a href="/cups-to-ml/">cups to mL page</a> covers international cup sizes. For butter, 1 stick = 8 tablespoons — the <a href="/butter-converter/">butter converter</a> handles sticks, grams and ounces.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "volume" } }) };
@@ -1438,6 +1546,7 @@ function llmsTxt() {
     ["Grams to Cups Converter", "/grams-to-cups/", "Reverse direction: enter a weight in grams and get cups, by ingredient"],
     ["Tablespoons to Grams Converter", "/tablespoons-to-grams/", "How many grams in a tablespoon of any ingredient (1 tbsp = 1/16 cup); tbsp/tsp/cups to grams"],
     ["Tablespoons in a Cup", "/tablespoons-in-a-cup/", "How many tablespoons/teaspoons in a cup and every fraction: 1 cup = 16 tbsp = 48 tsp; 1/3 cup = 5 tbsp + 1 tsp; 2/3 cup = 10 tbsp + 2 tsp; 1 tbsp = 3 tsp"],
+    ["Teaspoons in a Tablespoon", "/teaspoons-in-a-tablespoon/", "How many teaspoons in a tablespoon: 1 US tbsp = 3 tsp = 14.79 mL (1/2 tbsp = 1 1/2 tsp; 2 tbsp = 6 tsp = 1 fl oz); Australian tbsp = 20 mL = 4 tsp; dessertspoon = 10 mL = 2 tsp; dash = 1/8 tsp, pinch = 1/16 tsp"],
     ["Ounces in a Cup", "/ounces-in-a-cup/", "How many ounces in a cup: 1 US cup = 8 fl oz (1/2 cup = 4 fl oz, 3/4 cup = 6 fl oz); fluid oz (volume) vs dry oz (weight) explained — 1 cup of flour weighs 4.2 oz, sugar 7.1 oz, butter 8 oz"],
     ["Cups in a Quart", "/cups-in-a-quart/", "How many cups in a quart, pint and gallon: 1 quart = 4 cups = 2 pints = 32 fl oz = 0.946 L; 1 gallon = 4 quarts = 16 cups = 128 fl oz; 1 pint = 2 cups; half gallon = 8 cups"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
@@ -1590,7 +1699,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
