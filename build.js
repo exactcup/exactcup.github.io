@@ -94,6 +94,7 @@ const ALL_TOOLS = [
   ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
   ["/sourdough-hydration-calculator/", "Sourdough Hydration", "True dough hydration with the starter counted right."],
   ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
+  ["/butter-to-oil/", "Butter to Oil", "Swap butter for oil: 1 cup butter = 3/4 cup oil."],
 ];
 
 // ---------- structured data (JSON-LD) helpers ----------
@@ -431,7 +432,7 @@ function gramsToCupsPage() {
 <h2>Pick an ingredient</h2>
 ${lists}
 <h2>Prefer to go the other way?</h2>
-<p>Use the <a href="/cups-to-grams/">cups to grams converter</a> to turn a cup measurement into grams, or the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for spoon amounts. Jump to a category chart above, or looking for butter in sticks? Try the <a href="/butter-converter/">butter converter</a>.</p>
+<p>Use the <a href="/cups-to-grams/">cups to grams converter</a> to turn a cup measurement into grams, or the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> for spoon amounts. Jump to a category chart above, or looking for butter in sticks? Try the <a href="/butter-converter/">butter converter</a> — and if you're out of butter, the <a href="/butter-to-oil/">butter to oil chart</a> shows the ¾-rule substitution.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
@@ -677,8 +678,133 @@ function butterPage() {
 <tr><td>½ stick (¼ cup)</td><td class="num">4</td><td class="num">57 g</td><td class="num">2 oz</td></tr>
 <tr><td>2 sticks (1 cup)</td><td class="num">16</td><td class="num">227 g</td><td class="num">8 oz</td></tr>
 </tbody></table>
-<p class="note">Based on US butter: 1 cup = 227 g, 1 stick = 113.5 g. European butter is often sold in 250 g blocks.</p>`;
+<p class="note">Based on US butter: 1 cup = 227 g, 1 stick = 113.5 g. European butter is often sold in 250 g blocks.</p>
+<p>Out of butter entirely? The <a href="/butter-to-oil/">butter to oil conversion chart</a> shows how to replace butter with olive or vegetable oil — use ¾ of the amount — and which bakes the swap works in.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Butter Converter", description, canonical), cfg: { type: "butter" } }) };
+}
+
+// Butter → oil substitution. The standard published ratio (NAOOA / Bertolli /
+// Bob's Red Mill charts) is 3:4 by volume — 3 parts oil per 4 parts butter —
+// because butter is only ~81% fat with ~16% water (USDA FoodData Central 173410),
+// while oil is all fat. Every value below is computed from that single ratio and
+// the verified densities in ingredients.json (butter 227 g/cup, olive oil 216
+// g/cup); nothing is typed by hand.
+function butterToOilPage() {
+  const B_GPC = 227, O_GPC = 216, TSP_ML = 4.92892159375, CUP_ML = 236.5882365;
+  const OIL = 0.75; // 3:4 — oil per butter, by volume
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  // Render a teaspoon count the way a cook measures it: "1/4 cup + 2 tbsp".
+  const fmtNum = (x) => {
+    const FR = [[0.25, "¼"], [0.5, "½"], [0.75, "¾"]];
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    let frac = "";
+    if (rest > 0.03) {
+      for (const [v, s] of FR) if (Math.abs(rest - v) < 0.02) { frac = s; break; }
+      if (!frac) return String(rnd(x, 2));
+    }
+    return whole ? whole + frac : (frac || "0");
+  };
+  const fmtTsp = (t) => {
+    const parts = [];
+    const cups = Math.floor(t / 48 + 1e-9);
+    let rem = t - cups * 48, frac = "";
+    const EXACT = [[36, "¾"], [32, "⅔"], [24, "½"], [16, "⅓"], [12, "¼"]];
+    for (const [v, s] of EXACT) if (Math.abs(rem - v) < 1e-6) { frac = s; rem = 0; break; }
+    if (!frac) for (const [v, s] of [[36, "¾"], [24, "½"], [12, "¼"]]) if (rem >= v - 1e-9) { frac = s; rem -= v; break; }
+    if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+    if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+      parts.push(fmtNum(rem / 3) + " tbsp"); rem = 0;
+    } else {
+      const tbsp = Math.floor(rem / 3 + 1e-9); rem -= tbsp * 3;
+      if (tbsp) parts.push(tbsp + " tbsp");
+    }
+    if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+    return parts.join(" + ");
+  };
+  const title = "Butter to Oil Conversion Chart — 1 Cup Butter = 3/4 Cup Oil | ExactCup";
+  const description = "Substitute oil for butter at the standard 3:4 ratio — 1 cup butter = 3/4 cup oil, 1 stick = 6 tbsp. Converter + charts in cups, grams and mL, and when not to swap.";
+  const canonical = "/butter-to-oil/";
+  // Butter (in tsp) → oil, matching the published NAOOA/Bertolli chart rows exactly.
+  const chartRows = [
+    ["1 tsp", 1], ["1 tbsp", 3], ["2 tbsp", 6], ["¼ cup (½ stick)", 12], ["⅓ cup", 16],
+    ["½ cup (1 stick)", 24], ["⅔ cup", 32], ["¾ cup (1½ sticks)", 36], ["1 cup (2 sticks)", 48], ["2 cups (4 sticks)", 96],
+  ].map(([lab, t]) => {
+    const o = t * OIL;
+    return `<tr><td>${lab}</td><td>${fmtTsp(o)}</td><td class="num">${rnd(o * TSP_ML, 1)} mL</td><td class="num">${rnd(o / 48 * O_GPC, 0)} g</td></tr>`;
+  }).join("\n");
+  // Metric: butter grams → oil grams/mL. Oil is lighter per cup AND you use less
+  // of it, so by weight the factor is 0.75 × 216/227 ≈ 0.71.
+  const gRows = [
+    ["50 g", 50], ["100 g", 100], ["113.5 g (1 stick)", 113.5], ["150 g", 150],
+    ["200 g", 200], ["227 g (1 cup)", 227], ["250 g (1 block)", 250],
+  ].map(([lab, bg]) => {
+    const cups = bg / B_GPC * OIL;
+    return `<tr><td>${lab}</td><td class="num">${rnd(cups * O_GPC, 0)} g</td><td class="num">${rnd(cups * CUP_ML, 0)} mL</td><td>${fmtTsp(cups * 48)}</td></tr>`;
+  }).join("\n");
+  // Reverse: oil → butter is ×4/3 (rows chosen so every answer lands on a clean measure).
+  const revRows = [
+    ["2 tbsp", 6], ["¼ cup", 12], ["½ cup", 24], ["¾ cup", 36], ["1 cup", 48],
+  ].map(([lab, t]) => {
+    const b = t / OIL;
+    return `<tr><td>${lab}</td><td>${fmtTsp(b)}${b === 48 ? " (2 sticks)" : ""}</td><td class="num">${rnd(b / 48 * B_GPC, 1)} g</td></tr>`;
+  }).join("\n");
+  const faq = [
+    ["How much oil do I use instead of 1 cup of butter?", "Use 3/4 cup of oil for 1 cup of butter. The standard substitution ratio is 3:4 — three parts oil for every four parts butter, by volume — because butter is only about 80% fat, while oil is all fat."],
+    ["How much oil equals 1 stick of butter?", "1 stick of butter is 1/2 cup, so use 6 tablespoons of oil (that's 1/4 cup + 2 tablespoons, about 89 mL or 81 g). For half a stick (1/4 cup butter), use 3 tablespoons of oil."],
+    ["Is substituting oil for butter a 1:1 swap?", "The standard published charts say no — use 3/4 as much oil. But when a recipe calls for melted butter (brownies, many quick breads), plenty of bakers swap oil 1:1 by volume and accept a slightly richer, moister result. Both conventions exist; the 3:4 ratio matches the fat content, the 1:1 swap matches the liquid volume."],
+    ["Why do you use less oil than butter?", "Because butter isn't pure fat. Per USDA data, butter is about 81% fat and 16% water (the rest is milk solids). Oil is 100% fat, so 3/4 cup of oil delivers roughly the same fat as a full cup of butter."],
+    ["Can I use oil instead of butter in cake?", "Only partly, for classic creamed cakes. Creaming butter and sugar traps the air that leavens the cake, and oil can't hold air — King Arthur Baking recommends replacing just 25% (up to 50%) of the butter with oil for a moister crumb while still creaming normally. Cakes mixed like quick breads (with melted fat) take a full swap well."],
+    ["Can I use oil instead of butter in cookies?", "It's not recommended. Cookies rely on solid fat for structure and spread control — in King Arthur Baking's cookie-chemistry testing, all-oil cookies came out tender but greasy and flat. Use butter, or a recipe written for oil."],
+    ["Can I use oil instead of butter in brownies?", "Yes — brownies are the best-case swap, because most recipes call for melted butter anyway and don't depend on creaming. Use 3/4 the amount of oil (or swap 1:1 for extra-moist brownies), and expect to lose a little buttery flavor."],
+    ["100 grams of butter is how much oil?", "About 71 g of oil, or 78 mL — almost exactly 1/3 cup. By weight the factor is ~0.71, not 0.75, because oil is also slightly lighter than butter per cup (216 vs 227 g)."],
+    ["Which oil should I use in place of butter?", "A neutral oil (canola, vegetable, sunflower) keeps the flavor closest to the original. Olive oil works beautifully in chocolate, citrus and spice bakes and in anything savory — that's the swap the 3:4 chart was originally published for."],
+    ["Can I substitute butter for oil — the other direction?", "Yes: use 1/3 more butter than the oil called for (multiply by 4/3), melted and cooled slightly — so 1/2 cup oil becomes 2/3 cup butter. Butter brings water along, so the crumb will be a bit firmer and drier; for the moistest result many bakers just swap melted butter 1:1 for oil."],
+    ["Does the 3:4 butter-to-oil ratio work by weight?", "No — the ratio is by volume (cups and tablespoons). By weight, use about 71% of the butter's weight in oil (100 g butter ≈ 71 g oil), because a cup of oil also weighs slightly less than a cup of butter."],
+    ["Can I use oil in pie crust or puff pastry?", "No. Flaky pastry depends on cold solid fat forming layers that steam apart in the oven — a liquid oil just coats the flour and turns the crust mealy. Stick with butter (or another solid fat) for pie crusts, croissants and puff pastry."],
+  ];
+  const jsonLd = [
+    appLd("Butter to Oil Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Butter to Oil", canonical]]),
+  ];
+  const body = `
+<h1>Butter to Oil Conversion</h1>
+<p class="lead">The standard substitution is <strong>3 parts oil for every 4 parts butter</strong> — so 1 cup of butter becomes <strong>¾ cup of oil</strong>, and 1 stick becomes <strong>6 tablespoons</strong>. Enter any butter amount to get the oil equivalent.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="bo-amt">Butter amount</label><input id="bo-amt" type="text" inputmode="decimal" value="1" placeholder="e.g. 1/2 or 0.5"></div>
+    <div class="field"><label for="bo-unit">Unit</label><select id="bo-unit"><option value="cups">cups</option><option value="sticks">sticks</option><option value="tbsp">tablespoons</option><option value="grams">grams</option></select></div>
+  </div>
+  <div class="result"><div class="big" id="bo-out">—</div><div class="sub" id="bo-sub"></div></div>
+</div>
+<p class="note">The 3:4 ratio is by <strong>volume</strong>, not weight — see the grams table below for metric amounts. It's the ratio published by the North American Olive Oil Association and echoed by Bertolli and Bob's Red Mill; it works for any liquid oil, olive or neutral.</p>
+<h2>Butter to oil conversion chart</h2>
+<table><thead><tr><th>Butter</th><th>Oil</th><th>Oil (mL)</th><th>Oil (g, olive)</th></tr></thead><tbody>
+${chartRows}
+</tbody></table>
+<h2>Why only ¾ as much oil?</h2>
+<p>Butter is not pure fat: per <strong>USDA FoodData Central</strong>, it's about <strong>81% fat and 16% water</strong>, with a little milk solids making up the rest. Oil is 100% fat. Using the full volume of oil would make the batter noticeably greasier, so the standard charts scale it down to ¾ — which almost exactly matches the fat you're replacing. The water butter loses isn't usually missed in moist batters; in drier doughs it can be (see the "when it works" list below).</p>
+<h2>Butter to oil in grams</h2>
+<p>Baking by weight? Two things stack: you use ¾ of the volume, <em>and</em> a cup of oil weighs slightly less than a cup of butter (216 g vs 227 g). Net factor: <strong>multiply the butter weight by ~0.71</strong>.</p>
+<table><thead><tr><th>Butter</th><th>Oil (g)</th><th>Oil (mL)</th><th>Oil (measured)</th></tr></thead><tbody>
+${gRows}
+</tbody></table>
+<h2>When the swap works — and when it doesn't</h2>
+<p><strong>Swap freely:</strong> muffins, quick breads (banana, zucchini, pumpkin), pancakes and waffles, brownies and other melted-butter recipes, moist dense cakes, pizza dough and focaccia. Anywhere the recipe melts the butter anyway, oil behaves almost identically.</p>
+<p><strong>Think twice:</strong> recipes that <em>cream butter and sugar</em> — the creaming step traps the air that lifts the bake, and oil can't hold air. For those cakes, <strong>King Arthur Baking</strong> suggests replacing only 25–50% of the butter with oil and creaming the rest normally. <strong>Don't swap:</strong> cookies (all-oil cookies bake up greasy and flat), pie crust, croissants and puff pastry — flaky textures need cold solid fat.</p>
+<h2>The 3:4 rule vs the 1:1 melted-butter swap</h2>
+<p>You'll meet two honest conventions. The <strong>3:4 chart ratio</strong> (this page) matches the <em>fat</em> content and is the safe default. When a recipe already calls for <em>melted</em> butter, many bakers simply pour in the same volume of oil — a <strong>1:1</strong> swap that matches the <em>liquid</em> and gives a slightly richer, moister result. Either produces a good bake in melted-butter recipes; pick one and note what you did.</p>
+<h2>Oil to butter — the reverse</h2>
+<p>Going the other way, multiply the oil by 4/3 and use melted butter:</p>
+<table><thead><tr><th>Oil</th><th>Butter</th><th>Butter (g)</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<p class="note">Butter brings ~16% water with it, so an oil recipe made with butter bakes up slightly firmer and drier — many bakers swap melted butter 1:1 for oil and accept that trade for the flavor.</p>
+<h2>Need a different conversion?</h2>
+<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "butteroil" } }) };
 }
 
 function airFryerPage() {
@@ -1562,6 +1688,7 @@ function llmsTxt() {
     ["Yeast Converter", "/yeast-converter/", "Convert between active dry, instant and fresh yeast by weight (ratio 1 : 1.25 : 3); 1 packet = 7 g = 2¼ tsp"],
     ["Sourdough Hydration Calculator", "/sourdough-hydration-calculator/", "True dough hydration including the flour and water in the starter (any starter hydration), salt %, prefermented flour and target-hydration water"],
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
+    ["Butter to Oil Conversion", "/butter-to-oil/", "Substitute oil for butter at the standard 3:4 volume ratio: 1 cup butter = 3/4 cup oil; 1 stick = 6 tbsp oil; by weight 100 g butter ≈ 71 g oil (butter is ~81% fat + 16% water, USDA); melted-butter recipes are often swapped 1:1; not suited to cookies, creamed cakes, pie crust or laminated pastry"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
   out += `## Tools\n`;
@@ -1699,7 +1826,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

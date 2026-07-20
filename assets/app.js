@@ -465,6 +465,67 @@
     recompute();
   }
 
+  // Butter → oil substitution (used by /butter-to-oil/). Standard 3:4 ratio by
+  // volume (butter is ~81% fat + ~16% water; oil is all fat). Works in teaspoons
+  // internally and renders the oil the way a cook measures it: "1/4 cup + 2 tbsp".
+  function initButterOil() {
+    var amt = $("bo-amt"), unit = $("bo-unit"), out = $("bo-out"), sub = $("bo-sub");
+    if (!amt || !out) return;
+    var BUTTER_GPC = 227, OIL_GPC = 216, TSP_ML = 4.92892;
+    // accepts "3/4", "1 1/2", "0.75", "2"
+    function parseAmt(s) {
+      s = (s || "").trim();
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    var FR = [[0.25, "1/4"], [0.5, "1/2"], [0.75, "3/4"]];
+    function fmtNum(x) {
+      var whole = Math.floor(x + 1e-9), rest = x - whole, frac = "";
+      if (rest > 0.03) {
+        for (var i = 0; i < FR.length; i++) if (Math.abs(rest - FR[i][0]) < 0.02) { frac = FR[i][1]; break; }
+        if (!frac) return round(x, 2);
+      }
+      return whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+    }
+    function fmtTsp(t) {
+      if (!(t > 0.015)) return "a drop";
+      var parts = [], cups = Math.floor(t / 48 + 1e-9), rem = t - cups * 48, frac = "";
+      var EXACT = [[36, "3/4"], [32, "2/3"], [24, "1/2"], [16, "1/3"], [12, "1/4"]];
+      for (var i = 0; i < EXACT.length; i++) if (Math.abs(rem - EXACT[i][0]) < 1e-6) { frac = EXACT[i][1]; rem = 0; break; }
+      if (!frac) {
+        var Q = [[36, "3/4"], [24, "1/2"], [12, "1/4"]];
+        for (i = 0; i < Q.length; i++) if (rem >= Q[i][0] - 1e-9) { frac = Q[i][1]; rem -= Q[i][0]; break; }
+      }
+      if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+      // clean half-tablespoons (4 1/2 tsp -> "1 1/2 tbsp"), matching the published charts
+      if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+        parts.push(fmtNum(rem / 3) + " tbsp");
+        rem = 0;
+      } else {
+        var tbsp = Math.floor(rem / 3 + 1e-9);
+        rem -= tbsp * 3;
+        if (tbsp) parts.push(tbsp + " tbsp");
+      }
+      if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+      return parts.join(" + ");
+    }
+    function calc() {
+      var a = parseAmt(amt.value), u = unit ? unit.value : "cups";
+      if (isNaN(a) || a < 0) { out.textContent = "—"; if (sub) sub.textContent = ""; return; }
+      var bTsp = u === "grams" ? a / BUTTER_GPC * 48 : u === "sticks" ? a * 24 : u === "tbsp" ? a * 3 : a * 48;
+      var oTsp = bTsp * 0.75;
+      out.textContent = fmtTsp(oTsp) + " oil";
+      if (sub) sub.textContent = "= " + round(oTsp / 3, 2) + " tbsp · " + round(oTsp * TSP_ML, 1) + " mL · ≈ " + round(oTsp / 48 * OIL_GPC, 0) + " g olive oil";
+    }
+    amt.addEventListener("input", calc);
+    if (unit) unit.addEventListener("change", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -482,4 +543,5 @@
   else if (t === "yeast") initYeast();
   else if (t === "sourdough") initSourdough();
   else if (t === "halve") initHalve();
+  else if (t === "butteroil") initButterOil();
 })();
