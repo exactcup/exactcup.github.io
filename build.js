@@ -660,11 +660,58 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Oven Temperature Converter", description, canonical), faqLd(faq)], cfg: { type: "oven" } }) };
 }
 
+// Every number on this page is derived from the verified butter density in
+// ingredients.json (227 g/cup → 1 stick = 113.5 g, 1 tbsp = 14.2 g). Google
+// serves the stick-conversion query cluster ("1 1/2 sticks of butter in cups")
+// on this URL, so it answers sticks↔cups↔grams explicitly in all directions.
 function butterPage() {
+  const gpc = ingBySlug("butter").gramsPerCup; // 227
+  const STICK = gpc / 2, TBSP = gpc / 16;
   const title = "Butter Converter — Sticks, Cups, Tablespoons & Grams | ExactCup";
-  const description = "Convert butter between sticks, cups, tablespoons, teaspoons, grams and ounces instantly. 1 stick of butter = 113 g = 8 tablespoons = 1/2 cup.";
+  const description = `Convert butter between sticks, cups, tablespoons, grams and ounces instantly. 1 stick = 1/2 cup = 8 tbsp = ${g2(STICK)} g; 1 1/2 sticks = 3/4 cup = ${Math.round(1.5 * STICK)} g. Charts in every direction.`;
   const canonical = "/butter-converter/";
   const f = (lab, id, ph) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" placeholder="${ph}"></div>`;
+  // Render counts that land on kitchen fractions (½, ⅓ …) the way a cook says them.
+  const FRACS = [[0.125, "⅛"], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"]];
+  const fmtFrac = (x) => {
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    for (const [v, s] of FRACS) if (Math.abs(rest - v) < 0.01) return (whole || "") + s;
+    return rest < 0.01 ? String(whole) : String(cups2(x));
+  };
+  const fmtSticks = (s) => `${fmtFrac(s)} stick${s > 1 ? "s" : ""}`;
+  // Tablespoon count from a cup amount; thirds of a cup get the "+ tsp" form.
+  const fmtTbsp = (c) => {
+    const tsp = Math.round(c * 48), tbsp = Math.floor(tsp / 3), rem = tsp - tbsp * 3;
+    return rem ? `${tbsp} tbsp + ${rem} tsp` : `${tbsp} tbsp`;
+  };
+  // Sticks chart: ¼ → 4 sticks with cups, tbsp, grams, oz.
+  const stickRows = [0.25, 0.5, 1, 1.5, 2, 2.5, 3, 4].map((s) => {
+    const c = s / 2;
+    return `<tr><td>${fmtSticks(s)}${s === 4 ? " (1 lb)" : ""}</td><td>${fmtFrac(c)} cup${c > 1 ? "s" : ""}</td><td class="num">${fmtTbsp(c)}</td><td class="num">${g2(s * STICK)} g</td><td class="num">${g2(s * STICK / OZ)} oz</td></tr>`;
+  }).join("\n");
+  // Cups → sticks (the reverse direction people also search: "1 1/2 cups butter in sticks").
+  const cupRows = [0.25, 1 / 3, 0.5, 2 / 3, 0.75, 1, 1.25, 1.5, 2].map((c) => {
+    return `<tr><td>${fmtFrac(c)} cup${c > 1 ? "s" : ""}</td><td>${fmtSticks(c * 2)}</td><td class="num">${fmtTbsp(c)}</td><td class="num">${g2(c * gpc)} g</td></tr>`;
+  }).join("\n");
+  // Grams → sticks/cups/tbsp for metric cooks (250 g European block etc.).
+  const gramRows = [50, 100, 125, 150, 200, 250, 500].map((g) => {
+    const lab = g === 250 ? "250 g (1 block)" : `${g} g`;
+    return `<tr><td>${lab}</td><td class="num">${cups2(g / STICK)}</td><td class="num">${cups2(g / gpc)}</td><td class="num">${g2(g / TBSP)}</td></tr>`;
+  }).join("\n");
+  const faq = [
+    ["How many cups is 1 1/2 sticks of butter?", `1 1/2 sticks of butter is 3/4 cup — 12 tablespoons, about ${Math.round(1.5 * STICK)} grams or 6 ounces.`],
+    ["How many sticks is 1 1/2 cups of butter?", `1 1/2 cups of butter is 3 sticks — 24 tablespoons, about ${g2(3 * STICK)} grams. Each stick is 1/2 cup, so double the cups to get sticks.`],
+    ["How much is half a stick of butter?", `Half a stick is 1/4 cup — 4 tablespoons, about ${Math.round(STICK / 2)} grams or 2 ounces. On the wrapper, that's the line at the 4-tablespoon mark.`],
+    ["Is a stick of butter 4 ounces?", `Yes — one US stick weighs 4 ounces (1/4 pound, ${g2(STICK)} g). It also measures 1/2 cup by volume. A standard 1 lb box holds 4 sticks.`],
+    ["How many tablespoons are in a stick of butter?", `8 tablespoons. US wrappers print the tablespoon marks, so you can slice off exactly what you need — each tablespoon is about ${g2(TBSP)} grams.`],
+    ["How many sticks is 250 g of butter (a European block)?", `250 g is about ${cups2(250 / STICK)} sticks — just over 1 cup (${cups2(250 / gpc)} cups, or 1 cup plus roughly 1 1/2 tablespoons).`],
+    ["How many sticks is 200 g of butter?", `200 g is almost exactly 1 3/4 sticks (1 3/4 sticks = ${g2(1.75 * STICK)} g) — that's 14 tablespoons, or just under 1 cup.`],
+    ["What is 2/3 cup of butter in sticks?", `2/3 cup is 1 1/3 sticks — 10 tablespoons plus 2 teaspoons, about ${Math.round(gpc * 2 / 3)} grams. It's easiest to take 1 stick plus a third of a second one (cut at just past the 5-tbsp mark).`],
+    ["Does melted butter measure the same as solid butter?", "By weight, identical — melting changes nothing. By volume it's very close: 1 cup of solid butter yields roughly 1 cup melted. Recipes mean the state written: \"1/2 cup butter, melted\" = measure solid, then melt."],
+    ["Why are some butter sticks short and fat?", `Both shapes hold exactly the same amount — 1/2 cup, ${g2(STICK)} g. The long thin \"Elgin\" stick is standard in the eastern US; many West Coast dairies use a shorter, stubbier mold. The wrapper markings still divide it into 8 tablespoons.`],
+    ["Do these conversions work for European butter?", `Yes for measuring — a gram is a gram. European-style butters (Kerrygold, Plugrá) have a bit more butterfat (82–84% vs the US minimum 80%), which matters for flavor, not for conversion. A US-sold 8 oz half-pound block is exactly 2 sticks; a 250 g block is about ${cups2(250 / STICK)} sticks.`],
+    ["How many sticks of butter are in a pound?", `4 sticks. One pound of butter is 2 cups, or ${g2(4 * STICK)} g — so a US 1 lb box (4 sticks) equals 2 cups.`],
+  ];
   const body = `
 <h1>Butter Converter</h1>
 <p class="lead">US butter sticks, cups, tablespoons, grams and ounces — type any field and the rest update.</p>
@@ -672,15 +719,29 @@ function butterPage() {
   <div class="row">${f("Sticks", "sticks", "1")}${f("Cups", "cups", "0.5")}${f("Tablespoons", "tbsp", "8")}</div>
   <div class="row" style="margin-top:10px">${f("Teaspoons", "tsp", "24")}${f("Grams", "grams", "113.5")}${f("Ounces", "oz", "4")}</div>
 </div>
-<h2>Butter conversion chart</h2>
-<table><thead><tr><th>Butter</th><th>Tablespoons</th><th>Grams</th><th>Ounces</th></tr></thead><tbody>
-<tr><td>1 stick (½ cup)</td><td class="num">8</td><td class="num">113.5 g</td><td class="num">4 oz</td></tr>
-<tr><td>½ stick (¼ cup)</td><td class="num">4</td><td class="num">57 g</td><td class="num">2 oz</td></tr>
-<tr><td>2 sticks (1 cup)</td><td class="num">16</td><td class="num">227 g</td><td class="num">8 oz</td></tr>
+<p class="note">The key fact: <strong>1 stick = ½ cup = 8 tbsp = ${g2(STICK)} g = 4 oz</strong>, and a 1 lb box holds 4 sticks (2 cups, ${g2(4 * STICK)} g).</p>
+<h2>Butter sticks conversion chart</h2>
+<table><thead><tr><th>Sticks</th><th>Cups</th><th>Tablespoons</th><th>Grams</th><th>Ounces</th></tr></thead><tbody>
+${stickRows}
 </tbody></table>
-<p class="note">Based on US butter: 1 cup = 227 g, 1 stick = 113.5 g. European butter is often sold in 250 g blocks.</p>
-<p>Out of butter entirely? The <a href="/butter-to-oil/">butter to oil conversion chart</a> shows how to replace butter with olive or vegetable oil — use ¾ of the amount — and which bakes the swap works in.</p>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: appLd("Butter Converter", description, canonical), cfg: { type: "butter" } }) };
+<h2>Cups of butter to sticks</h2>
+<p>Recipe written in cups, butter sold in sticks? Sticks are just cups doubled — every ½ cup is one stick. The awkward thirds land between the wrapper marks, so they're spelled out in spoons:</p>
+<table><thead><tr><th>Cups</th><th>Sticks</th><th>Tablespoons</th><th>Grams</th></tr></thead><tbody>
+${cupRows}
+</tbody></table>
+<h2>Grams of butter to sticks and cups</h2>
+<p>Metric recipe, US butter? Divide grams by ${g2(STICK)} to get sticks. The classic case is the European 250 g block — just over 1 cup:</p>
+<table><thead><tr><th>Grams</th><th>Sticks</th><th>Cups</th><th>Tablespoons</th></tr></thead><tbody>
+${gramRows}
+</tbody></table>
+<h2>Reading the wrapper</h2>
+<p>Every US stick wrapper is printed with 8 tablespoon marks — slice straight through wrapper and all at the line you need instead of packing soft butter into a measuring cup. Each mark is 1 tbsp ≈ ${g2(TBSP)} g. Long eastern-style sticks and the shorter, stubbier West Coast sticks carry the same markings and hold the same ½ cup.</p>
+<p>Out of butter entirely? The <a href="/butter-to-oil/">butter to oil conversion chart</a> shows how to replace butter with olive or vegetable oil — use ¾ of the amount — and which bakes the swap works in.</p>
+<h2>Need a different conversion?</h2>
+<p>Weighing other ingredients too? The <a href="/cups-to-grams/butter/">butter cups-to-grams page</a> has every cup fraction from ⅛ to 3 cups, and the <a href="/grams-to-cups/">grams to cups converter</a> goes weight-first across 80+ ingredients. Halving a recipe with 1½ sticks in it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Butter Converter", description, canonical), faqLd(faq)], cfg: { type: "butter" } }) };
 }
 
 // Butter → oil substitution. The standard published ratio (NAOOA / Bertolli /
