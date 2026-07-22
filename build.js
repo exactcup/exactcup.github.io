@@ -95,6 +95,7 @@ const ALL_TOOLS = [
   ["/sourdough-hydration-calculator/", "Sourdough Hydration", "True dough hydration with the starter counted right."],
   ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ["/butter-to-oil/", "Butter to Oil", "Swap butter for oil: 1 cup butter = 3/4 cup oil."],
+  ["/sugar-to-honey/", "Sugar to Honey", "Swap sugar for honey: 1 cup sugar = ½–¾ cup honey."],
 ];
 
 // ---------- structured data (JSON-LD) helpers ----------
@@ -862,10 +863,139 @@ ${revRows}
 </tbody></table>
 <p class="note">Butter brings ~16% water with it, so an oil recipe made with butter bakes up slightly firmer and drier — many bakers swap melted butter 1:1 for oil and accept that trade for the flavor.</p>
 <h2>Need a different conversion?</h2>
-<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons.</p>
+<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons. Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> works the same way — a fixed ratio plus a few small recipe adjustments.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "butteroil" } }) };
+}
+
+// Sugar → honey substitution. The published guidance genuinely disagrees on the
+// ratio — King Arthur says ¾ cup honey per cup of sugar; the National Honey Board
+// says replace up to HALF the sugar; Clemson Extension says start at ½ — so the
+// page shows both conventions side by side instead of pretending there's one rule.
+// The three adjustments (liquid −¼ cup, baking soda +½ tsp, oven −25°F) are per
+// cup of HONEY used, per NHB/Clemson. Note: soda is ½ tsp, NOT the ¼ tsp many
+// circulating charts copy from each other.
+function sugarToHoneyPage() {
+  const H_GPC = 340, S_GPC = 200; // site-verified g per US cup (USDA: honey 339, sugar 200; KA: 336/198)
+  const R = 0.75; // King Arthur rule — honey per sugar, by volume
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  // Render a teaspoon count the way a cook measures it: "¼ cup + 2 tbsp".
+  const fmtNum = (x) => {
+    const FR = [[0.25, "¼"], [0.5, "½"], [0.75, "¾"]];
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    let frac = "";
+    if (rest > 0.03) {
+      for (const [v, s] of FR) if (Math.abs(rest - v) < 0.02) { frac = s; break; }
+      if (!frac) return String(rnd(x, 2));
+    }
+    return whole ? whole + frac : (frac || "0");
+  };
+  const fmtTsp = (t) => {
+    const parts = [];
+    const cups = Math.floor(t / 48 + 1e-9);
+    let rem = t - cups * 48, frac = "";
+    const EXACT = [[36, "¾"], [32, "⅔"], [24, "½"], [16, "⅓"], [12, "¼"]];
+    for (const [v, s] of EXACT) if (Math.abs(rem - v) < 1e-6) { frac = s; rem = 0; break; }
+    if (!frac) for (const [v, s] of [[36, "¾"], [24, "½"], [12, "¼"]]) if (rem >= v - 1e-9) { frac = s; rem -= v; break; }
+    if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+    if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+      parts.push(fmtNum(rem / 3) + " tbsp"); rem = 0;
+    } else {
+      const tbsp = Math.floor(rem / 3 + 1e-9); rem -= tbsp * 3;
+      if (tbsp) parts.push(tbsp + " tbsp");
+    }
+    if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+    return parts.join(" + ");
+  };
+  const title = "Sugar to Honey Conversion Chart — Substitute Honey for Sugar | ExactCup";
+  const description = "How much honey replaces 1 cup of sugar? ½–¾ cup (≈255 g by the ¾ rule). Then cut liquid ¼ cup and add ½ tsp baking soda per cup of honey, and bake 25°F lower.";
+  const canonical = "/sugar-to-honey/";
+  // Sugar (in tsp) → honey under both published conventions.
+  const chartRows = [
+    ["1 tbsp", 3], ["2 tbsp", 6], ["¼ cup", 12], ["⅓ cup", 16], ["½ cup", 24],
+    ["⅔ cup", 32], ["¾ cup", 36], ["1 cup", 48], ["1½ cups", 72], ["2 cups", 96],
+  ].map(([lab, s]) => {
+    const h = s * R;
+    return `<tr><td>${lab}</td><td>${fmtTsp(h)}</td><td>${fmtTsp(s * 0.5)}</td><td class="num">${rnd(h / 48 * H_GPC, 0)} g</td></tr>`;
+  }).join("\n");
+  // Metric: honey is used at ¾ the volume but is much denser than sugar
+  // (340 vs 200 g/cup), so by WEIGHT you need MORE honey: 0.75 × 340/200 = 1.275.
+  const gRows = [
+    ["50 g", 50], ["100 g", 100], ["150 g", 150], ["200 g (1 cup)", 200], ["250 g", 250], ["300 g", 300],
+  ].map(([lab, sg]) => {
+    const hc = sg / S_GPC * R;
+    return `<tr><td>${lab}</td><td class="num">${rnd(hc * H_GPC, 0)} g</td><td>${fmtTsp(hc * 48)}</td></tr>`;
+  }).join("\n");
+  // Reverse: 1 cup honey → 1¼ cups sugar + ¼ cup extra liquid (USU Extension FN255).
+  const revRows = [
+    ["¼ cup", 12], ["½ cup", 24], ["¾ cup", 36], ["1 cup", 48],
+  ].map(([lab, h]) => {
+    const s = h * 1.25;
+    return `<tr><td>${lab}</td><td>${fmtTsp(s)}</td><td class="num">${rnd(s / 48 * S_GPC, 0)} g</td><td>${fmtTsp(h * 0.25)}</td></tr>`;
+  }).join("\n");
+  const faq = [
+    ["How much honey do I use instead of 1 cup of sugar?", "Between 1/2 and 3/4 cup. King Arthur Baking's rule is a generous 3/4 cup of honey per cup of sugar; the National Honey Board and Clemson Extension are more conservative and suggest replacing sugar with about half its amount in honey (or replacing only half the sugar). The chart on this page shows both. Whichever you pick, also cut the recipe's liquid, add a little baking soda and lower the oven — see the three adjustments."],
+    ["How much honey equals 1/2 cup of sugar?", "By the 3/4 rule, 6 tablespoons of honey (1/4 cup + 2 tbsp, about 128 g). By the conservative 1/2 rule, 1/4 cup (about 85 g)."],
+    ["Do I need to reduce the liquid when I bake with honey?", "Yes. Honey is about 17% water (USDA), so reduce the recipe's other liquid by 1/4 cup for every 1 cup of honey used — that's the National Honey Board and Clemson Extension figure; King Arthur says 3–4 tablespoons, which is the same range. If the recipe has no added liquid at all, King Arthur suggests adding 3–4 tablespoons of extra flour per cup of honey instead."],
+    ["How much baking soda do I add per cup of honey?", "1/2 teaspoon per cup of honey — that's the figure both the National Honey Board and Clemson Extension publish. Many circulating charts say 1/4 teaspoon, but that's not what the primary sources recommend. The soda neutralizes honey's acidity (average pH 3.9) and helps the bake rise and brown evenly. Skip the extra soda if the recipe already uses buttermilk, sour milk or sour cream — they do the same job."],
+    ["Why do I lower the oven temperature by 25°F?", "Honey's fructose caramelizes and scorches at lower temperatures than granulated sugar, so honey-sweetened bakes brown much faster. Reduce the oven by 25°F (about 15°C), and take King Arthur's ceiling seriously: avoid using honey in recipes baked above 350°F — it scorches."],
+    ["Is honey sweeter than sugar?", "Yes, modestly. The National Honey Board puts it at 1 to 1.5 times sweeter than sugar on a dry-weight basis, mostly because fructose predominates. Per cup the gap is bigger: a cup of honey weighs 340 g and is about 82% sugars (roughly 278 g), versus 200 g in a cup of granulated sugar — which is why you use less honey by volume."],
+    ["Can I substitute honey for sugar 1:1?", "Sweetening tea, coffee, oatmeal or yogurt — sure, to taste; nothing needs to be balanced. In baking, no authoritative chart endorses a 1:1 volume swap: you'd be adding more sweetness, more water and faster browning at once. For a tablespoon or two the difference hardly matters, but for 1/4 cup and up, scale it down and make the three adjustments."],
+    ["How many grams is a cup of honey?", "About 340 g — USDA lists 339 g per cup and King Arthur 336 g (12 oz); brands vary slightly. One tablespoon is 21 g. Note that a cup of honey weighs about 12 ounces on a scale even though it's 8 fluid ounces by volume — fluid ounces and weight ounces are different things."],
+    ["How much honey replaces 100 g of sugar?", "About 128 g of honey. It surprises people: honey replaces sugar at 3/4 the VOLUME, but honey is much denser (340 vs 200 g per cup), so by weight you need about 1.28× as many grams — more honey on the scale, less in the measuring cup."],
+    ["My recipe calls for 1 cup of honey — how much sugar do I use instead?", "Going the other direction, use 1 1/4 cups of granulated sugar plus 1/4 cup of extra liquid (water, milk — whatever the recipe uses) for each cup of honey, per Utah State University Extension. You can also leave out any baking soda the recipe added specifically to offset the honey."],
+    ["How does honey change the texture and flavor of a bake?", "Expect a moister, slightly denser crumb, a darker color, and a floral note that depends on the honey (clover is mild; buckwheat is bold). Honey is hygroscopic — it pulls in moisture — so honey-sweetened bakes stay soft for days. Cookies are the biggest change: they spread more and turn soft and cakey rather than crisp."],
+    ["Is honey safe for everyone?", "One firm exception: never give honey in any form to babies under 12 months — it can contain Clostridium botulinum spores, which baking does not reliably destroy. For everyone else, honey behaves like any other sugar in the diet."],
+  ];
+  const jsonLd = [
+    appLd("Sugar to Honey Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Sugar to Honey", canonical]]),
+  ];
+  const body = `
+<h1>Sugar to Honey Conversion</h1>
+<p class="lead">To replace 1 cup of granulated sugar, use <strong>½ to ¾ cup of honey</strong> — then cut the recipe's liquid by ¼ cup and add ½ tsp of baking soda per cup of honey, and bake 25°F lower. Enter any sugar amount to get the honey equivalent and the adjustments, scaled.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="sh-amt">Sugar amount</label><input id="sh-amt" type="text" inputmode="decimal" value="1" placeholder="e.g. 1/2 or 0.5"></div>
+    <div class="field"><label for="sh-unit">Unit</label><select id="sh-unit"><option value="cups">cups</option><option value="tbsp">tablespoons</option><option value="grams">grams</option></select></div>
+  </div>
+  <div class="result"><div class="big" id="sh-out">—</div><div class="sub" id="sh-sub"></div><div class="sub" id="sh-adj"></div></div>
+</div>
+<p class="note">Honest disclosure: the sources disagree on the ratio. The <strong>¾-cup rule</strong> (used by the converter) is <strong>King Arthur Baking's</strong>; the <strong>National Honey Board</strong> itself suggests replacing only <em>up to half</em> the sugar, and <strong>Clemson Extension</strong> says to start with <em>half</em> the amount in honey. Less honey = a safer, drier, less sweet result; ¾ = the fuller flavor most charts use. Both work — the chart shows both.</p>
+<h2>Sugar to honey conversion chart</h2>
+<table><thead><tr><th>Sugar</th><th>Honey — ¾ rule (King Arthur)</th><th>Honey — ½ rule (NHB / Clemson)</th><th>Honey (g, ¾ rule)</th></tr></thead><tbody>
+${chartRows}
+</tbody></table>
+<h2>The three adjustments that make it work</h2>
+<p>Swapping the sweetener is the easy part — honey also brings <strong>water</strong> and <strong>acid</strong> with it, and it <strong>browns faster</strong>. For every <strong>1 cup of honey</strong> that goes into the recipe:</p>
+<table><thead><tr><th>Adjustment</th><th>Amount</th><th>Why</th></tr></thead><tbody>
+<tr><td>Cut other liquid</td><td>−¼ cup</td><td>Honey is ~17% water (USDA)</td></tr>
+<tr><td>Add baking soda</td><td>+½ tsp</td><td>Neutralizes honey's acidity (average pH 3.9)</td></tr>
+<tr><td>Lower the oven</td><td>−25°F</td><td>Fructose scorches at lower temperatures</td></tr>
+</tbody></table>
+<p class="note">Two fine points from the sources: if the recipe has <em>no</em> added liquid, King Arthur suggests adding 3–4 tbsp of flour per cup of honey instead of cutting liquid; and skip the extra baking soda when the recipe already uses buttermilk, sour milk or sour cream. Watch for a widespread copy-paste error: many charts say ¼ tsp of soda, but the National Honey Board and Clemson Extension both say <strong>½ tsp per cup of honey</strong>. And King Arthur's ceiling: don't use honey in recipes baked above 350°F.</p>
+<h2>Why do you use less honey than sugar?</h2>
+<p>Two reasons. Honey is <strong>sweeter</strong> — the National Honey Board puts it at 1 to 1.5× the sweetness of sugar on a dry-weight basis, because fructose (its dominant sugar) tastes sweeter than sucrose. And a cup of honey simply <strong>contains more sugar</strong>: it weighs 340 g and is about 82% sugars, so a cup carries roughly 278 g of actual sugars versus 200 g in a cup of granulated. Scale the volume down to ½–¾ and the sweetness lands about right.</p>
+<h2>Sugar to honey by weight (grams)</h2>
+<p>Here's the counter-intuitive part for metric bakers: honey replaces sugar at ¾ the <em>volume</em>, but honey is far denser (340 vs 200 g per cup) — so by <em>weight</em> you need <strong>about 1.28× as many grams of honey</strong>. Less in the cup, more on the scale.</p>
+<table><thead><tr><th>Sugar</th><th>Honey (g)</th><th>Honey (measured)</th></tr></thead><tbody>
+${gRows}
+</tbody></table>
+<h2>When the swap works — and when it doesn't</h2>
+<p><strong>Swap happily:</strong> quick breads (banana, zucchini, pumpkin), muffins, snack cakes, granola, yeast breads (honey feeds the yeast), marinades, glazes, dressings, sauces and drinks. Honey's moisture-holding (hygroscopic) nature keeps these soft for days.</p>
+<p><strong>Think twice:</strong> crisp cookies — honey makes them spread more and bake up soft and cakey; delicate white or sponge cakes — the extra browning and floral flavor take over; and anything built on sugar's <em>crystals</em> — creamed-butter structure, meringue, royal icing, candy and caramel work because granulated sugar is dry and crystalline, and a liquid sweetener changes the chemistry entirely.</p>
+<h2>Honey to sugar — the reverse</h2>
+<p>Recipe written for honey but you only have sugar? Use <strong>1¼ cups of sugar plus ¼ cup of extra liquid per cup of honey</strong> (Utah State University Extension):</p>
+<table><thead><tr><th>Honey</th><th>Sugar</th><th>Sugar (g)</th><th>Extra liquid</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<h2>Need a different conversion?</h2>
+<p>Just measuring, not substituting? <a href="/cups-to-grams/honey/">1 cup of honey is 340 g</a> and <a href="/cups-to-grams/granulated-sugar/">1 cup of granulated sugar is 200 g</a> — the <a href="/sugar-conversion-chart/">sugar &amp; sweetener chart</a> covers brown sugar, <a href="/cups-to-grams/maple-syrup/">maple syrup (322 g)</a>, molasses and the rest. Swapping fats too? The <a href="/butter-to-oil/">butter to oil conversion</a> works the same way: a fixed ratio plus a couple of honest adjustments. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "sugarhoney" } }) };
 }
 
 function airFryerPage() {
@@ -1534,7 +1664,8 @@ function categoryPage(key) {
 </div>
 <h2>${esc(cname)} conversion chart</h2>
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
-<p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>
+<p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
+<p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}
 ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
@@ -1750,6 +1881,7 @@ function llmsTxt() {
     ["Sourdough Hydration Calculator", "/sourdough-hydration-calculator/", "True dough hydration including the flour and water in the starter (any starter hydration), salt %, prefermented flour and target-hydration water"],
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
     ["Butter to Oil Conversion", "/butter-to-oil/", "Substitute oil for butter at the standard 3:4 volume ratio: 1 cup butter = 3/4 cup oil; 1 stick = 6 tbsp oil; by weight 100 g butter ≈ 71 g oil (butter is ~81% fat + 16% water, USDA); melted-butter recipes are often swapped 1:1; not suited to cookies, creamed cakes, pie crust or laminated pastry"],
+    ["Sugar to Honey Conversion", "/sugar-to-honey/", "Substitute honey for granulated sugar: 1 cup sugar = 3/4 cup honey (King Arthur rule; the National Honey Board and Clemson Extension suggest up to 1/2), then per cup of honey used cut other liquid by 1/4 cup, add 1/2 tsp baking soda (honey pH ~3.9) and bake 25 F lower (avoid recipes over 350 F); by weight 100 g sugar ≈ 128 g honey (honey is 340 g/cup vs sugar 200 g/cup); reverse: 1 cup honey = 1 1/4 cups sugar + 1/4 cup liquid"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
   out += `## Tools\n`;
@@ -1887,7 +2019,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
