@@ -269,8 +269,8 @@ function gramsToCupsTable(gpc) {
 // at least one category list so the whole tool set gets internal inlinks.
 const CATEGORY_TOOLS = {
   flour: [["/pizza-dough-calculator/", "Pizza Dough Calculator"], ["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/sourdough-hydration-calculator/", "Sourdough Hydration Calculator"], ["/yeast-converter/", "Yeast Converter"]],
-  sugar: [["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"], ["/volume-converter/", "Volume Converter"], ["/cups-to-ml/", "Cups to mL Converter"]],
-  dairy: [["/butter-converter/", "Butter Converter"], ["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"], ["/cups-to-ml/", "Cups to mL Converter"]],
+  sugar: [["/sugar-to-honey/", "Sugar to Honey Conversion"], ["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"], ["/volume-converter/", "Volume Converter"], ["/cups-to-ml/", "Cups to mL Converter"]],
+  dairy: [["/butter-converter/", "Butter Converter"], ["/butter-to-oil/", "Butter to Oil Conversion"], ["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"], ["/cups-to-ml/", "Cups to mL Converter"]],
   baking: [["/bakers-percentage-calculator/", "Baker's Percentage Calculator"], ["/oven-temperature-converter/", "Oven Temperature Converter"], ["/air-fryer-conversion-calculator/", "Air Fryer Converter"], ["/pan-size-converter/", "Pan Size Converter"]],
   grain: [["/portion-calculator/", "Portion Calculator"], ["/recipe-scaler/", "Recipe Scaler"], ["/recipe-halving-chart/", "Recipe Halving Chart"]],
 };
