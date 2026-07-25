@@ -1917,6 +1917,7 @@ select,input{width:100%;font-size:16px;padding:9px 10px;border:1px solid #e6e8eb
 <div class="ec-out"><div class="ec-big" id="out-grams">—</div><div class="ec-sub" id="out-oz">—</div></div>
 <div class="ec-attr"><a href="${SITE.baseUrl}/cups-to-grams/" target="_blank" rel="noopener">Cups to Grams Converter</a> by ExactCup</div>
 </div>
+<script>(function(){var m=location.search.match(/[?&]ingredient=([a-z0-9-]+)/);if(m){var s=document.getElementById("ingredient");if(s&&s.querySelector('option[value="'+m[1]+'"]'))s.value=m[1];}})();</script>
 <script type="application/json" id="cfg">${JSON.stringify(cfg)}</script><script src="/assets/app.js" defer></script>
 </body></html>`;
   return { canonical, html };
@@ -1928,17 +1929,36 @@ function embedInfoPage() {
   const description = "Add a free, accurate cups-to-grams converter to your recipe blog or website. Copy-paste one line of HTML — no sign-up, no cost. Just keep the attribution link.";
   const snippet = `<iframe src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="Cups to Grams Converter" loading="lazy"></iframe>
 <p style="font-size:13px"><a href="${SITE.baseUrl}/cups-to-grams/">Cups to Grams Converter</a> by ExactCup</p>`;
+  const ebOpts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
   const body = `
 <h1>Free Embeddable Cups-to-Grams Converter</h1>
 <p class="lead">Give your readers an accurate, instant cups&#8596;grams converter right inside your recipe posts. Free, no sign-up &mdash; just copy the snippet below.</p>
 <h2>Live preview</h2>
-<iframe src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid var(--line);border-radius:12px;max-width:440px" title="Cups to Grams Converter preview" loading="lazy"></iframe>
+<iframe id="eb-preview" src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid var(--line);border-radius:12px;max-width:440px" title="Cups to Grams Converter preview" loading="lazy"></iframe>
+<h2>Match it to your post (optional)</h2>
+<p>Writing about a specific ingredient? Pick it here and the widget opens preset to that ingredient &mdash; the preview and snippet update automatically. Readers can still switch to any of the ${DATA.ingredients.length}+ ingredients.</p>
+<label for="eb-ing" style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">Preset ingredient</label>
+<select id="eb-ing" style="max-width:440px;width:100%"><option value="">None &mdash; general converter</option>${ebOpts}</select>
 <h2>Copy this snippet</h2>
-<p>Paste it anywhere in your post&#8217;s HTML:</p>
-<textarea readonly rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(snippet)}</textarea>
+<p>Paste it anywhere in your post&#8217;s HTML (in WordPress: a <strong>Custom&nbsp;HTML</strong> block):</p>
+<textarea readonly id="eb-snippet" rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(snippet)}</textarea>
 <h2>License</h2>
 <p>Free to embed on any site, commercial or personal. The only condition: <strong>keep the &ldquo;by ExactCup&rdquo; attribution link</strong> shown under the widget. That link is how we keep the tool free. Thanks!</p>
-<p class="note">Covers 80+ ingredients with weights verified against authoritative baking references. The widget updates automatically as we add ingredients &mdash; you never touch the code again.</p>`;
+<p class="note">Covers ${DATA.ingredients.length}+ ingredients with weights verified against authoritative baking references. The widget updates automatically as we add ingredients &mdash; you never touch the code again.</p>
+<script type="application/json" id="eb-data">${JSON.stringify(DATA.ingredients.map((i) => ({ s: i.slug, n: i.name })))}</script>
+<script>(function(){
+var el=document.getElementById("eb-data"),sel=document.getElementById("eb-ing"),ta=document.getElementById("eb-snippet"),pv=document.getElementById("eb-preview");
+if(!el||!sel||!ta)return;
+var names={};JSON.parse(el.textContent).forEach(function(i){names[i.s]=i.n;});
+var base="${SITE.baseUrl}";
+function widgetSrc(slug){return base+"/embed/cups-to-grams/"+(slug?"?ingredient="+slug:"");}
+function snippet(slug){
+var href=slug?base+"/cups-to-grams/"+slug+"/":base+"/cups-to-grams/";
+var text=slug?names[slug]+" cups to grams converter":"Cups to Grams Converter";
+return '<iframe src="'+widgetSrc(slug)+'" width="100%" height="380" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="Cups to Grams Converter" loading="lazy"></iframe>\\n<p style="font-size:13px"><a href="'+href+'">'+text+'</a> by ExactCup</p>';
+}
+sel.addEventListener("change",function(){ta.value=snippet(sel.value);if(pv)pv.src=widgetSrc(sel.value);});
+})();</script>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body }) };
 }
 
