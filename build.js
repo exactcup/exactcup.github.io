@@ -314,6 +314,13 @@ function ingredientPage(ing) {
       [`How many sticks of butter is 1 cup?`, `1 cup of butter is 2 sticks — each US stick is 1/2 cup, or about ${g2(gpc / 2)} grams.`],
     );
   }
+  if (ing.slug === "corn-syrup") {
+    const dens = (gpc / 236.588).toFixed(2);
+    faq.push(
+      [`What is the density of corn syrup in g/mL?`, `About ${dens} g/mL: a US cup is 236.59 mL and weighs about ${g2(gpc)} grams of corn syrup, so ${g2(gpc)} ÷ 236.59 ≈ ${dens} g/mL (${dens} g/cm³). Corn syrup is roughly 1.4 times as dense as water, which is why a cup of it weighs far more than a cup of water.`],
+      [`How many grams is 100 mL of corn syrup?`, `100 mL of corn syrup weighs about ${Math.round(gpc / 236.588 * 100)} grams (at about ${dens} g/mL). A full US cup (236.59 mL) is about ${g2(gpc)} g.`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
