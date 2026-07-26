@@ -96,6 +96,7 @@ const ALL_TOOLS = [
   ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
   ["/butter-to-oil/", "Butter to Oil", "Swap butter for oil: 1 cup butter = 3/4 cup oil."],
   ["/sugar-to-honey/", "Sugar to Honey", "Swap sugar for honey: 1 cup sugar = ½–¾ cup honey."],
+  ["/cake-flour-substitute/", "Cake Flour Substitute", "Make cake flour: swap 2 tbsp cornstarch into each cup of flour."],
 ];
 
 // ---------- structured data (JSON-LD) helpers ----------
@@ -279,7 +280,10 @@ function ingredientPage(ing) {
   const gpc = ing.gramsPerCup;
   const related = DATA.ingredients.filter((i) => i.category === ing.category && i.slug !== ing.slug).slice(0, 6);
   // Reverse hub + tablespoon converter are relevant to every ingredient; category tools add depth.
-  const toolLinks = [["/grams-to-cups/", "Grams to Cups Converter"], ["/tablespoons-to-grams/", "Tablespoons to Grams"], ...(CATEGORY_TOOLS[ing.category] || [])];
+  // The cake-flour substitute is linked only from the two flours it's actually made of.
+  const toolLinks = [
+    ...(ing.slug === "cake-flour" || ing.slug === "all-purpose-flour" ? [["/cake-flour-substitute/", "Cake Flour Substitute"]] : []),
+    ["/grams-to-cups/", "Grams to Cups Converter"], ["/tablespoons-to-grams/", "Tablespoons to Grams"], ...(CATEGORY_TOOLS[ing.category] || [])];
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = ing.slug === "butter"
     ? `How many grams is a cup of butter? 1 cup = ${g2(gpc)} g, 1 stick = ${g2(gpc / 2)} g, 1/2 cup = ${g2(gpc / 2)} g. Free butter converter with a full cups, sticks, tablespoons and grams chart.`
@@ -998,6 +1002,137 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "sugarhoney" } }) };
 }
 
+// Cake flour substitute. The 14-tbsp rule is unanimous across the primary
+// sources (King Arthur, America's Test Kitchen, Bob's Red Mill): per 1 cup of
+// cake flour, 14 tbsp AP flour (= ¾ cup + 2 tbsp = ⅞ cup = 1 cup minus 2 tbsp
+// — all the same amount) + 2 tbsp cornstarch. KA gives it by weight as
+// 105 g + 14 g and says the blend subs for cake flour by equal weight or
+// volume. Two honest wrinkles the page discloses: a no-cornstarch variant
+// (1 cup minus 2 tbsp AP, Virginia Cooperative Extension) is a real published
+// convention, and a garbled "¾ cup AP + 2 tbsp cornstarch" version (12 tbsp of
+// flour instead of 14) circulates — it even appears on a university extension
+// page. All chart values are computed from the site-verified densities
+// (AP flour 120 g/cup, cornstarch 112 g/cup — both matching the KA chart).
+function cakeFlourSubstitutePage() {
+  const AP_GPC = 120, CS_GPC = 112; // g per US cup, site-verified (= KA chart)
+  const AP_TSP = 42 / 48, CS_TSP = 6 / 48; // per tsp of cake flour: AP + cornstarch fractions
+  const AP_G = 105, CS_G = 14; // KA's per-cup weights; blend = 119 g per cup of cake flour
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  const fmtNum = (x) => {
+    const FR = [[0.25, "¼"], [0.5, "½"], [0.75, "¾"]];
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    let frac = "";
+    if (rest > 0.03) {
+      for (const [v, s] of FR) if (Math.abs(rest - v) < 0.02) { frac = s; break; }
+      if (!frac) return String(rnd(x, 2));
+    }
+    return whole ? whole + frac : (frac || "0");
+  };
+  const fmtTsp = (t) => {
+    const parts = [];
+    const cups = Math.floor(t / 48 + 1e-9);
+    let rem = t - cups * 48, frac = "";
+    const EXACT = [[36, "¾"], [32, "⅔"], [24, "½"], [16, "⅓"], [12, "¼"]];
+    for (const [v, s] of EXACT) if (Math.abs(rem - v) < 1e-6) { frac = s; rem = 0; break; }
+    if (!frac) for (const [v, s] of [[36, "¾"], [24, "½"], [12, "¼"]]) if (rem >= v - 1e-9) { frac = s; rem -= v; break; }
+    if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+    if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+      parts.push(fmtNum(rem / 3) + " tbsp"); rem = 0;
+    } else {
+      const tbsp = Math.floor(rem / 3 + 1e-9); rem -= tbsp * 3;
+      if (tbsp) parts.push(tbsp + " tbsp");
+    }
+    if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+    return parts.join(" + ");
+  };
+  // grams: whole numbers read best, but keep a decimal on small cornstarch amounts
+  const gFmt = (g) => (g < 10 ? rnd(g, 1) : Math.round(g)) + " g";
+  const title = "Cake Flour Substitute — Make Cake Flour from All-Purpose Flour | ExactCup";
+  const description = "No cake flour? Per cup, whisk ¾ cup + 2 tbsp all-purpose flour (105 g) with 2 tbsp cornstarch (14 g). Chart and calculator for any amount, in cups or grams.";
+  const canonical = "/cake-flour-substitute/";
+  // Cake flour needed (in tsp) → AP flour + cornstarch, measured and in grams.
+  const chartRows = [
+    ["¼ cup", 12], ["⅓ cup", 16], ["½ cup", 24], ["⅔ cup", 32], ["¾ cup", 36],
+    ["1 cup", 48], ["1¼ cups", 60], ["1½ cups", 72], ["2 cups", 96], ["3 cups", 144],
+  ].map(([lab, t]) => {
+    const ap = t * AP_TSP, cs = t * CS_TSP;
+    return `<tr><td>${lab}</td><td>${fmtTsp(ap)}</td><td class="num">${gFmt(ap / 48 * AP_GPC)}</td><td>${fmtTsp(cs)}</td><td class="num">${gFmt(cs / 48 * CS_GPC)}</td></tr>`;
+  }).join("\n");
+  // By weight: KA's 105 g + 14 g blend (119 g) stands in for a cup of cake
+  // flour by EQUAL WEIGHT, so a recipe's grams split 105:14 across the blend.
+  const gRows = [100, 150, 200, 250, 300, 500].map((g) => {
+    const ap = g * AP_G / (AP_G + CS_G), cs = g * CS_G / (AP_G + CS_G);
+    return `<tr><td>${g} g</td><td class="num">${Math.round(ap)} g</td><td class="num">${Math.round(cs)} g</td></tr>`;
+  }).join("\n");
+  // Reverse: recipe written for AP flour, baker wants the finer cake-flour crumb.
+  // Swans Down + Utah State Extension: 1 cup + 2 tbsp cake flour per cup of AP.
+  const revRows = [
+    ["½ cup", 24], ["1 cup", 48], ["1½ cups", 72], ["2 cups", 96],
+  ].map(([lab, ap]) => {
+    const cake = ap * 54 / 48;
+    return `<tr><td>${lab}</td><td>${fmtTsp(cake)}</td><td class="num">${Math.round(cake / 48 * AP_GPC)} g</td></tr>`;
+  }).join("\n");
+  const faq = [
+    ["How do I make 1 cup of cake flour from all-purpose flour?", "Measure 1 cup of all-purpose flour, remove 2 tablespoons, then add 2 tablespoons of cornstarch and whisk to combine. That's 3/4 cup + 2 tbsp of flour (105 g) plus 2 tbsp of cornstarch (14 g) — the same rule King Arthur Baking, America's Test Kitchen and Bob's Red Mill all publish. Use the blend in place of cake flour, measure for measure."],
+    ["Is it 3/4 cup or 7/8 cup of all-purpose flour?", "Both — they're the same amount. 3/4 cup + 2 tablespoons, 7/8 cup, and 1 cup minus 2 tablespoons are all exactly 14 tablespoons. Watch out for a garbled version in circulation (it even appears on a university extension page): a plain '3/4 cup of all-purpose flour plus 2 tablespoons of cornstarch' silently drops 2 tablespoons of flour and shorts the recipe by an eighth of a cup."],
+    ["Can I substitute all-purpose flour without adding cornstarch?", "You can — it's a real published convention, not a mistake. Virginia Cooperative Extension's substitution chart says 1 cup minus 2 tablespoons of all-purpose flour per cup of cake flour, with no cornstarch. It reduces the amount of flour rather than the protein percentage, so the crumb lands a little closer to an everyday all-purpose bake. If you have cornstarch, the blend gets you closer to true cake flour."],
+    ["Do I sift or whisk the flour and cornstarch together?", "King Arthur Baking says simply whisk them together. Bob's Red Mill goes the other way and advises sifting — as many as five times — for the fluffiest cakes. Sifting distributes the cornstarch evenly and adds air, but no primary source treats it as mandatory; whisking thoroughly is the accepted minimum."],
+    ["Why does adding cornstarch make all-purpose flour act like cake flour?", "Dilution. Cornstarch is essentially protein-free, so cutting all-purpose flour with it lowers the blend's overall protein content toward cake flour's. Less protein means less gluten develops when the batter is mixed, and that's what gives cake-flour bakes their fine, tender crumb. King Arthur, America's Test Kitchen and Bob's Red Mill all describe it the same way."],
+    ["What is the protein difference between cake flour and all-purpose flour?", "Classic bleached cake flour (Swans Down style) runs about 6–9% protein versus roughly 10–12% for all-purpose — the ranges America's Test Kitchen and Bob's Red Mill publish. One nuance: King Arthur's unbleached cake flour is 10% protein against their 11.7% all-purpose, a much smaller gap. Either way, cake flour is the lowest-protein wheat flour on the shelf."],
+    ["How do I make cake flour by weight?", "For every 100 g of cake flour a recipe calls for, whisk together 88 g of all-purpose flour and 12 g of cornstarch. That's King Arthur's 105 g + 14 g per-cup blend scaled down — they state it substitutes for cake flour by equal weight or volume. (Cook's Illustrated publishes a starchier mix — about 20 g of cornstarch per 100 g of flour — proof the ratio has some slack.)"],
+    ["How much does a cup of cake flour weigh?", "It depends on the brand more than people expect. King Arthur lists its unbleached cake flour at 120 g per cup — the same as its all-purpose flour. Bob's Red Mill and Swans Down package labels work out to about 112 g per cup. This site's charts use the King Arthur 120 g convention."],
+    ["How much cornstarch do I add to 2 cups of all-purpose flour?", "Swap 2 tablespoons per cup: remove 4 tablespoons (1/4 cup) of flour from the 2 cups, then add 4 tablespoons of cornstarch. By weight that's 210 g of all-purpose flour + 28 g of cornstarch standing in for 2 cups of cake flour. The chart above spells out every common amount."],
+    ["Can I use self-rising flour instead of cake flour?", "No. Self-rising flour is flour with baking powder (about 1 1/2 tsp per cup) and salt already mixed in, so swapping it for cake flour adds leavening and salt the recipe never asked for — on top of the wrong protein level. Use the flour-plus-cornstarch blend instead."],
+    ["My recipe calls for all-purpose flour — can I use cake flour instead?", "Going that direction, use 1 cup plus 2 tablespoons of cake flour for every cup of all-purpose — the rule published by both Swans Down and Utah State University Extension. Expect a more delicate result, and don't push it into sturdy bakes: King Arthur cautions that cake flour swapped 1:1 into a recipe built for all-purpose can mean sunken cakes or cookies that fall apart."],
+    ["Does the substitute work for angel food or chiffon cake?", "It's weakest there. The blend is great in everyday butter cakes, cupcakes, muffins and snack cakes. The most delicate high-egg-white bakes — angel food, chiffon, pure white cakes — are usually developed around real bleached cake flour, which America's Test Kitchen notes produces a loftier cake. The substitute will still bake up fine, just a little less tall with a slightly coarser crumb."],
+  ];
+  const jsonLd = [
+    appLd("Cake Flour Substitute Calculator", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Cake Flour Substitute", canonical]]),
+  ];
+  const body = `
+<h1>Cake Flour Substitute</h1>
+<p class="lead">No cake flour? For every <strong>1 cup of cake flour</strong>, whisk together <strong>¾ cup + 2 tbsp of all-purpose flour</strong> (105 g) and <strong>2 tbsp of cornstarch</strong> (14 g) — the rule King Arthur Baking, America's Test Kitchen and Bob's Red Mill all agree on. Enter any amount to get the blend, measured or in grams.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field"><label for="cf-amt">Cake flour needed</label><input id="cf-amt" type="text" inputmode="decimal" value="1" placeholder="e.g. 1/2 or 1 1/2"></div>
+    <div class="field"><label for="cf-unit">Unit</label><select id="cf-unit"><option value="cups">cups</option><option value="tbsp">tablespoons</option><option value="grams">grams</option></select></div>
+  </div>
+  <div class="result"><div class="big" id="cf-out">—</div><div class="sub" id="cf-sub"></div><div class="sub" id="cf-adj"></div></div>
+</div>
+<p class="note">One amount, three phrasings: <strong>¾ cup + 2 tbsp</strong>, <strong>⅞ cup</strong> and <strong>1 cup minus 2 tbsp</strong> are all exactly <strong>14 tablespoons</strong> of flour — sources word the same rule differently. But watch for a garbled copy that circulates widely (even on a university extension page): plain <em>"¾ cup of all-purpose flour plus 2 tbsp cornstarch"</em> quietly drops 2 tablespoons of flour and shorts the recipe.</p>
+<h2>Cake flour substitute chart</h2>
+<table><thead><tr><th>Cake flour needed</th><th>All-purpose flour</th><th>Flour (g)</th><th>Cornstarch</th><th>Cornstarch (g)</th></tr></thead><tbody>
+${chartRows}
+</tbody></table>
+<p class="note">Whisk the two together thoroughly before using (King Arthur's instruction). Bob's Red Mill suggests sifting the blend — up to five times — for the airiest cakes; sifting isn't mandatory, but it does distribute the cornstarch evenly.</p>
+<h2>Why the cornstarch works</h2>
+<p>Cake flour is simply <strong>lower-protein</strong> flour: classic bleached cake flour runs about <strong>6–9% protein</strong> against roughly <strong>10–12%</strong> for all-purpose (King Arthur's unbleached cake flour is a narrower 10% vs 11.7%). Cornstarch contains essentially no protein, so replacing part of the flour with it <strong>dilutes the blend's protein</strong> toward cake-flour territory. Less protein → less gluten when the batter is mixed → the fine, tender, melt-away crumb cake flour is famous for. The cornstarch also brings some extra tenderness of its own.</p>
+<h2>Cake flour substitute by weight (grams)</h2>
+<p>Baking by scale? King Arthur's blend is <strong>105 g all-purpose flour + 14 g cornstarch</strong> per cup of cake flour, and they state it substitutes <em>by equal weight or volume</em> — so for a metric recipe, split the recipe's cake-flour grams roughly <strong>88% flour : 12% cornstarch</strong>:</p>
+<table><thead><tr><th>Cake flour called for</th><th>All-purpose flour</th><th>Cornstarch</th></tr></thead><tbody>
+${gRows}
+</tbody></table>
+<p class="note">Honest footnote for scale bakers: Cook's Illustrated publishes a noticeably starchier blend — about 20 g of cornstarch per 100 g of flour — while its sibling America's Test Kitchen page matches the King Arthur ratio. The rule has slack; more cornstarch leans more tender.</p>
+<h2>The no-cornstarch variant</h2>
+<p>Older substitution charts — still published by <strong>Virginia Cooperative Extension</strong> — skip the cornstarch entirely: use <strong>1 cup minus 2 tbsp of all-purpose flour</strong> per cup of cake flour and stop there. That version reduces the <em>amount</em> of flour (and so total gluten) rather than the protein <em>percentage</em>, and it works acceptably in sturdy cakes. If there's cornstarch in the pantry, the blend above gets closer to the real thing.</p>
+<h2>The reverse: using cake flour in an all-purpose recipe</h2>
+<p>Going the other way — the recipe says all-purpose, and you'd like a finer crumb — use <strong>1 cup + 2 tbsp of cake flour per cup of all-purpose</strong> (the Swans Down and Utah State University Extension rule; cake flour is lighter, so it takes a little more of it):</p>
+<table><thead><tr><th>All-purpose called for</th><th>Cake flour to use</th><th>Cake flour (g)</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<p class="note">Keep the swap to tender bakes. King Arthur cautions that cake flour pushed 1:1 into a recipe developed for all-purpose can give sunken cakes and bars, or cookies too delicate to hold together. And if the recipe calls for cake flour and you'd rather just use plain all-purpose 1:1 (by weight), that works too — expect a slightly coarser, sturdier crumb.</p>
+<h2>Where the substitute shines — and where it doesn't</h2>
+<p><strong>Use it confidently:</strong> butter and oil cakes, cupcakes, snack cakes, muffins, pancakes and biscuits — anywhere cake flour is there for tenderness.</p>
+<p><strong>Think twice:</strong> angel food, chiffon and pure white cakes, which are usually developed around real <em>bleached</em> cake flour (America's Test Kitchen notes it produces a loftier cake than unbleached flour). The blend still bakes up fine there — just a touch shorter and coarser. And <strong>don't reach for self-rising flour</strong>: it's flour plus baking powder and salt, which the recipe didn't ask for.</p>
+<h2>Need a different conversion?</h2>
+<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "cakeflour" } }) };
+}
+
 function airFryerPage() {
   const title = "Air Fryer Conversion Calculator — Oven to Air Fryer Time & Temp | ExactCup";
   const description = "Convert any oven recipe to an air fryer instantly. Lower the temperature by 25°F and reduce the time by about 20%. Free calculator with a conversion chart.";
@@ -1665,7 +1800,8 @@ function categoryPage(key) {
 <h2>${esc(cname)} conversion chart</h2>
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
-<p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}
+<p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}${key === "flour" ? `
+<p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount.</p>` : ""}
 ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
@@ -1882,6 +2018,7 @@ function llmsTxt() {
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
     ["Butter to Oil Conversion", "/butter-to-oil/", "Substitute oil for butter at the standard 3:4 volume ratio: 1 cup butter = 3/4 cup oil; 1 stick = 6 tbsp oil; by weight 100 g butter ≈ 71 g oil (butter is ~81% fat + 16% water, USDA); melted-butter recipes are often swapped 1:1; not suited to cookies, creamed cakes, pie crust or laminated pastry"],
     ["Sugar to Honey Conversion", "/sugar-to-honey/", "Substitute honey for granulated sugar: 1 cup sugar = 3/4 cup honey (King Arthur rule; the National Honey Board and Clemson Extension suggest up to 1/2), then per cup of honey used cut other liquid by 1/4 cup, add 1/2 tsp baking soda (honey pH ~3.9) and bake 25 F lower (avoid recipes over 350 F); by weight 100 g sugar ≈ 128 g honey (honey is 340 g/cup vs sugar 200 g/cup); reverse: 1 cup honey = 1 1/4 cups sugar + 1/4 cup liquid"],
+    ["Cake Flour Substitute", "/cake-flour-substitute/", "Make cake flour from all-purpose flour: per 1 cup cake flour use 14 tbsp AP flour (3/4 cup + 2 tbsp = 7/8 cup = 1 cup minus 2 tbsp, 105 g) + 2 tbsp cornstarch (14 g), whisked — the King Arthur / America's Test Kitchen / Bob's Red Mill rule; by weight 100 g cake flour = 88 g AP flour + 12 g cornstarch; no-cornstarch variant (Virginia Extension): 1 cup minus 2 tbsp AP flour; reverse (cake flour in an AP recipe): 1 cup + 2 tbsp cake flour per cup AP (Swans Down / Utah State); protein: bleached cake flour ~6-9% vs AP ~10-12%; self-rising flour is NOT a cake flour substitute (contains baking powder + salt)"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
   out += `## Tools\n`;
@@ -2039,7 +2176,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

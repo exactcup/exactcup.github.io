@@ -602,6 +602,73 @@
     calc();
   }
 
+  function initCakeFlour() {
+    var amt = $("cf-amt"), unit = $("cf-unit"), out = $("cf-out"), sub = $("cf-sub"), adj = $("cf-adj");
+    if (!amt || !out) return;
+    // Per cup of cake flour: 14 tbsp AP flour (105 g) + 2 tbsp cornstarch (14 g) — KA/ATK/Bob's.
+    var AP_GPC = 120, CS_GPC = 112, AP_G = 105, CS_G = 14;
+    // accepts "3/4", "1 1/2", "0.75", "2"
+    function parseAmt(s) {
+      s = (s || "").trim();
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    var FR = [[0.25, "1/4"], [0.5, "1/2"], [0.75, "3/4"]];
+    function fmtNum(x) {
+      var whole = Math.floor(x + 1e-9), rest = x - whole, frac = "";
+      if (rest > 0.03) {
+        for (var i = 0; i < FR.length; i++) if (Math.abs(rest - FR[i][0]) < 0.02) { frac = FR[i][1]; break; }
+        if (!frac) return round(x, 2);
+      }
+      return whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+    }
+    function fmtTsp(t) {
+      if (!(t > 0.015)) return "a pinch";
+      var parts = [], cups = Math.floor(t / 48 + 1e-9), rem = t - cups * 48, frac = "";
+      var EXACT = [[36, "3/4"], [32, "2/3"], [24, "1/2"], [16, "1/3"], [12, "1/4"]];
+      for (var i = 0; i < EXACT.length; i++) if (Math.abs(rem - EXACT[i][0]) < 1e-6) { frac = EXACT[i][1]; rem = 0; break; }
+      if (!frac) {
+        var Q = [[36, "3/4"], [24, "1/2"], [12, "1/4"]];
+        for (i = 0; i < Q.length; i++) if (rem >= Q[i][0] - 1e-9) { frac = Q[i][1]; rem -= Q[i][0]; break; }
+      }
+      if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+      if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+        parts.push(fmtNum(rem / 3) + " tbsp");
+        rem = 0;
+      } else {
+        var tbsp = Math.floor(rem / 3 + 1e-9);
+        rem -= tbsp * 3;
+        if (tbsp) parts.push(tbsp + " tbsp");
+      }
+      if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+      return parts.join(" + ");
+    }
+    function calc() {
+      var a = parseAmt(amt.value), u = unit ? unit.value : "cups";
+      if (isNaN(a) || a < 0) { out.textContent = "—"; if (sub) sub.textContent = ""; if (adj) adj.textContent = ""; return; }
+      if (u === "grams") {
+        // by weight the 105:14 blend substitutes gram-for-gram (King Arthur)
+        var apG = a * AP_G / (AP_G + CS_G), csG = a * CS_G / (AP_G + CS_G);
+        out.textContent = round(apG, 0) + " g all-purpose flour + " + round(csG, csG < 10 ? 1 : 0) + " g cornstarch";
+        if (sub) sub.textContent = "Whisk together and use in place of " + round(a, 0) + " g cake flour";
+        if (adj) adj.textContent = "Blend ratio by weight: 88% flour, 12% cornstarch (King Arthur: 105 g + 14 g per cup)";
+        return;
+      }
+      var cakeTsp = u === "tbsp" ? a * 3 : a * 48;
+      var apTsp = cakeTsp * 42 / 48, csTsp = cakeTsp * 6 / 48;
+      out.textContent = fmtTsp(apTsp) + " all-purpose flour + " + fmtTsp(csTsp) + " cornstarch";
+      if (sub) sub.textContent = "≈ " + round(apTsp / 48 * AP_GPC, 0) + " g flour + " + round(csTsp / 48 * CS_GPC, csTsp / 48 * CS_GPC < 10 ? 1 : 0) + " g cornstarch — whisk together";
+      if (adj) adj.textContent = "Same amount, said three ways: 14 tbsp = 3/4 cup + 2 tbsp = 1 cup minus 2 tbsp (per cup of cake flour)";
+    }
+    amt.addEventListener("input", calc);
+    if (unit) unit.addEventListener("change", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -621,4 +688,5 @@
   else if (t === "halve") initHalve();
   else if (t === "butteroil") initButterOil();
   else if (t === "sugarhoney") initSugarHoney();
+  else if (t === "cakeflour") initCakeFlour();
 })();
