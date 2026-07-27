@@ -669,6 +669,79 @@
     calc();
   }
 
+  function initThickener() {
+    var dir = $("th-dir"), amt = $("th-amt"), unit = $("th-unit"), out = $("th-out"), sub = $("th-sub"), adj = $("th-adj");
+    if (!amt || !out) return;
+    // 2:1 flour:cornstarch by volume (Argo/Bob's/ATK/USU). Weights: KA chart, g per cup.
+    var FL_GPC = 120, CS_GPC = 112;
+    // accepts "3/4", "1 1/2", "0.75", "2"
+    function parseAmt(s) {
+      s = (s || "").trim();
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    var FR = [[0.25, "1/4"], [0.5, "1/2"], [0.75, "3/4"]];
+    function fmtNum(x) {
+      var whole = Math.floor(x + 1e-9), rest = x - whole, frac = "";
+      if (rest > 0.03) {
+        for (var i = 0; i < FR.length; i++) if (Math.abs(rest - FR[i][0]) < 0.02) { frac = FR[i][1]; break; }
+        if (!frac) return round(x, 2);
+      }
+      return whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+    }
+    function fmtTsp(t) {
+      if (!(t > 0.015)) return "a pinch";
+      var parts = [], cups = Math.floor(t / 48 + 1e-9), rem = t - cups * 48, frac = "";
+      var EXACT = [[36, "3/4"], [32, "2/3"], [24, "1/2"], [16, "1/3"], [12, "1/4"]];
+      for (var i = 0; i < EXACT.length; i++) if (Math.abs(rem - EXACT[i][0]) < 1e-6) { frac = EXACT[i][1]; rem = 0; break; }
+      if (!frac) {
+        var Q = [[36, "3/4"], [24, "1/2"], [12, "1/4"]];
+        for (i = 0; i < Q.length; i++) if (rem >= Q[i][0] - 1e-9) { frac = Q[i][1]; rem -= Q[i][0]; break; }
+      }
+      if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+      if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+        parts.push(fmtNum(rem / 3) + " tbsp");
+        rem = 0;
+      } else {
+        var tbsp = Math.floor(rem / 3 + 1e-9);
+        rem -= tbsp * 3;
+        if (tbsp) parts.push(tbsp + " tbsp");
+      }
+      if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+      return parts.join(" + ");
+    }
+    function calc() {
+      var a = parseAmt(amt.value), u = unit ? unit.value : "tbsp", f2c = !dir || dir.value === "f2c";
+      if (isNaN(a) || a < 0) { out.textContent = "—"; if (sub) sub.textContent = ""; if (adj) adj.textContent = ""; return; }
+      var useName = f2c ? "cornstarch" : "all-purpose flour", inName = f2c ? "flour" : "cornstarch";
+      if (u === "grams") {
+        // volume rule 2:1 → weight factor 7/15 (tbsp: cornstarch 7 g vs flour 7.5 g)
+        var outG = f2c ? a * 7 / 15 : a * 15 / 7;
+        // whole-teaspoon hint reads better than "1.71 tsp" for an ≈ value
+        var outTspG = Math.round(outG / ((f2c ? CS_GPC : FL_GPC) / 48));
+        out.textContent = round(outG, outG < 10 ? 1 : 0) + " g " + useName;
+        if (sub) sub.textContent = "≈ " + fmtTsp(outTspG) + " — instead of " + round(a, a < 10 ? 1 : 0) + " g " + inName;
+      } else {
+        var tspIn = u === "cups" ? a * 48 : u === "tbsp" ? a * 3 : a;
+        var tspOut = f2c ? tspIn / 2 : tspIn * 2;
+        var outGv = tspOut / 48 * (f2c ? CS_GPC : FL_GPC);
+        out.textContent = fmtTsp(tspOut) + " " + useName;
+        if (sub) sub.textContent = "≈ " + round(outGv, outGv < 10 ? 1 : 0) + " g — instead of " + fmtTsp(tspIn) + " " + inName;
+      }
+      if (adj) adj.textContent = f2c
+        ? "Cornstarch: stir into cold water first, add near the end, boil 1 minute, then lower the heat"
+        : "Flour: cook it — a 4-minute roux, or simmer the sauce 10–15 min to lose the raw-flour taste";
+    }
+    amt.addEventListener("input", calc);
+    if (unit) unit.addEventListener("change", calc);
+    if (dir) dir.addEventListener("change", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -689,4 +762,5 @@
   else if (t === "butteroil") initButterOil();
   else if (t === "sugarhoney") initSugarHoney();
   else if (t === "cakeflour") initCakeFlour();
+  else if (t === "thickener") initThickener();
 })();

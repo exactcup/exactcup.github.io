@@ -97,6 +97,7 @@ const ALL_TOOLS = [
   ["/butter-to-oil/", "Butter to Oil", "Swap butter for oil: 1 cup butter = 3/4 cup oil."],
   ["/sugar-to-honey/", "Sugar to Honey", "Swap sugar for honey: 1 cup sugar = ½–¾ cup honey."],
   ["/cake-flour-substitute/", "Cake Flour Substitute", "Make cake flour: swap 2 tbsp cornstarch into each cup of flour."],
+  ["/cornstarch-to-flour/", "Cornstarch to Flour", "Thickener swap both ways: 1 tbsp cornstarch = 2 tbsp flour."],
 ];
 
 // ---------- structured data (JSON-LD) helpers ----------
@@ -280,9 +281,11 @@ function ingredientPage(ing) {
   const gpc = ing.gramsPerCup;
   const related = DATA.ingredients.filter((i) => i.category === ing.category && i.slug !== ing.slug).slice(0, 6);
   // Reverse hub + tablespoon converter are relevant to every ingredient; category tools add depth.
-  // The cake-flour substitute is linked only from the two flours it's actually made of.
+  // The cake-flour substitute is linked only from the two flours it's actually made of,
+  // and the thickener converter only from the starches (+ AP flour) people thicken with.
   const toolLinks = [
     ...(ing.slug === "cake-flour" || ing.slug === "all-purpose-flour" ? [["/cake-flour-substitute/", "Cake Flour Substitute"]] : []),
+    ...(["cornstarch", "arrowroot-powder", "tapioca-flour", "all-purpose-flour"].includes(ing.slug) ? [["/cornstarch-to-flour/", "Cornstarch to Flour Thickener"]] : []),
     ["/grams-to-cups/", "Grams to Cups Converter"], ["/tablespoons-to-grams/", "Tablespoons to Grams"], ...(CATEGORY_TOOLS[ing.category] || [])];
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = ing.slug === "butter"
@@ -1134,10 +1137,129 @@ ${revRows}
 <p><strong>Use it confidently:</strong> butter and oil cakes, cupcakes, snack cakes, muffins, pancakes and biscuits — anywhere cake flour is there for tenderness.</p>
 <p><strong>Think twice:</strong> angel food, chiffon and pure white cakes, which are usually developed around real <em>bleached</em> cake flour (America's Test Kitchen notes it produces a loftier cake than unbleached flour). The blend still bakes up fine there — just a touch shorter and coarser. And <strong>don't reach for self-rising flour</strong>: it's flour plus baking powder and salt, which the recipe didn't ask for.</p>
 <h2>Need a different conversion?</h2>
-<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Using the cornstarch to thicken a sauce instead? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> is the mirror-image page: there, cornstarch replaces flour at half the amount. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "cakeflour" } }) };
+}
+
+function cornstarchFlourPage() {
+  const FL_GPC = 120, CS_GPC = 112; // g per US cup, site-verified (= KA chart)
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  const fmtNum = (x) => {
+    const FR = [[0.25, "¼"], [0.5, "½"], [0.75, "¾"]];
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    let frac = "";
+    if (rest > 0.03) {
+      for (const [v, s] of FR) if (Math.abs(rest - v) < 0.02) { frac = s; break; }
+      if (!frac) return String(rnd(x, 2));
+    }
+    return whole ? whole + frac : (frac || "0");
+  };
+  const fmtTsp = (t) => {
+    const parts = [];
+    const cups = Math.floor(t / 48 + 1e-9);
+    let rem = t - cups * 48, frac = "";
+    const EXACT = [[36, "¾"], [32, "⅔"], [24, "½"], [16, "⅓"], [12, "¼"]];
+    for (const [v, s] of EXACT) if (Math.abs(rem - v) < 1e-6) { frac = s; rem = 0; break; }
+    if (!frac) for (const [v, s] of [[36, "¾"], [24, "½"], [12, "¼"]]) if (rem >= v - 1e-9) { frac = s; rem -= v; break; }
+    if (cups || frac) parts.push((cups ? cups + (frac ? " " + frac : "") : frac) + " cup" + (cups > 1 || (cups === 1 && frac) ? "s" : ""));
+    if (rem >= 3 && Math.abs(rem * 2 / 3 - Math.round(rem * 2 / 3)) < 1e-9) {
+      parts.push(fmtNum(rem / 3) + " tbsp"); rem = 0;
+    } else {
+      const tbsp = Math.floor(rem / 3 + 1e-9); rem -= tbsp * 3;
+      if (tbsp) parts.push(tbsp + " tbsp");
+    }
+    if (rem > 0.03) parts.push(fmtNum(rem) + " tsp");
+    return parts.join(" + ");
+  };
+  const gFmt = (g) => (g < 10 ? rnd(g, 1) : Math.round(g)) + " g";
+  // grams from an amount in teaspoons, per ingredient
+  const flG = (t) => gFmt(t / 48 * FL_GPC), csG = (t) => gFmt(t / 48 * CS_GPC);
+  const title = "Cornstarch to Flour Ratio — Thickener Conversion Chart & Calculator | ExactCup";
+  const description = "Swap thickeners either way: 1 tbsp cornstarch = 2 tbsp flour — cornstarch has twice the thickening power (Argo's rule). Chart, calculator and per-cup dosing.";
+  const canonical = "/cornstarch-to-flour/";
+  // Recipe calls for flour → use half as much cornstarch (2:1 by volume; unanimous
+  // across Argo, Bob's Red Mill, ATK, USU + Illinois Extension — sauces/gravies only).
+  const chartRows = [
+    ["1 tsp", 1], ["2 tsp", 2], ["1 tbsp", 3], ["2 tbsp", 6], ["3 tbsp", 9],
+    ["¼ cup", 12], ["⅓ cup", 16], ["½ cup", 24], ["1 cup", 48],
+  ].map(([lab, t]) => `<tr><td>${lab}</td><td class="num">${flG(t)}</td><td>${fmtTsp(t / 2)}</td><td class="num">${csG(t / 2)}</td></tr>`).join("\n");
+  const revRows = [
+    ["1 tsp", 1], ["1½ tsp", 1.5], ["2 tsp", 2], ["1 tbsp", 3], ["2 tbsp", 6], ["3 tbsp", 9], ["¼ cup", 12],
+  ].map(([lab, t]) => `<tr><td>${lab}</td><td class="num">${csG(t)}</td><td>${fmtTsp(t * 2)}</td><td class="num">${flG(t * 2)}</td></tr>`).join("\n");
+  const faq = [
+    ["Can I use flour instead of cornstarch to thicken a sauce?", "Yes — use twice as much. Flour has about half the thickening power of cornstarch, so replace every tablespoon of cornstarch with 2 tablespoons of all-purpose flour. Argo, Bob's Red Mill, America's Test Kitchen and Utah State University Extension all publish this same 2:1 rule. Flour also needs more cooking than cornstarch to lose its raw taste, and the sauce will finish opaque rather than glossy."],
+    ["How much cornstarch equals 1/4 cup of flour?", "2 tablespoons. That's Argo's own worked example of the rule: cornstarch has twice the thickening power of flour, so use half as much. Spoon by spoon, 1 tablespoon of flour is replaced by 1 1/2 teaspoons of cornstarch."],
+    ["How much cornstarch does it take to thicken 1 cup of liquid?", "1 tablespoon of cornstarch per cup of liquid for a medium-bodied sauce or gravy — the University of Illinois Extension figure, and exactly the proportion in Argo's gravy recipe and Bob's Red Mill's white sauce. Doing it with flour instead, use 2 tablespoons per cup. Use about half that for a thin sauce and about one-and-a-half times for a thick one."],
+    ["Is 1 tablespoon of flour really equal to 1 1/2 teaspoons of cornstarch?", "Yes — and it's the same rule, not a different one. 1 1/2 teaspoons is exactly half a tablespoon, so '1 tbsp flour = 1 1/2 tsp cornstarch' is the standard 2:1 ratio restated in teaspoons. Some sites present the two phrasings as if they were competing ratios; they are identical."],
+    ["Do you have to boil a cornstarch-thickened sauce?", "Yes — briefly. Argo's instruction is to bring the mixture to a full boil, stirring constantly, and boil for 1 minute, at which point the starch granules have swelled to full capacity; Bob's Red Mill says the same. The popular warning to 'never boil cornstarch' garbles the real caveats, which are significant overcooking and rough stirring — not the one-minute boil itself."],
+    ["Why did my cornstarch sauce thin out again?", "Argo documents three causes: significant overcooking (thickened mixtures can thin as they cool), excessive or rough stirring (it physically breaks the swollen starch cells), and acidic ingredients like lemon juice or vinegar (they reduce the starch's thickening ability or stop it thickening at all). Freezing does it too — ice ruptures the starch network."],
+    ["Is the cornstarch-to-flour ratio the same by weight?", "Almost, but not exactly. A tablespoon of cornstarch weighs 7 g and a tablespoon of all-purpose flour 7.5 g (King Arthur's chart: 112 g vs 120 g per cup), so halving by volume means multiplying the weight by 7/15 — about 47%, not 50%. Replace 100 g of flour thickener with about 47 g of cornstarch; going the other way, 100 g of cornstarch becomes about 214 g of flour."],
+    ["Which makes better gravy — cornstarch or flour?", "Flour is the traditional choice: a roux-based gravy is opaque and matte, tastes rounder, and America's Test Kitchen notes flour-thickened sauces hold up longer than cornstarch ones. Cornstarch is faster (no roux), gluten-free, and gives a glossy, translucent finish — the look of many Chinese-style sauces and fruit fillings. For a classic opaque gravy, flour; for speed, shine or gluten-free, cornstarch."],
+    ["Can I freeze gravy thickened with flour or cornstarch?", "Both weep. America's Test Kitchen froze and thawed both kinds and found each one separates as the starch structure breaks down — the fix is to bring the thawed gravy to a full boil and whisk hard, which re-emulsifies it. Clemson Extension's cleaner answer: freeze the broth unthickened and make the gravy fresh, or thicken with waxy rice flour, which survives freezing."],
+    ["Does the 2:1 ratio work for pie fillings?", "No — pie is the exception. King Arthur's pie-thickener guide sets the amounts per fruit, and the flour-to-cornstarch ratio swings from about 3.5:1 for apples to roughly 1:1 for peaches, because sugar, acidity and a long bake all change how each starch performs. Use the 2:1 rule for sauces, gravies and soups, and a fruit-specific chart for pie."],
+    ["Is cornstarch gluten-free?", "Yes — Argo states its cornstarch is gluten-free (it's pure starch from corn, no wheat). That makes the swap in this calculator the standard way to make gravy gluten-free: use half as much cornstarch in place of the flour. Arrowroot, potato starch and tapioca starch are gluten-free alternatives too."],
+    ["What about arrowroot, potato starch or tapioca instead?", "Per 1 tablespoon of cornstarch: arrowroot 1 to 1 1/2 tablespoons (Utah State Extension says equal amounts; America's Test Kitchen says 1 1/2× — a genuine disagreement; ATK also warns arrowroot turns slimy with dairy), potato starch 1 to 1 1/2 tablespoons (same split), tapioca starch an equal amount (ATK — and it survives slow cooking better than flour or cornstarch), granular quick tapioca 2 tablespoons (Utah State)."],
+  ];
+  const jsonLd = [
+    appLd("Cornstarch to Flour Thickener Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Cornstarch to Flour", canonical]]),
+  ];
+  const body = `
+<h1>Cornstarch to Flour: the Thickener Conversion</h1>
+<p class="lead">Out of cornstarch — or thickening gluten-free and out of flour? For sauces, gravies and soups the rule is simple: <strong>1 tbsp cornstarch = 2 tbsp all-purpose flour</strong>. Cornstarch has <strong>twice the thickening power</strong> of flour, so use half as much — Argo, Bob's Red Mill, America's Test Kitchen and Utah State Extension all publish the same 2:1 rule. Enter what the recipe calls for:</p>
+<div class="calc">
+  <div class="field" style="margin-bottom:10px"><label for="th-dir">Direction</label><select id="th-dir"><option value="f2c">Recipe calls for flour → I'll use cornstarch</option><option value="c2f">Recipe calls for cornstarch → I'll use flour</option></select></div>
+  <div class="row">
+    <div class="field"><label for="th-amt">Amount in the recipe</label><input id="th-amt" type="text" inputmode="decimal" value="2" placeholder="e.g. 1/4 or 1 1/2"></div>
+    <div class="field"><label for="th-unit">Unit</label><select id="th-unit"><option value="tbsp">tablespoons</option><option value="tsp">teaspoons</option><option value="cups">cups</option><option value="grams">grams</option></select></div>
+  </div>
+  <div class="result"><div class="big" id="th-out">—</div><div class="sub" id="th-sub"></div><div class="sub" id="th-adj"></div></div>
+</div>
+<p class="note">Seen <em>"1 tbsp flour = 1½ tsp cornstarch"</em> and wondered if it's a different rule? It isn't — 1½ tsp is exactly half a tablespoon, so it's the same 2:1 ratio restated in teaspoons. Why does pure starch beat flour? Flour is only about <strong>75% starch</strong> (America's Test Kitchen); the rest is protein and other solids that dilute its thickening power.</p>
+<h2>Flour to cornstarch conversion chart</h2>
+<p>The recipe thickens with flour and you're reaching for cornstarch — use <strong>half as much</strong>:</p>
+<table><thead><tr><th>Flour called for</th><th>Flour (g)</th><th>Cornstarch instead</th><th>Cornstarch (g)</th></tr></thead><tbody>
+${chartRows}
+</tbody></table>
+<h2>Cornstarch to flour conversion chart</h2>
+<p>The recipe thickens with cornstarch and you only have flour — use <strong>twice as much</strong>:</p>
+<table><thead><tr><th>Cornstarch called for</th><th>Cornstarch (g)</th><th>Flour instead</th><th>Flour (g)</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<h2>How much thickener per cup of liquid?</h2>
+<p>Starting from scratch rather than converting a recipe? The extension-service dosing for a <strong>medium-bodied</strong> sauce or gravy is <strong>1 tbsp cornstarch — or 2 tbsp flour — per 1 cup of liquid</strong> (University of Illinois Extension; Argo's gravy recipe and Bob's Red Mill's white sauce use exactly these proportions):</p>
+<table><thead><tr><th>Consistency (per 1 cup liquid)</th><th>All-purpose flour</th><th>Cornstarch</th></tr></thead><tbody>
+<tr><td>Thin (soup-like)</td><td>1 tbsp (${flG(3)})</td><td>1½ tsp (${csG(1.5)})</td></tr>
+<tr><td>Medium (gravy, white sauce)</td><td>2 tbsp (${flG(6)})</td><td>1 tbsp (${csG(3)})</td></tr>
+<tr><td>Thick (binding, croquettes)</td><td>3 tbsp (${flG(9)})</td><td>1½ tbsp (${csG(4.5)})</td></tr>
+</tbody></table>
+<p class="note">The medium row is the extension-verified figure; the thin and thick rows follow the classic white-sauce ladder (1 tbsp flour per cup for thin, 3 for thick — the Betty Crocker convention) with cornstarch at half throughout.</p>
+<h2>By weight: it's 47%, not 50%</h2>
+<p>The 2:1 rule is a <strong>volume</strong> rule. A tablespoon of cornstarch weighs <strong>7 g</strong> while a tablespoon of all-purpose flour weighs <strong>7.5 g</strong> (King Arthur's chart: <a href="/cups-to-grams/cornstarch/">112 g per cup of cornstarch</a> vs <a href="/cups-to-grams/all-purpose-flour/">120 g per cup of flour</a>) — so by weight, replace flour with <strong>about 47% as much cornstarch</strong>, not 50%: <strong>100 g flour → ≈47 g cornstarch</strong>, and in reverse <strong>100 g cornstarch → ≈214 g flour</strong>. The calculator above does this automatically when you pick grams.</p>
+<h2>Technique: slurry vs roux</h2>
+<p><strong>Cornstarch — cold slurry, end of cooking.</strong> Stir the cornstarch into a little <em>cold</em> liquid until completely smooth (hot liquid makes it clump), stir the slurry into the simmering pot, then — Argo's instruction — bring it to a <strong>full boil, stirring constantly, and boil 1 minute</strong> so the granules swell to full capacity. Then reduce the heat: prolonged hard cooking or rough whisking will thin it back out.</p>
+<p><strong>Flour — roux, or slurry plus a longer simmer.</strong> The classic route is a roux: equal parts flour and fat (butter), cooked together before the liquid goes in — King Arthur's tested gravy cooks the roux about <strong>4 minutes</strong> (light golden, nutty-smelling) and then simmers the gravy ~15 minutes to thicken fully and lose any raw-flour taste. The shortcut is beurre manié — equal parts flour and <em>softened</em> butter kneaded to a paste, whisked into boiling liquid a spoonful at a time, 2–3 minutes' simmer each (America's Test Kitchen).</p>
+<h2>Which thickener should you use?</h2>
+<p><strong>Reach for cornstarch</strong> when you want speed (no roux), a <strong>glossy, translucent</strong> finish — stir-fry sauces, fruit sauces, pudding — or a gluten-free result. <strong>Reach for flour</strong> for classic <strong>opaque, matte</strong> gravies and cream sauces, anything that simmers a while, and sauces you'll reheat: America's Test Kitchen notes cornstarch-thickened sauces break down more quickly than flour-thickened ones.</p>
+<p>Honest caveats, all documented: <strong>acid</strong> (lemon, lime, vinegar) weakens or defeats cornstarch (Argo); <strong>freezing</strong> makes <em>both</em> weep — ATK tested flour and cornstarch gravies and both separated when thawed (a full boil plus hard whisking rescues them; Clemson Extension's advice is to freeze the broth unthickened, or use waxy rice flour); and neither belongs in <strong>home canning</strong> — extension services say to thicken after opening, not before processing.</p>
+<h2>The pie-filling exception</h2>
+<p>Don't carry the 2:1 rule into fruit pie. King Arthur's pie-thickener guide doses per fruit, and the flour-to-cornstarch ratio there runs from about <strong>3.5:1 for apples</strong> down to <strong>1:1 for peaches</strong> — sugar, acidity and an hour in the oven change how each starch behaves. The 2:1 rule is for sauces, gravies and soups; for pie, follow a fruit-specific chart.</p>
+<h2>Other thickeners, per 1 tbsp of cornstarch</h2>
+<table><thead><tr><th>Thickener</th><th>Instead of 1 tbsp cornstarch</th><th>Notes</th></tr></thead><tbody>
+<tr><td>All-purpose flour</td><td>2 tbsp</td><td>Unanimous: Argo, Bob's Red Mill, ATK, Utah State Extension</td></tr>
+<tr><td><a href="/cups-to-grams/arrowroot-powder/">Arrowroot</a></td><td>1–1½ tbsp</td><td>Sources genuinely disagree: Utah State says equal; ATK says 1½×. ATK: avoid with dairy (turns slimy)</td></tr>
+<tr><td>Potato starch</td><td>1–1½ tbsp</td><td>Same split (Utah State 1:1; ATK 1–1½×). Add late; pull off the heat once thick</td></tr>
+<tr><td><a href="/cups-to-grams/tapioca-flour/">Tapioca starch / flour</a></td><td>1 tbsp</td><td>ATK: equal volume — and it holds up in a slow cooker, unlike flour or cornstarch</td></tr>
+<tr><td>Quick (granular) tapioca</td><td>2 tbsp</td><td>Utah State. Not the same thing as tapioca starch — the granules need a 15–30 min rest</td></tr>
+</tbody></table>
+<h2>Need a different conversion?</h2>
+<p>Just weighing, not swapping? <a href="/cups-to-grams/cornstarch/">1 cup of cornstarch is 112 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> — the <a href="/flour-conversion-chart/">flour &amp; starch chart</a> covers arrowroot, tapioca and every flour on the site. Fun mirror image: the <a href="/cake-flour-substitute/">cake flour substitute</a> runs the same two ingredients the other way — cornstarch stirred <em>into</em> flour to weaken it for tender cakes. More swaps: <a href="/butter-to-oil/">butter to oil</a> and <a href="/sugar-to-honey/">sugar to honey</a>. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp).</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "thickener" } }) };
 }
 
 function airFryerPage() {
@@ -1808,7 +1930,7 @@ function categoryPage(key) {
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
 <p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}${key === "flour" ? `
-<p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount.</p>` : ""}
+<p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}
 ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
@@ -2026,6 +2148,7 @@ function llmsTxt() {
     ["Butter to Oil Conversion", "/butter-to-oil/", "Substitute oil for butter at the standard 3:4 volume ratio: 1 cup butter = 3/4 cup oil; 1 stick = 6 tbsp oil; by weight 100 g butter ≈ 71 g oil (butter is ~81% fat + 16% water, USDA); melted-butter recipes are often swapped 1:1; not suited to cookies, creamed cakes, pie crust or laminated pastry"],
     ["Sugar to Honey Conversion", "/sugar-to-honey/", "Substitute honey for granulated sugar: 1 cup sugar = 3/4 cup honey (King Arthur rule; the National Honey Board and Clemson Extension suggest up to 1/2), then per cup of honey used cut other liquid by 1/4 cup, add 1/2 tsp baking soda (honey pH ~3.9) and bake 25 F lower (avoid recipes over 350 F); by weight 100 g sugar ≈ 128 g honey (honey is 340 g/cup vs sugar 200 g/cup); reverse: 1 cup honey = 1 1/4 cups sugar + 1/4 cup liquid"],
     ["Cake Flour Substitute", "/cake-flour-substitute/", "Make cake flour from all-purpose flour: per 1 cup cake flour use 14 tbsp AP flour (3/4 cup + 2 tbsp = 7/8 cup = 1 cup minus 2 tbsp, 105 g) + 2 tbsp cornstarch (14 g), whisked — the King Arthur / America's Test Kitchen / Bob's Red Mill rule; by weight 100 g cake flour = 88 g AP flour + 12 g cornstarch; no-cornstarch variant (Virginia Extension): 1 cup minus 2 tbsp AP flour; reverse (cake flour in an AP recipe): 1 cup + 2 tbsp cake flour per cup AP (Swans Down / Utah State); protein: bleached cake flour ~6-9% vs AP ~10-12%; self-rising flour is NOT a cake flour substitute (contains baking powder + salt)"],
+    ["Cornstarch to Flour Thickener", "/cornstarch-to-flour/", "Substitute cornstarch and flour for thickening sauces, gravies and soups: 1 tbsp cornstarch = 2 tbsp all-purpose flour (cornstarch has twice the thickening power — Argo / Bob's Red Mill / America's Test Kitchen / Utah State Extension; 1 tbsp flour = 1 1/2 tsp cornstarch is the same rule in teaspoons); dosing per 1 cup liquid: 1 tbsp cornstarch or 2 tbsp flour for a medium sauce (Illinois Extension); by weight 100 g flour ≈ 47 g cornstarch (7 vs 7.5 g/tbsp); cornstarch = cold slurry + boil 1 minute (Argo), flour = roux ~4 min + ~15 min simmer (King Arthur); acid weakens cornstarch, both weep after freezing (boil + whisk to fix, per ATK); ratio does NOT hold for pie fillings (fruit-dependent, King Arthur); per 1 tbsp cornstarch: arrowroot 1-1.5 tbsp, potato starch 1-1.5 tbsp, tapioca starch 1 tbsp, granular tapioca 2 tbsp"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
   out += `## Tools\n`;
@@ -2183,7 +2306,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
