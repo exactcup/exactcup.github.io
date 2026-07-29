@@ -742,6 +742,59 @@
     calc();
   }
 
+  function initLeavener() {
+    var dir = $("bp-dir"), amt = $("bp-amt"), unit = $("bp-unit"), out = $("bp-out"), sub = $("bp-sub"), adj = $("bp-adj");
+    if (!amt || !out) return;
+    // 1 tsp baking powder = 1/4 tsp soda + 1/2 tsp cream of tartar (KA/ATK/A&H/McCormick);
+    // 1 tsp soda = 3 tsp powder (unanimous). Leavener amounts stay in spoons.
+    // accepts "3/4", "1 1/2", "0.75", "2"
+    function parseAmt(s) {
+      s = (s || "").trim();
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    var FR8 = ["1/8", "1/4", "3/8", "1/2", "5/8", "3/4", "7/8"];
+    function mix(x) {
+      var e = Math.round(x * 8), whole = Math.floor(e / 8), rem = e % 8;
+      var frac = rem ? FR8[rem - 1] : "";
+      return whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+    }
+    function fmtTsp(t) {
+      if (!(t > 0.0625)) return "a pinch";
+      if (t >= 3) {
+        var tbsp = Math.floor(t / 3 + 1e-9), rem = t - tbsp * 3;
+        return tbsp + " tbsp" + (Math.round(rem * 8) ? " + " + mix(rem) + " tsp" : "");
+      }
+      return mix(t) + " tsp";
+    }
+    function named(t, name) {
+      var f = fmtTsp(t);
+      return f === "a pinch" ? "a pinch of " + name : f + " " + name;
+    }
+    function calc() {
+      var a = parseAmt(amt.value), u = unit ? unit.value : "tsp", p2s = !dir || dir.value === "p2s";
+      if (isNaN(a) || a < 0) { out.textContent = "—"; if (sub) sub.textContent = ""; if (adj) adj.textContent = ""; return; }
+      var t = u === "tbsp" ? a * 3 : a;
+      if (p2s) {
+        out.textContent = named(t / 4, "baking soda") + " + " + named(t / 2, "cream of tartar");
+        if (sub) sub.textContent = "instead of " + named(t, "baking powder");
+        if (adj) adj.textContent = "Single-acting: mix, then bake right away. No cream of tartar? See the acid table below";
+      } else {
+        out.textContent = named(t * 3, "baking powder");
+        if (sub) sub.textContent = "instead of " + named(t, "baking soda");
+        if (adj) adj.textContent = "3× is a lot of powder — a slightly bitter note is possible; prefer non-acidic liquids";
+      }
+    }
+    amt.addEventListener("input", calc);
+    if (unit) unit.addEventListener("change", calc);
+    if (dir) dir.addEventListener("change", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -763,4 +816,5 @@
   else if (t === "sugarhoney") initSugarHoney();
   else if (t === "cakeflour") initCakeFlour();
   else if (t === "thickener") initThickener();
+  else if (t === "leavener") initLeavener();
 })();

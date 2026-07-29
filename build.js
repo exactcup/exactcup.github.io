@@ -98,6 +98,7 @@ const ALL_TOOLS = [
   ["/sugar-to-honey/", "Sugar to Honey", "Swap sugar for honey: 1 cup sugar = ½–¾ cup honey."],
   ["/cake-flour-substitute/", "Cake Flour Substitute", "Make cake flour: swap 2 tbsp cornstarch into each cup of flour."],
   ["/cornstarch-to-flour/", "Cornstarch to Flour", "Thickener swap both ways: 1 tbsp cornstarch = 2 tbsp flour."],
+  ["/baking-powder-substitute/", "Baking Powder Substitute", "Per tsp: ¼ tsp baking soda + ½ tsp cream of tartar."],
 ];
 
 // ---------- structured data (JSON-LD) helpers ----------
@@ -877,7 +878,7 @@ ${revRows}
 </tbody></table>
 <p class="note">Butter brings ~16% water with it, so an oil recipe made with butter bakes up slightly firmer and drier — many bakers swap melted butter 1:1 for oil and accept that trade for the flavor.</p>
 <h2>Need a different conversion?</h2>
-<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons. Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> works the same way — a fixed ratio plus a few small recipe adjustments. The other swap charts on the site: the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch into every cup of all-purpose flour) and the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (cornstarch thickens twice as hard, so use half as much).</p>
+<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons. Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> works the same way — a fixed ratio plus a few small recipe adjustments. The other swap charts on the site: the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch into every cup of all-purpose flour), the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (cornstarch thickens twice as hard, so use half as much) and the <a href="/baking-powder-substitute/">baking powder substitute</a> (¼ tsp baking soda + ½ tsp cream of tartar per teaspoon of powder).</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "butteroil" } }) };
@@ -1006,7 +1007,7 @@ ${gRows}
 ${revRows}
 </tbody></table>
 <h2>Need a different conversion?</h2>
-<p>Just measuring, not substituting? <a href="/cups-to-grams/honey/">1 cup of honey is 340 g</a> and <a href="/cups-to-grams/granulated-sugar/">1 cup of granulated sugar is 200 g</a> — the <a href="/sugar-conversion-chart/">sugar &amp; sweetener chart</a> covers brown sugar, <a href="/cups-to-grams/maple-syrup/">maple syrup (322 g)</a>, molasses and the rest. Swapping fats too? The <a href="/butter-to-oil/">butter to oil conversion</a> works the same way: a fixed ratio plus a couple of honest adjustments — as do the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch per cup of all-purpose flour) and the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (half as much cornstarch as flour). Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<p>Just measuring, not substituting? <a href="/cups-to-grams/honey/">1 cup of honey is 340 g</a> and <a href="/cups-to-grams/granulated-sugar/">1 cup of granulated sugar is 200 g</a> — the <a href="/sugar-conversion-chart/">sugar &amp; sweetener chart</a> covers brown sugar, <a href="/cups-to-grams/maple-syrup/">maple syrup (322 g)</a>, molasses and the rest. Swapping fats too? The <a href="/butter-to-oil/">butter to oil conversion</a> works the same way: a fixed ratio plus a couple of honest adjustments — as do the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch per cup of all-purpose flour) and the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (half as much cornstarch as flour). And the ½ tsp of baking soda this page adds per cup of honey? The <a href="/baking-powder-substitute/">baking powder substitute</a> page covers that whole soda-vs-powder chemistry, both directions. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "sugarhoney" } }) };
@@ -1137,7 +1138,7 @@ ${revRows}
 <p><strong>Use it confidently:</strong> butter and oil cakes, cupcakes, snack cakes, muffins, pancakes and biscuits — anywhere cake flour is there for tenderness.</p>
 <p><strong>Think twice:</strong> angel food, chiffon and pure white cakes, which are usually developed around real <em>bleached</em> cake flour (America's Test Kitchen notes it produces a loftier cake than unbleached flour). The blend still bakes up fine there — just a touch shorter and coarser. And <strong>don't reach for self-rising flour</strong>: it's flour plus baking powder and salt, which the recipe didn't ask for.</p>
 <h2>Need a different conversion?</h2>
-<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Using the cornstarch to thicken a sauce instead? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> is the mirror-image page: there, cornstarch replaces flour at half the amount. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Using the cornstarch to thicken a sauce instead? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> is the mirror-image page: there, cornstarch replaces flour at half the amount. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments — and if the self-rising-flour warning above caught you, the <a href="/baking-powder-substitute/">baking powder substitute</a> untangles powder vs soda (about 1½ tsp of powder per cup is what self-rising flour carries). Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "cakeflour" } }) };
@@ -1256,10 +1257,109 @@ ${revRows}
 <tr><td>Quick (granular) tapioca</td><td>2 tbsp</td><td>Utah State. Not the same thing as tapioca starch — the granules need a 15–30 min rest</td></tr>
 </tbody></table>
 <h2>Need a different conversion?</h2>
-<p>Just weighing, not swapping? <a href="/cups-to-grams/cornstarch/">1 cup of cornstarch is 112 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> — the <a href="/flour-conversion-chart/">flour &amp; starch chart</a> covers arrowroot, tapioca and every flour on the site. Fun mirror image: the <a href="/cake-flour-substitute/">cake flour substitute</a> runs the same two ingredients the other way — cornstarch stirred <em>into</em> flour to weaken it for tender cakes. More swaps: <a href="/butter-to-oil/">butter to oil</a> and <a href="/sugar-to-honey/">sugar to honey</a>. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp).</p>
+<p>Just weighing, not swapping? <a href="/cups-to-grams/cornstarch/">1 cup of cornstarch is 112 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> — the <a href="/flour-conversion-chart/">flour &amp; starch chart</a> covers arrowroot, tapioca and every flour on the site. Fun mirror image: the <a href="/cake-flour-substitute/">cake flour substitute</a> runs the same two ingredients the other way — cornstarch stirred <em>into</em> flour to weaken it for tender cakes. More swaps: <a href="/butter-to-oil/">butter to oil</a>, <a href="/sugar-to-honey/">sugar to honey</a> and the <a href="/baking-powder-substitute/">baking powder substitute</a>. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp).</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "thickener" } }) };
+}
+
+// ---------- Baking Powder Substitute (/baking-powder-substitute/) ----------
+// Both directions between the two leaveners. Powder -> soda: 1 tsp baking powder
+// = 1/4 tsp baking soda + 1/2 tsp cream of tartar (KA, ATK, Arm & Hammer,
+// McCormick; USU + Texas A&M extensions carry the older USDA 5/8-tsp-tartar
+// version). Soda -> powder: 1 tsp soda = 3 tsp powder (unanimous across KA,
+// Bob's Red Mill, Arm & Hammer, McCormick — no primary source says 4x).
+function bakingPowderSubstitutePage() {
+  // teaspoons -> cook-friendly mixed fraction in eighths, promoting to tbsp at
+  // 3 tsp; leavener amounts never reach cups.
+  const FR8 = ["⅛", "¼", "⅜", "½", "⅝", "¾", "⅞"];
+  const mix = (x) => {
+    const e = Math.round(x * 8), whole = Math.floor(e / 8), rem = e % 8;
+    const frac = rem ? FR8[rem - 1] : "";
+    return whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+  };
+  const t8 = (t) => {
+    if (t >= 3) {
+      const tbsp = Math.floor(t / 3 + 1e-9), rem = t - tbsp * 3;
+      return tbsp + " tbsp" + (Math.round(rem * 8) ? " + " + mix(rem) + " tsp" : "");
+    }
+    return mix(t) + " tsp";
+  };
+  const title = "Baking Powder Substitute — Baking Soda Conversion Chart & Calculator | ExactCup";
+  const description = "Out of baking powder? Per tsp use ¼ tsp baking soda + ½ tsp cream of tartar. Out of soda? Use 3× the powder (1 tsp = 1 tbsp). Chart, calculator and every acid option.";
+  const canonical = "/baking-powder-substitute/";
+  const pRows = [
+    ["½ tsp", 0.5], ["1 tsp", 1], ["1½ tsp", 1.5], ["2 tsp", 2], ["1 tbsp (3 tsp)", 3], ["4 tsp", 4],
+  ].map(([lab, p]) => `<tr><td>${lab}</td><td>${t8(p / 4)}</td><td>${t8(p / 2)}</td></tr>`).join("\n");
+  const sRows = [
+    ["¼ tsp", 0.25], ["½ tsp", 0.5], ["¾ tsp", 0.75], ["1 tsp", 1], ["1½ tsp", 1.5], ["2 tsp", 2],
+  ].map(([lab, s]) => `<tr><td>${lab}</td><td>${t8(s * 3)}</td></tr>`).join("\n");
+  const faq = [
+    ["Can I use baking soda instead of baking powder?", "Yes, if you add an acid. For every teaspoon of baking powder the recipe calls for, use 1/4 teaspoon of baking soda plus 1/2 teaspoon of cream of tartar — the substitution King Arthur, America's Test Kitchen, Arm & Hammer and McCormick all publish. No cream of tartar? Pair the 1/4 teaspoon of soda with 1/2 cup of buttermilk or yogurt, or with lemon juice or vinegar. Plain baking soda alone won't work: without an acid it makes no gas, and unreacted soda tastes soapy."],
+    ["Can I use baking powder instead of baking soda?", "Yes — use three times as much. Replace every teaspoon of baking soda with 3 teaspoons (1 tablespoon) of baking powder; King Arthur, Bob's Red Mill, Arm & Hammer and McCormick all publish the same 3x rule. King Arthur's caveat: that much baking powder can leave a slightly bitter note. Bob's Red Mill also suggests swapping the recipe's acidic liquid (buttermilk) for a non-acidic one (milk), since baking powder brings its own acid along."],
+    ["How much baking soda equals 1 tablespoon of baking powder?", "3/4 teaspoon of baking soda plus 1 1/2 teaspoons of cream of tartar. The rule is 1/4 teaspoon of soda plus 1/2 teaspoon of cream of tartar per teaspoon of baking powder, and a tablespoon is 3 teaspoons — so multiply everything by three."],
+    ["Is it 1/2 teaspoon of cream of tartar or 5/8?", "Both figures circulate, and both are legitimate. King Arthur, America's Test Kitchen, Arm & Hammer and McCormick all say 1/2 teaspoon of cream of tartar per 1/4 teaspoon of baking soda; Utah State and Texas A&M extension services carry the older USDA-lineage figure of 5/8 teaspoon, which is closer to the exact chemistry. The 1/2-teaspoon version is the rounded, kitchen-friendly one — either rises fine."],
+    ["What if I don't have cream of tartar either?", "Use a liquid acid with the same 1/4 teaspoon of baking soda per teaspoon of powder replaced. The sources genuinely disagree on the amount: King Arthur says 1/2 teaspoon of lemon juice or white vinegar, Arm & Hammer and McCormick say 1 teaspoon, and Utah State Extension stirs 1/2 tablespoon into milk to make 1/2 cup. Or skip the measuring spoon: 1/2 cup of buttermilk, yogurt or sour cream plus the 1/4 teaspoon of soda (America's Test Kitchen) — count that half cup as part of the recipe's liquid, not an addition."],
+    ["How do I make homemade baking powder?", "Mix 1 part baking soda with 2 parts cream of tartar — for one teaspoon's worth, 1/4 teaspoon of soda and 1/2 teaspoon of cream of tartar (Bob's Red Mill; King Arthur adds 1/4 teaspoon of cornstarch, which keeps a stored batch dry and free-flowing). One big caveat: homemade powder is single-acting — it fires as soon as it gets wet, with no second rise in the oven — so mix the batter and bake it right away, as America's Test Kitchen instructs."],
+    ["Are baking soda and baking powder the same thing?", "No. Baking soda is pure sodium bicarbonate and only makes gas when it meets an acid in the batter — buttermilk, yogurt, lemon, brown sugar, molasses. Baking powder is a complete kit: baking soda plus one or two dry acids plus a starch buffer (Arm & Hammer). That's why they can't swap 1:1 — a teaspoon of baking powder contains only about a quarter teaspoon of actual soda."],
+    ["Why do I need 3 times as much baking powder to replace baking soda?", "Because baking powder is mostly not baking soda — the dry acid and starch dilute it, so teaspoon for teaspoon it has only about a quarter of the leavening power (Arm & Hammer puts the equivalence at 1 teaspoon of powder = 1/4 teaspoon of soda). Watch a common garble: some sites say 'soda is 3-4x stronger' and turn that into a 4x substitution — every primary source that publishes a ratio (King Arthur, Bob's Red Mill, Arm & Hammer, McCormick) says 3x."],
+    ["How much baking soda or baking powder per cup of flour?", "The working rules of thumb: about 1/4 teaspoon of baking soda per cup of flour (Arm & Hammer), or 1 to 1 1/4 teaspoons of baking powder per cup (food scientist Shirley Corriher's rule) — the same one-to-four relationship as the substitution ratio. Treat them as ceilings as much as minimums: extra soda doesn't buy extra rise, it buys a soapy taste and a dark, coarse crumb."],
+    ["How much does a teaspoon of baking powder or baking soda weigh?", "The published figures honestly disagree. King Arthur's ingredient chart has baking powder at 4 g per teaspoon and baking soda at 6 g (listed as 1/2 tsp = 3 g); USDA data puts both at about 4.6 g per teaspoon; and Arm & Hammer's and Clabber Girl's own nutrition labels both work out to 4.8 g (1/8 tsp = 0.6 g). At leavener quantities the spread is well under a gram — measure with the spoon, not the scale."],
+    ["How much baking soda does it take to neutralize 1 cup of buttermilk?", "About 1/2 teaspoon. The number falls straight out of the substitution rule: 1/4 teaspoon of soda balances 1/2 cup of buttermilk (America's Test Kitchen, Utah State Extension), so a full cup takes 1/2 teaspoon. That's why recipes with both buttermilk and baking powder often add a pinch of soda — it's there to neutralize the dairy, not to leaven."],
+    ["How do I test whether my baking soda or baking powder is still good?", "Two different tests — don't mix them up. Baking soda: stir 1/2 teaspoon into a few tablespoons of vinegar; it should fizz hard immediately. Baking powder: stir 1/2 teaspoon into a few tablespoons of hot water — water, not vinegar, because powder brings its own acid; it should fizz visibly. Arm & Hammer gives unopened baking soda a three-year shelf life; once opened, the working consensus for either leavener is 6-12 months."],
+  ];
+  const jsonLd = [
+    appLd("Baking Powder Substitute Calculator", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Baking Powder Substitute", canonical]]),
+  ];
+  const body = `
+<h1>Baking Powder ↔ Baking Soda: the Substitution</h1>
+<p class="lead">Out of baking powder — or out of baking soda? They are <strong>not</strong> interchangeable 1:1, but each can stand in for the other. Per teaspoon of baking powder: <strong>¼ tsp baking soda + ½ tsp cream of tartar</strong> (King Arthur, America's Test Kitchen, Arm &amp; Hammer and McCormick all publish this rule). Per teaspoon of baking soda: <strong>3 tsp (1 tbsp) of baking powder</strong>. Enter what the recipe calls for:</p>
+<div class="calc">
+  <div class="field" style="margin-bottom:10px"><label for="bp-dir">Direction</label><select id="bp-dir"><option value="p2s">Recipe calls for baking powder → I'll use baking soda + cream of tartar</option><option value="s2p">Recipe calls for baking soda → I'll use baking powder</option></select></div>
+  <div class="row">
+    <div class="field"><label for="bp-amt">Amount in the recipe</label><input id="bp-amt" type="text" inputmode="decimal" value="1" placeholder="e.g. 1/2 or 1 1/2"></div>
+    <div class="field"><label for="bp-unit">Unit</label><select id="bp-unit"><option value="tsp">teaspoons</option><option value="tbsp">tablespoons</option></select></div>
+  </div>
+  <div class="result"><div class="big" id="bp-out">—</div><div class="sub" id="bp-sub"></div><div class="sub" id="bp-adj"></div></div>
+</div>
+<p class="note">Why the lopsided ratios? A teaspoon of baking powder contains only about <strong>¼ teaspoon of actual baking soda</strong> — the rest is dry acid and a starch buffer (Arm &amp; Hammer). So replacing soda takes 3× the volume of powder, while replacing powder takes just a quarter of the soda <em>plus</em> the acid the powder would have brought along. One honest dissent: Sally's Baking Addiction declines to publish any swap and says just don't; the ratios here are from the primary sources that do publish one, caveats attached.</p>
+<h2>Baking powder → baking soda + cream of tartar</h2>
+<p>The recipe calls for baking powder and the tin is empty. Per teaspoon of powder, use <strong>¼ tsp baking soda + ½ tsp cream of tartar</strong>:</p>
+<table><thead><tr><th>Baking powder called for</th><th>Baking soda</th><th>Cream of tartar</th></tr></thead><tbody>
+${pRows}
+</tbody></table>
+<p class="note">Two fine points. The mix is <strong>single-acting</strong> — it starts fizzing the moment it gets wet and has no oven-triggered second rise — so get the batter into the oven right away (America's Test Kitchen's instruction). And you may meet <strong>⅝ tsp of cream of tartar</strong> in older charts: that's the USDA-lineage figure Utah State and Texas A&amp;M extensions still carry, slightly closer to the exact chemistry; the ½ tsp everyone else prints is the rounded kitchen version. Both work.</p>
+<h2>No cream of tartar? Every acid that works</h2>
+<p>All of these pair with the same <strong>¼ tsp of baking soda</strong> to replace 1 tsp of baking powder:</p>
+<table><thead><tr><th>Acid</th><th>Amount (per ¼ tsp soda)</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Cream of tartar</td><td>½ tsp</td><td>The standard: King Arthur, ATK, Arm &amp; Hammer, McCormick (older USDA figure: ⅝ tsp)</td></tr>
+<tr><td>Lemon juice or white vinegar</td><td>½–1 tsp</td><td>Sources genuinely disagree: King Arthur ½ tsp; Arm &amp; Hammer &amp; McCormick 1 tsp; Utah State ½ tbsp stirred into milk to make ½ cup</td></tr>
+<tr><td>Buttermilk, yogurt or sour cream</td><td>½ cup</td><td>ATK &amp; Utah State. Count it as part of the recipe's liquid, not an addition</td></tr>
+<tr><td>Molasses</td><td>¼–½ cup</td><td>Utah State — acidic enough to fire the soda; reduce other sweetener to match</td></tr>
+</tbody></table>
+<h2>Baking soda → baking powder: use 3×</h2>
+<p>The recipe calls for baking soda and you only have powder — use <strong>three times as much</strong>. The 3× rule is unanimous across King Arthur, Bob's Red Mill, Arm &amp; Hammer and McCormick (no primary source says 4×; that garble comes from misreading "soda is 3–4× stronger" as a dosing instruction):</p>
+<table><thead><tr><th>Baking soda called for</th><th>Baking powder instead</th></tr></thead><tbody>
+${sRows}
+</tbody></table>
+<p class="note">Caveats from the sources themselves: King Arthur warns a slightly bitter, off-putting taste can result from that much powder; Bob's Red Mill suggests swapping acidic liquids (buttermilk) for non-acidic ones (milk), since the powder brings its own acid. And a fun catch — McCormick's own chart prints <strong>2½ tsp</strong> in its ¾-tsp row, where 3× is 2¼ tsp; the rest of their table follows the rule. Charts get copied; arithmetic doesn't lie.</p>
+<h2>Homemade baking powder</h2>
+<p>Making powder rather than substituting per-teaspoon: mix <strong>1 part baking soda with 2 parts cream of tartar</strong> — Bob's Red Mill's ratio; King Arthur's per-teaspoon version adds ¼ tsp of cornstarch to every ¼ + ½ tsp, which absorbs moisture so a stored batch doesn't fire in the jar. It behaves like the substitution above: <strong>single-acting</strong>, so bake promptly — commercial double-acting powder rises once at mixing and again in the oven's heat, and the homemade blend only does the first.</p>
+<h2>What's actually in the tin</h2>
+<p><strong>Baking soda</strong> is pure sodium bicarbonate. <strong>Baking powder</strong> is soda plus one or two dry acids plus a starch — and here's a detail most charts miss: America's best-selling powder (Clabber Girl) lists <em>cornstarch, sodium bicarbonate, sodium aluminum sulfate and monocalcium phosphate</em> — no cream of tartar at all. The tartar version is the homemade and premium recipe; "aluminum-free" brands such as Rumford and Bob's Red Mill lean on monocalcium phosphate instead. <strong>Double-acting</strong> (nearly all US retail powder) means two rises: the first when the powder dissolves into the batter, the second when the batter heats in the oven — which is why store-bought batters can wait and homemade-powder batters can't.</p>
+<h2>How much per cup of flour?</h2>
+<p>Building or rescuing a recipe rather than converting one: the rules of thumb are <strong>¼ tsp of baking soda per cup of flour</strong> (Arm &amp; Hammer) or <strong>1 to 1¼ tsp of baking powder per cup of flour</strong> (food scientist Shirley Corriher's rule) — the same 1:4 relationship as the substitution ratio, which is a nice sanity check. More leavener than that doesn't mean more lift: excess soda survives the bake unreacted and tastes soapy.</p>
+<h2>By weight: the sources disagree</h2>
+<p>Weighing leaveners is honestly messy, so we show the spread rather than pretending there isn't one: King Arthur's chart weighs a teaspoon of baking powder at <strong>4 g</strong> and baking soda at <strong>6 g</strong>; USDA data puts both at about <strong>4.6 g</strong>; and the Arm &amp; Hammer and Clabber Girl nutrition labels both work out to <strong>4.8 g</strong> per teaspoon (⅛ tsp = 0.6 g). The differences come down to how hard the spoon is packed — and at these quantities they're under a gram, so this is the one place on this site we'll tell you to <strong>skip the scale and use the spoon</strong>.</p>
+<h2>Is it still good?</h2>
+<p>Leaveners fade rather than spoil, and each has its own test. <strong>Baking soda:</strong> stir ½ tsp into a few tablespoons of <em>vinegar</em> — it should fizz hard instantly. <strong>Baking powder:</strong> stir ½ tsp into a few tablespoons of <em>hot water</em> — water, not vinegar, because the powder carries its own acid and vinegar would make even dead powder fizz. Arm &amp; Hammer's stated shelf life for soda is three years unopened; once open, the working consensus for either is 6–12 months. If a test barely bubbles, the substitution charts above won't save the bake — fresh leavener will.</p>
+<h2>Need a different conversion?</h2>
+<p>Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> leans on this exact chemistry — it adds ½ tsp of baking soda per cup of honey to neutralize the honey's acidity. The <a href="/cake-flour-substitute/">cake flour substitute</a> is the reason self-rising flour isn't one (it's flour with about 1½ tsp of baking powder per cup already inside), and the <a href="/butter-to-oil/">butter to oil</a> and <a href="/cornstarch-to-flour/">cornstarch to flour</a> pages run the same fixed-ratio-plus-caveats format. Swapping the <em>other</em> leavener? The <a href="/yeast-converter/">yeast converter</a> moves between active dry, instant and fresh. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp).</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "leavener" } }) };
 }
 
 function airFryerPage() {
@@ -2149,6 +2249,7 @@ function llmsTxt() {
     ["Sugar to Honey Conversion", "/sugar-to-honey/", "Substitute honey for granulated sugar: 1 cup sugar = 3/4 cup honey (King Arthur rule; the National Honey Board and Clemson Extension suggest up to 1/2), then per cup of honey used cut other liquid by 1/4 cup, add 1/2 tsp baking soda (honey pH ~3.9) and bake 25 F lower (avoid recipes over 350 F); by weight 100 g sugar ≈ 128 g honey (honey is 340 g/cup vs sugar 200 g/cup); reverse: 1 cup honey = 1 1/4 cups sugar + 1/4 cup liquid"],
     ["Cake Flour Substitute", "/cake-flour-substitute/", "Make cake flour from all-purpose flour: per 1 cup cake flour use 14 tbsp AP flour (3/4 cup + 2 tbsp = 7/8 cup = 1 cup minus 2 tbsp, 105 g) + 2 tbsp cornstarch (14 g), whisked — the King Arthur / America's Test Kitchen / Bob's Red Mill rule; by weight 100 g cake flour = 88 g AP flour + 12 g cornstarch; no-cornstarch variant (Virginia Extension): 1 cup minus 2 tbsp AP flour; reverse (cake flour in an AP recipe): 1 cup + 2 tbsp cake flour per cup AP (Swans Down / Utah State); protein: bleached cake flour ~6-9% vs AP ~10-12%; self-rising flour is NOT a cake flour substitute (contains baking powder + salt)"],
     ["Cornstarch to Flour Thickener", "/cornstarch-to-flour/", "Substitute cornstarch and flour for thickening sauces, gravies and soups: 1 tbsp cornstarch = 2 tbsp all-purpose flour (cornstarch has twice the thickening power — Argo / Bob's Red Mill / America's Test Kitchen / Utah State Extension; 1 tbsp flour = 1 1/2 tsp cornstarch is the same rule in teaspoons); dosing per 1 cup liquid: 1 tbsp cornstarch or 2 tbsp flour for a medium sauce (Illinois Extension); by weight 100 g flour ≈ 47 g cornstarch (7 vs 7.5 g/tbsp); cornstarch = cold slurry + boil 1 minute (Argo), flour = roux ~4 min + ~15 min simmer (King Arthur); acid weakens cornstarch, both weep after freezing (boil + whisk to fix, per ATK); ratio does NOT hold for pie fillings (fruit-dependent, King Arthur); per 1 tbsp cornstarch: arrowroot 1-1.5 tbsp, potato starch 1-1.5 tbsp, tapioca starch 1 tbsp, granular tapioca 2 tbsp"],
+    ["Baking Powder Substitute", "/baking-powder-substitute/", "Substitute between baking powder and baking soda: 1 tsp baking powder = 1/4 tsp baking soda + 1/2 tsp cream of tartar (King Arthur / America's Test Kitchen / Arm & Hammer / McCormick; older USDA-lineage figure: 5/8 tsp cream of tartar per Utah State + Texas A&M extensions); liquid-acid variants per 1/4 tsp soda: lemon juice or white vinegar 1/2-1 tsp (sources disagree), or 1/2 cup buttermilk/yogurt/sour cream (ATK), or 1/4-1/2 cup molasses (Utah State); reverse: 1 tsp baking soda = 3 tsp (1 tbsp) baking powder — 3x rule unanimous, no primary source says 4x; homemade baking powder = 1 part soda : 2 parts cream of tartar (+1 part cornstarch to store), single-acting so bake immediately; rules of thumb per cup flour: 1/4 tsp soda or 1-1 1/4 tsp powder; 1/2 tsp soda neutralizes 1 cup buttermilk; weights per tsp disputed: KA powder 4 g / soda 6 g, USDA both 4.6 g, manufacturer labels 4.8 g; freshness tests: soda + vinegar should fizz, powder + hot water should fizz"],
   ];
   let out = `# ExactCup\n\n> Free, accurate cooking and baking measurement converters. Cups-to-grams for ${DATA.ingredients.length}+ ingredients (every weight verified against authoritative sources such as the King Arthur Baking ingredient weight chart and USDA), plus recipe scaler, oven temperature, air fryer, pan size, volume, portion and pizza dough calculators. All tools are free, client-side and need no sign-up. Note: 1 US cup = 236.588 ml; weights differ by ingredient because densities differ.\n\n`;
   out += `## Tools\n`;
@@ -2306,7 +2407,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
