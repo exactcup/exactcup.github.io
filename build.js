@@ -291,6 +291,8 @@ function ingredientPage(ing) {
   const title = `${ing.name} Cups to Grams Converter | 1 Cup ${ing.name} in Grams`;
   const description = ing.slug === "butter"
     ? `How many grams is a cup of butter? 1 cup = ${g2(gpc)} g, 1 stick = ${g2(gpc / 2)} g, 1/2 cup = ${g2(gpc / 2)} g. Free butter converter with a full cups, sticks, tablespoons and grams chart.`
+    : ing.slug === "semolina"
+    ? `How many grams is a cup of semolina (rava, sooji)? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
@@ -325,6 +327,16 @@ function ingredientPage(ing) {
       [`How many grams is 100 mL of corn syrup?`, `100 mL of corn syrup weighs about ${Math.round(gpc / 236.588 * 100)} grams (at about ${dens} g/mL). A full US cup (236.59 mL) is about ${g2(gpc)} g.`],
     );
   }
+  if (ing.slug === "semolina") {
+    const metricCup = Math.round(gpc / 236.588 * 250);
+    faq.push(
+      [`How many grams is 1 cup of rava (sooji)?`, `Rava and sooji are the Indian names for semolina, so the same weights apply: 1 US cup of rava is about ${g2(gpc)} grams, 1/2 cup about ${g2(gpc / 2)} g, 1/4 cup about ${g2(gpc / 4)} g. Measuring with a 250 mL metric cup instead? A level cup holds about ${metricCup} g.`],
+      [`Is rava the same as semolina?`, `Yes. Rava (the South Indian name) and sooji or suji (the North Indian name) are granulated wheat semolina — the same ingredient this page converts. Whether the recipe is upma, kesari, sheera or rava dosa, the chart above applies.`],
+      [`Is idli rava the same as semolina?`, `No — this is the one "rava" that is not semolina. Idli rava (rice rava) is ground parboiled rice: it is gluten-free, behaves completely differently, and weighs more per cup (roughly 180 g per US cup). Don't swap it with wheat rava in either direction.`],
+      [`Does fine or coarse rava change the weight per cup?`, `Somewhat — grind changes how the grains pack, which is why published values genuinely spread from about 158 to 180 grams per US cup (King Arthur 163 g, USDA 167 g, Bob's Red Mill's label works out to 180 g). We use 163 g. For anything where the flour-to-liquid ratio matters, a kitchen scale beats any cup value.`],
+      [`Is Cream of Wheat (farina) the same as semolina?`, `Not exactly. Farina — the product in the Cream of Wheat box — is granulated common wheat, while true semolina is milled from durum. Farina is an accepted stand-in for fine sooji in Indian sweets like kesari and halwa, but it is not a good substitute for durum semolina in pasta.`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
@@ -355,7 +367,11 @@ ${butterSticksTable(gpc)}
 <h2>Grams to cups: ${esc(ing.name.toLowerCase())}</h2>
 <p>Working backwards from a weight? Here is how common gram amounts of ${ing.name.toLowerCase()} convert to cups (at ${g2(gpc)} g per cup).</p>
 ${gramsToCupsTable(gpc)}
-${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>${esc(ing.blurb)}</p>` : ""}
+${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>${esc(ing.blurb)}</p>` : ""}${ing.slug === "semolina" ? `
+<h2>Semolina, rava and sooji: the same ingredient</h2>
+<p>If your recipe says <strong>rava</strong>, <strong>sooji</strong> or <strong>suji</strong>, this page applies as written: they are the Indian names for granulated wheat semolina — <em>sooji/suji</em> in the North, <em>rava</em> in the South. So <strong>1 cup of rava is about ${g2(gpc)} g</strong>, 1/2 cup about ${g2(gpc / 2)} g, 1/4 cup about ${g2(gpc / 4)} g, and the full chart above works for upma, kesari, sheera and rava dosa alike. Using a 250 mL metric cup rather than the US cup? Figure about ${Math.round(gpc / 236.588 * 250)} g per level cup.</p>
+<p>Grade names vary by region, so go by the dish: fine grades (chiroti rava, fine sooji) are for smooth sweets — kesari, sheera/halwa, rava laddu — while medium and coarser grades (upma or Bombay rava, and the browner bansi rava) are for upma and rava dosa. Grind also changes how the grains pack, which is why published cup weights honestly spread from about <strong>158 to 180 g per US cup</strong> (King Arthur 163 g, USDA 167 g, Bob's Red Mill's label works out to 180 g). We use 163 g; when the ratio matters, weigh.</p>
+<p>Two look-alikes to watch. <strong>Idli rava is not semolina</strong> — it's ground parboiled rice, gluten-free and heavier (roughly 180 g per cup), so never swap it with wheat rava. And American <strong>Cream of Wheat (farina)</strong> is granulated common wheat, not durum: fine for Indian sweets in place of fine sooji, wrong for durum-semolina pasta. One last trap — Indian rava is often sold pre-roasted, Western semolina never is, so dry-roast plain semolina before making upma or kesari.</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>

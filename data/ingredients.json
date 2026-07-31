@@ -72,7 +72,7 @@
     { "slug": "rye-flour", "name": "Rye Flour", "category": "flour", "gramsPerCup": 106, "aliases": ["dark rye flour", "whole rye flour"] },
     { "slug": "oat-flour", "name": "Oat Flour", "category": "flour", "gramsPerCup": 92, "aliases": ["ground oats"] },
     { "slug": "coconut-flour", "name": "Coconut Flour", "category": "flour", "gramsPerCup": 128, "aliases": [] },
-    { "slug": "semolina", "name": "Semolina", "category": "flour", "gramsPerCup": 163, "aliases": ["semolina flour", "durum semolina"] },
+    { "slug": "semolina", "name": "Semolina", "category": "flour", "gramsPerCup": 163, "aliases": ["semolina flour", "durum semolina", "rava", "sooji", "suji"] },
     { "slug": "tapioca-flour", "name": "Tapioca Flour", "category": "flour", "gramsPerCup": 113, "aliases": ["tapioca starch"] },
     { "slug": "arrowroot-powder", "name": "Arrowroot Powder", "category": "flour", "gramsPerCup": 128, "aliases": ["arrowroot flour", "arrowroot starch"] },
 
