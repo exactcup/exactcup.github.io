@@ -84,6 +84,7 @@ const ALL_TOOLS = [
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
   ["/recipe-halving-chart/", "Recipe Halving Chart", "Half of 3/4 cup, 1/3 cup & every other measure."],
+  ["/kitchen-conversion-chart/", "Printable Kitchen Chart", "Every must-know conversion on one printable page."],
   ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
   ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
   ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
@@ -176,6 +177,16 @@ footer.site a{color:var(--muted)}
 footer.site .fcol{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0}
 footer.site .fcol .fh{width:100%;font-weight:600;color:var(--fg);font-size:13px;margin-bottom:2px}
 @media(max-width:520px){h1{font-size:25px}nav a{margin-left:10px}}
+.print-only{display:none}
+@media print{
+header.site,footer.site,.no-print,details{display:none !important}
+.print-only{display:block}
+main{padding:0}.wrap{max-width:none;padding:0}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:13px;margin:8px 0 2px}
+table{font-size:10px;margin:4px 0}th,td{padding:2px 6px}
+a{color:inherit;text-decoration:none}
+.print-cols{columns:2;column-gap:22px}.print-cols section{break-inside:avoid}
+}
 `;
 
 function layout(opts) {
@@ -625,6 +636,84 @@ function halvingChartPage() {
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "halve" } }) };
+}
+
+// Printable one-page kitchen conversion chart — the linkable flagship reference.
+// Ingredient weights derive from the verified densities in ingredients.json and the
+// oven rows match the oven-temperature page. The global @media print CSS strips the
+// site chrome and flows .print-cols into two columns so the chart lands on one sheet.
+function kitchenChartPage() {
+  const title = "Printable Kitchen Conversion Chart — Cups, Grams, Oven Temps | ExactCup";
+  const description = "Free printable kitchen conversion chart: cups to tablespoons, fl oz and mL, ingredient weights in grams per cup, oven temperatures (°F, °C, gas mark), butter sticks and ounces to grams — all on one page. No sign-up.";
+  const canonical = "/kitchen-conversion-chart/";
+  const STICK = ingBySlug("butter").gramsPerCup / 2; // 113.5 g, from the verified dataset
+  // Curated everyday ingredients for the print chart; the full list lives on /cups-to-grams/.
+  const PRINT_INGS = ["all-purpose-flour", "bread-flour", "cake-flour", "whole-wheat-flour", "granulated-sugar", "brown-sugar", "powdered-sugar", "butter", "milk", "heavy-cream", "vegetable-oil", "honey", "maple-syrup", "cocoa-powder", "cornstarch", "rolled-oats", "white-rice", "chocolate-chips"].map(ingBySlug).filter(Boolean);
+  const ingRows = PRINT_INGS.map((i) => `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / OZ)} oz</td></tr>`).join("");
+  // 1 US cup = 16 tbsp = 8 fl oz = 236.588 mL — every row follows from that.
+  const VOL = [
+    ["1 cup", "16 tbsp", "8 fl oz", "237 mL"],
+    ["3/4 cup", "12 tbsp", "6 fl oz", "177 mL"],
+    ["2/3 cup", "10 tbsp + 2 tsp", "5 1/3 fl oz", "158 mL"],
+    ["1/2 cup", "8 tbsp", "4 fl oz", "118 mL"],
+    ["1/3 cup", "5 tbsp + 1 tsp", "2 2/3 fl oz", "79 mL"],
+    ["1/4 cup", "4 tbsp", "2 fl oz", "59 mL"],
+    ["1/8 cup", "2 tbsp", "1 fl oz", "30 mL"],
+    ["1 tbsp", "3 tsp", "1/2 fl oz", "15 mL"],
+    ["1 tsp", "1/3 tbsp", "1/6 fl oz", "5 mL"],
+  ].map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${esc(c)}</td>`).join("")}</tr>`).join("");
+  const BIG = [
+    ["1 gallon", "4 quarts", "16 cups", "3.79 L"],
+    ["1 quart", "2 pints", "4 cups", "946 mL"],
+    ["1 pint", "2 cups", "16 fl oz", "473 mL"],
+    ["1 cup", "1/2 pint", "8 fl oz", "237 mL"],
+  ].map((r) => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${esc(c)}</td>`).join("")}</tr>`).join("");
+  // Same values as the oven-temperature page, extended one step each way.
+  const OVEN = [[250, 120, "1/2"], [275, 140, "1"], [300, 150, "2"], [325, 170, "3"], [350, 180, "4"], [375, 190, "5"], [400, 200, "6"], [425, 220, "7"], [450, 230, "8"], [475, 240, "9"]]
+    .map(([f, c, g]) => `<tr><td class="num">${f}°F</td><td class="num">${c}°C</td><td>Gas ${g}</td></tr>`).join("");
+  const BUTTER = [["1/2 stick", "1/4 cup", "4 tbsp", 0.5], ["1 stick", "1/2 cup", "8 tbsp", 1], ["2 sticks", "1 cup", "16 tbsp", 2], ["4 sticks (1 lb)", "2 cups", "32 tbsp", 4]]
+    .map(([s, c, t, n]) => `<tr><td>${esc(s)}</td><td class="num">${esc(c)}</td><td class="num">${esc(t)}</td><td class="num">${g2(n * STICK)} g</td></tr>`).join("");
+  const WEIGHT = [["1/2 oz", 0.5], ["1 oz", 1], ["2 oz", 2], ["4 oz (1/4 lb)", 4], ["8 oz (1/2 lb)", 8], ["12 oz (3/4 lb)", 12], ["16 oz (1 lb)", 16]]
+    .map(([l, n]) => `<tr><td>${esc(l)}</td><td class="num">${Math.round(n * OZ)} g</td></tr>`).join("");
+  const faq = [
+    ["How many tablespoons are in a cup?", "There are 16 US tablespoons in a cup, and 3 teaspoons in a tablespoon (48 teaspoons per cup). So 3/4 cup is 12 tablespoons, 1/2 cup is 8, and 1/4 cup is 4. The awkward ones are the thirds: 1/3 cup is 5 tablespoons + 1 teaspoon and 2/3 cup is 10 tablespoons + 2 teaspoons."],
+    ["How many mL are in a cup?", "A US cup is 236.588 mL — 237 mL in practice, and US nutrition labels round it to 240 mL. The metric cup used in the UK, Australia and New Zealand is 250 mL, about 5% bigger, which matters over several cups."],
+    ["Why is a cup of flour 120 g but a cup of honey 340 g?", "Because a cup measures volume, not weight, and every ingredient has a different density. That is why the ingredient table on this chart lists a separate gram weight per cup for each ingredient — one cups-to-grams number for all ingredients does not exist."],
+    ["How do I print this chart?", "Click the Print button at the top (or press Ctrl+P / Cmd+P). The page is print-optimized: the site header, footer and everything below the chart are stripped automatically, and the tables flow into two columns so the whole chart fits on one portrait page in plain black and white."],
+    ["Is this chart free to print and share?", "Yes — print it for your kitchen, classroom, cookbook club or commercial kitchen, and share copies freely. If you republish it online, please credit ExactCup with a link; the underlying ingredient-density data is open under CC BY 4.0."],
+    ["Are these US or UK measurements?", "The cups, tablespoons and fluid ounces are US customary (UK and US tablespoons are both 15 mL, but the Australian tablespoon is 20 mL). For UK cooks the chart includes gas marks in the oven table and grams everywhere; note the UK/Australian metric cup is 250 mL rather than the US 237 mL."],
+  ];
+  const jsonLd = [faqLd(faq), breadcrumbLd([["Kitchen Conversion Chart", canonical]])];
+  const body = `
+<h1>Kitchen Conversion Chart</h1>
+<p class="lead no-print">All the must-know kitchen conversions on one page: cups to tablespoons, fluid ounces and mL; everyday ingredient weights in grams; oven temperatures; butter sticks; ounces to grams. Built to print &mdash; hit the button and it comes out as a clean one-page chart for the fridge or recipe binder.</p>
+<p class="no-print"><button class="btn" onclick="window.print()">Print this chart</button>&ensp;<span style="font-size:13px;color:var(--muted)">Free to print and share &mdash; black-and-white friendly, fits one page.</span></p>
+<div class="print-cols">
+<section><h2>Volume equivalents (US)</h2>
+<table><thead><tr><th>Cups</th><th>Spoons</th><th>Fl oz</th><th>mL</th></tr></thead><tbody>${VOL}</tbody></table></section>
+<section><h2>Cups, pints, quarts &amp; gallons</h2>
+<table><tbody>${BIG}</tbody></table></section>
+<section><h2>Butter</h2>
+<table><thead><tr><th>Sticks</th><th>Cups</th><th>Tbsp</th><th>Grams</th></tr></thead><tbody>${BUTTER}</tbody></table></section>
+<section><h2>Ingredient weights (1 US cup)</h2>
+<table><thead><tr><th>Ingredient</th><th>Grams</th><th>Ounces</th></tr></thead><tbody>${ingRows}</tbody></table></section>
+<section><h2>Oven temperatures</h2>
+<table><thead><tr><th>°F</th><th>°C</th><th>Gas mark</th></tr></thead><tbody>${OVEN}</tbody></table>
+<p class="note" style="margin:4px 0">Fan/convection oven: reduce by about 20&deg;C (25&deg;F).</p></section>
+<section><h2>Ounces to grams</h2>
+<table><tbody>${WEIGHT}</tbody></table></section>
+</div>
+<p class="print-only" style="font-size:10px;margin-top:8px">Ingredient weights are nominal &mdash; how you fill the cup matters, so weigh when accuracy counts. Free chart by ExactCup &middot; interactive converters for 80+ ingredients at exactcup.github.io/kitchen-conversion-chart/</p>
+<div class="no-print">
+<h2>How to use this chart</h2>
+<p>The volume table is universal &mdash; 1/2 cup is 8 tablespoons whether it holds milk or flour, because those are all volume units. The <strong>ingredient weights</strong> table is the one that changes per ingredient: it gives the weight in grams of one level US cup, using the same verified densities as our <a href="/cups-to-grams/">cups to grams converter</a> (which covers ${DATA.ingredients.length}+ ingredients and every fraction of a cup, both <a href="/grams-to-cups/">directions</a>). For brown sugar that means packed into the cup; for flour, spooned in and leveled &mdash; scooping straight from the bag compacts flour by up to 30%, which is why serious bakers <a href="/ingredient-density-data/">weigh instead</a>.</p>
+<p>Halving a recipe and stuck on half of 3/4 cup? That is its own chart: the <a href="/recipe-halving-chart/">recipe halving chart</a>. Scaling the whole ingredient list, use the <a href="/recipe-scaler/">recipe scaler</a>; converting an oven recipe for the air fryer, the <a href="/air-fryer-conversion-calculator/">air fryer converter</a>. The butter rows come from the <a href="/butter-converter/">butter converter</a>, which also handles odd amounts like 1 1/2 sticks in grams, and the temperature rows from the <a href="/oven-temperature-converter/">oven temperature converter</a>.</p>
+<h2>Want this on your own site?</h2>
+<p>The interactive version of this chart is <a href="/embed/">free to embed</a> &mdash; one HTML snippet adds a live cups&#8596;grams converter to any recipe post. And the ingredient densities behind it are published as an <a href="/ingredient-density-data/">open dataset (CC BY 4.0)</a>, free to reuse with attribution.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
+</div>`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
 }
 
 function homePage() {
@@ -2291,6 +2380,7 @@ function llmsTxt() {
     ["Cups in a Quart", "/cups-in-a-quart/", "How many cups in a quart, pint and gallon: 1 quart = 4 cups = 2 pints = 32 fl oz = 0.946 L; 1 gallon = 4 quarts = 16 cups = 128 fl oz; 1 pint = 2 cups; half gallon = 8 cups"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Recipe Halving Chart", "/recipe-halving-chart/", "Half and one-third of any kitchen measurement (half of 3/4 cup = 6 tbsp; half of 1/3 cup = 2 tbsp + 2 tsp)"],
+    ["Printable Kitchen Conversion Chart", "/kitchen-conversion-chart/", "One-page printable chart: cups to tbsp/fl oz/mL (1 cup = 16 tbsp = 8 fl oz = 237 mL), everyday ingredient weights in grams per cup, oven temperatures °F/°C/gas mark, butter sticks and ounces to grams"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
     ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
     ["Pan Size Converter", "/pan-size-converter/", "Adjust a recipe when swapping cake pan sizes (by area)"],
@@ -2464,7 +2554,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
