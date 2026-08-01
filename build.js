@@ -293,6 +293,8 @@ function ingredientPage(ing) {
     ? `How many grams is a cup of butter? 1 cup = ${g2(gpc)} g, 1 stick = ${g2(gpc / 2)} g, 1/2 cup = ${g2(gpc / 2)} g. Free butter converter with a full cups, sticks, tablespoons and grams chart.`
     : ing.slug === "semolina"
     ? `How many grams is a cup of semolina (rava, sooji)? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`
+    : ing.slug === "vegetable-oil"
+    ? `How many grams is a cup of oil? 1 cup of vegetable oil = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g — and all common cooking oils weigh about the same. Free converter with a full chart.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
@@ -325,6 +327,16 @@ function ingredientPage(ing) {
     faq.push(
       [`What is the density of corn syrup in g/mL?`, `About ${dens} g/mL: a US cup is 236.59 mL and weighs about ${g2(gpc)} grams of corn syrup, so ${g2(gpc)} ÷ 236.59 ≈ ${dens} g/mL (${dens} g/cm³). Corn syrup is roughly 1.4 times as dense as water, which is why a cup of it weighs far more than a cup of water.`],
       [`How many grams is 100 mL of corn syrup?`, `100 mL of corn syrup weighs about ${Math.round(gpc / 236.588 * 100)} grams (at about ${dens} g/mL). A full US cup (236.59 mL) is about ${g2(gpc)} g.`],
+    );
+  }
+  if (ing.slug === "vegetable-oil") {
+    const dens = (gpc / 236.588).toFixed(2);
+    faq.push(
+      [`How many grams is 1 cup of oil?`, `About ${g2(gpc)} grams for any common liquid cooking oil. Per USDA data, vegetable, canola, soybean, corn, sunflower and melted coconut oil all weigh 218 g per US cup, with olive and peanut oil just behind at 216 g — so if a recipe only says "oil", the chart on this page applies within a gram or two.`],
+      [`Do all cooking oils weigh the same per cup?`, `Very nearly. Every common liquid cooking oil falls between 216 and 218 grams per US cup (a density of 0.91–0.92 g/mL): vegetable, canola, soybean, corn, sunflower and melted coconut oil at 218 g, olive and peanut oil at 216 g. The differences are smaller than normal measuring error, so oils can be swapped by volume without re-weighing.`],
+      [`Does a cup of oil weigh the same as a cup of water?`, `No — oil is lighter. A US cup of water weighs about 237 grams, while a cup of cooking oil weighs about ${g2(gpc)} grams (density ~${dens} g/mL). That density gap is exactly why oil floats on water, and why you can't use the water rule "1 mL = 1 g" for oil.`],
+      [`How many grams is 100 mL of oil?`, `About ${Math.round(gpc / 236.588 * 100)} grams (at ~${dens} g/mL). To convert any millilitre amount of oil to grams, multiply the mL by ${dens}; a full US cup is 236.59 mL, or about ${g2(gpc)} g.`],
+      [`Why do some baking charts say 1 cup of oil is 198 grams?`, `That figure is a rounding artifact, not a different measurement. King Arthur's ingredient chart lists vegetable oil as a rounded 7 oz (198 g) and uses the old 8-oz-cup convention (it lists water at 227 g, though a US cup of water really weighs 236.6 g). Measured density puts every common cooking oil at 0.91–0.92 g/mL, which works out to 216–218 g per US cup — the USDA value this page uses. 198 g/cup would imply a density of 0.84 g/mL, which no cooking oil has.`],
     );
   }
   if (ing.slug === "semolina") {
@@ -371,7 +383,20 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 <h2>Semolina, rava and sooji: the same ingredient</h2>
 <p>If your recipe says <strong>rava</strong>, <strong>sooji</strong> or <strong>suji</strong>, this page applies as written: they are the Indian names for granulated wheat semolina — <em>sooji/suji</em> in the North, <em>rava</em> in the South. So <strong>1 cup of rava is about ${g2(gpc)} g</strong>, 1/2 cup about ${g2(gpc / 2)} g, 1/4 cup about ${g2(gpc / 4)} g, and the full chart above works for upma, kesari, sheera and rava dosa alike. Using a 250 mL metric cup rather than the US cup? Figure about ${Math.round(gpc / 236.588 * 250)} g per level cup.</p>
 <p>Grade names vary by region, so go by the dish: fine grades (chiroti rava, fine sooji) are for smooth sweets — kesari, sheera/halwa, rava laddu — while medium and coarser grades (upma or Bombay rava, and the browner bansi rava) are for upma and rava dosa. Grind also changes how the grains pack, which is why published cup weights honestly spread from about <strong>158 to 180 g per US cup</strong> (King Arthur 163 g, USDA 167 g, Bob's Red Mill's label works out to 180 g). We use 163 g; when the ratio matters, weigh.</p>
-<p>Two look-alikes to watch. <strong>Idli rava is not semolina</strong> — it's ground parboiled rice, gluten-free and heavier (roughly 180 g per cup), so never swap it with wheat rava. And American <strong>Cream of Wheat (farina)</strong> is granulated common wheat, not durum: fine for Indian sweets in place of fine sooji, wrong for durum-semolina pasta. One last trap — Indian rava is often sold pre-roasted, Western semolina never is, so dry-roast plain semolina before making upma or kesari.</p>` : ""}
+<p>Two look-alikes to watch. <strong>Idli rava is not semolina</strong> — it's ground parboiled rice, gluten-free and heavier (roughly 180 g per cup), so never swap it with wheat rava. And American <strong>Cream of Wheat (farina)</strong> is granulated common wheat, not durum: fine for Indian sweets in place of fine sooji, wrong for durum-semolina pasta. One last trap — Indian rava is often sold pre-roasted, Western semolina never is, so dry-roast plain semolina before making upma or kesari.</p>` : ""}${ing.slug === "vegetable-oil" ? `
+<h2>Recipe just says "oil"? Every cooking oil weighs about the same</h2>
+<p>If a recipe calls for plain <strong>oil</strong> — no type given — this page applies as written. Per USDA data, every common liquid cooking oil weighs between <strong>216 and 218 g per US cup</strong> (a density of 0.91–0.92 g/mL), a spread smaller than ordinary measuring error. So <strong>1 cup of oil is about ${g2(gpc)} g</strong>, 1/2 cup about ${g2(gpc / 2)} g and 1/4 cup about ${g2(gpc / 4)} g, whether you pour vegetable, canola, sunflower or corn oil.</p>
+<table><thead><tr><th>Oil</th><th>Grams per US cup</th><th>g/mL</th></tr></thead><tbody>
+<tr><td>Vegetable / soybean oil</td><td class="num">218 g</td><td class="num">0.92</td></tr>
+<tr><td>Canola oil</td><td class="num">218 g</td><td class="num">0.92</td></tr>
+<tr><td>Sunflower oil</td><td class="num">218 g</td><td class="num">0.92</td></tr>
+<tr><td>Corn oil</td><td class="num">218 g</td><td class="num">0.92</td></tr>
+<tr><td><a href="/cups-to-grams/coconut-oil/">Coconut oil</a> (melted)</td><td class="num">218 g</td><td class="num">0.92</td></tr>
+<tr><td><a href="/cups-to-grams/olive-oil/">Olive oil</a></td><td class="num">216 g</td><td class="num">0.91</td></tr>
+<tr><td>Peanut oil</td><td class="num">216 g</td><td class="num">0.91</td></tr>
+</tbody></table>
+<p>Note that oil is <em>lighter than water</em>: a US cup of water weighs about 237 g against oil's ~${g2(gpc)} g, which is why oil floats and why the handy water rule "1 mL = 1 g" overshoots for oil — multiply millilitres by 0.92 instead (100 mL ≈ ${Math.round(gpc / 236.588 * 100)} g). You may also meet <strong>198 g per cup</strong> on some baking charts: that's King Arthur's rounded 7-oz figure under the old 8-oz-cup convention, not a real density — measured, no cooking oil is that light.</p>
+<p>Using oil <em>in place of butter</em>? That swap isn't 1:1 — the standard rule is 3 parts oil per 4 parts butter, so 1 stick of butter becomes 6 tablespoons (about 81 g) of oil. The <a href="/butter-to-oil/">butter to oil conversion</a> has the full chart in cups, grams and mL.</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>

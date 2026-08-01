@@ -30,7 +30,7 @@
     { "slug": "sour-cream", "name": "Sour Cream", "category": "dairy", "gramsPerCup": 230, "aliases": [] },
     { "slug": "cream-cheese", "name": "Cream Cheese", "category": "dairy", "gramsPerCup": 232, "aliases": [] },
     { "slug": "yogurt", "name": "Yogurt", "category": "dairy", "gramsPerCup": 245, "aliases": ["yoghurt", "greek yogurt"] },
-    { "slug": "vegetable-oil", "name": "Vegetable Oil", "category": "dairy", "gramsPerCup": 218, "aliases": ["canola oil"] },
+    { "slug": "vegetable-oil", "name": "Vegetable Oil", "category": "dairy", "gramsPerCup": 218, "aliases": ["canola oil", "cooking oil", "sunflower oil", "corn oil", "soybean oil"] },
     { "slug": "olive-oil", "name": "Olive Oil", "category": "dairy", "gramsPerCup": 216, "aliases": [] },
     { "slug": "coconut-oil", "name": "Coconut Oil", "category": "dairy", "gramsPerCup": 218, "aliases": [] },
     { "slug": "peanut-butter", "name": "Peanut Butter", "category": "dairy", "gramsPerCup": 256, "aliases": [] },
