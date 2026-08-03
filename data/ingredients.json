@@ -90,7 +90,7 @@
     { "slug": "pearl-barley", "name": "Pearl Barley (Dry)", "category": "grain", "gramsPerCup": 213, "aliases": ["pearled barley", "dry barley"] },
 
     { "slug": "vegetable-shortening", "name": "Vegetable Shortening", "category": "dairy", "gramsPerCup": 184, "aliases": ["shortening", "crisco"] },
-    { "slug": "tahini", "name": "Tahini", "category": "dairy", "gramsPerCup": 256, "aliases": ["sesame paste", "tahini paste"] },
+    { "slug": "tahini", "name": "Tahini", "category": "dairy", "gramsPerCup": 256, "aliases": ["sesame paste", "tahini paste", "hulled tahini", "sesame butter"] },
     { "slug": "almond-butter", "name": "Almond Butter", "category": "dairy", "gramsPerCup": 272, "aliases": ["almond nut butter"] },
 
     { "slug": "white-chocolate-chips", "name": "White Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["white choc chips", "white chocolate morsels"] },

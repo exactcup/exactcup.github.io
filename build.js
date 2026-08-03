@@ -306,6 +306,8 @@ function ingredientPage(ing) {
     ? `How many grams is a cup of semolina (rava, sooji)? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`
     : ing.slug === "vegetable-oil"
     ? `How many grams is a cup of oil? 1 cup of vegetable oil = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g — and all common cooking oils weigh about the same. Free converter with a full chart.`
+    : ing.slug === "tahini"
+    ? `How many grams is a cup of tahini? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g — hulled or unhulled. Free cups-to-grams converter with a full conversion chart.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
@@ -360,6 +362,16 @@ function ingredientPage(ing) {
       [`Is Cream of Wheat (farina) the same as semolina?`, `Not exactly. Farina — the product in the Cream of Wheat box — is granulated common wheat, while true semolina is milled from durum. Farina is an accepted stand-in for fine sooji in Indian sweets like kesari and halwa, but it is not a good substitute for durum semolina in pasta.`],
     );
   }
+  if (ing.slug === "tahini") {
+    const metricCup = Math.round(gpc / 236.588 * 250);
+    faq.push(
+      [`How many grams is 1/2 cup of hulled tahini?`, `About ${g2(gpc / 2)} grams — the same as any tahini. Hulled and unhulled tahini show no consistently documented weight difference per cup: brand nutrition labels for both types use the identical 30 g per 2-tablespoon serving. A 1/4 cup of hulled tahini is about ${g2(gpc / 4)} g and 1/3 cup about ${g2(gpc / 3)} g. Measuring with a 250 mL metric cup? A level cup holds about ${metricCup} g.`],
+      [`Do hulled and unhulled tahini weigh the same per cup?`, `For kitchen purposes, yes — use the same chart for both. USDA's two tahini entries differ slightly (15 g per tablespoon for the common roasted hulled type vs 14 g for unroasted whole-seed), but real hulled and unhulled brands print identical serving weights, so the gap is smaller than measuring error. What genuinely differs is character: unhulled tahini is darker, coarser and noticeably more bitter, and the hulls carry several times the calcium of hulled tahini.`],
+      [`Why do some charts say a cup of tahini is 240 grams?`, `Published weights honestly spread from about 224 to 256 grams per US cup. USDA lists 15 g per tablespoon (240 g/cup) and most brand labels round to 30 g per 2 tablespoons (also 240 g/cup), while King Arthur's ingredient chart lists 128 g per half-cup — the 256 g/cup this page uses. A real jar can swing more than that with oil separation, so stir thoroughly before measuring and weigh when the ratio matters.`],
+      [`Is tahini the same as Chinese sesame paste?`, `No. Chinese sesame paste (zhi ma jiang) is made from deeply roasted unhulled seeds — much darker, thicker and stronger-tasting than tahini, which is ground from raw or lightly toasted hulled seeds. Tahini plus a little toasted sesame oil can stand in for it in noodle sauces, but the swap doesn't work in reverse. Black tahini is simply tahini made from black sesame seeds: earthier in flavor, but it measures the same (labels print the same 30 g per 2 tbsp).`],
+      [`How much tahini does a cup of sesame seeds make?`, `About 1/2 cup, or roughly ${g2(gpc / 2)} grams. A US cup of sesame seeds weighs about 142 g and blends down to around half its volume of paste; the 2–4 tablespoons of neutral oil most homemade recipes add to loosen it can bring the yield closer to 3/4 cup.`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
@@ -407,7 +419,11 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 <tr><td>Peanut oil</td><td class="num">216 g</td><td class="num">0.91</td></tr>
 </tbody></table>
 <p>Note that oil is <em>lighter than water</em>: a US cup of water weighs about 237 g against oil's ~${g2(gpc)} g, which is why oil floats and why the handy water rule "1 mL = 1 g" overshoots for oil — multiply millilitres by 0.92 instead (100 mL ≈ ${Math.round(gpc / 236.588 * 100)} g). You may also meet <strong>198 g per cup</strong> on some baking charts: that's King Arthur's rounded 7-oz figure under the old 8-oz-cup convention, not a real density — measured, no cooking oil is that light.</p>
-<p>Using oil <em>in place of butter</em>? That swap isn't 1:1 — the standard rule is 3 parts oil per 4 parts butter, so 1 stick of butter becomes 6 tablespoons (about 81 g) of oil. The <a href="/butter-to-oil/">butter to oil conversion</a> has the full chart in cups, grams and mL.</p>` : ""}
+<p>Using oil <em>in place of butter</em>? That swap isn't 1:1 — the standard rule is 3 parts oil per 4 parts butter, so 1 stick of butter becomes 6 tablespoons (about 81 g) of oil. The <a href="/butter-to-oil/">butter to oil conversion</a> has the full chart in cups, grams and mL.</p>` : ""}${ing.slug === "tahini" ? `
+<h2>Hulled, unhulled and black tahini: what changes (and what doesn't)</h2>
+<p>Recipes rarely say which tahini they mean, and for the math it doesn't matter: <strong>hulled and unhulled tahini measure the same</strong>, so the chart above applies to both. <strong>1/2 cup of hulled tahini is about ${g2(gpc / 2)} g</strong>, 1/4 cup about ${g2(gpc / 4)} g, 1/3 cup about ${g2(gpc / 3)} g. USDA's two entries hint at a small gap (15 g per tablespoon for the common roasted hulled type, 14 g for unroasted whole-seed), but hulled and unhulled brands print identical serving weights — the difference is smaller than ordinary measuring error. Using a 250 mL metric cup rather than the US cup? Figure about ${Math.round(gpc / 236.588 * 250)} g per level cup.</p>
+<p>What does change is the character. Unhulled (whole-seed) tahini is darker, coarser and distinctly bitter because the hulls come along for the grind — and those hulls carry several times the calcium, iron and fiber of hulled tahini. Hulled is the mild, pourable style most hummus and cookie recipes assume. On the weight itself, published values honestly spread from about <strong>224 to 256 g per US cup</strong>: USDA works out to 240 g, most brand labels round to 240 g (30 g per 2 tbsp), and King Arthur's chart gives 256 g — the value we use. A settled jar splits into a light sesame-oil layer (about 0.92 g/mL) over dense solids, so an unstirred scoop can land either side of any published average. Stir until homogeneous, or better, weigh.</p>
+<p>Two look-alikes to watch. <strong>Chinese sesame paste (zhi ma jiang) is not tahini</strong> — it's ground from deeply roasted unhulled seeds, so it's darker, thicker and far more intense; tahini plus a splash of toasted sesame oil approximates it, but the swap fails in reverse. <strong>Black tahini</strong> is true tahini made from black sesame — earthier tasting, same weight per cup. Making your own? A cup of <a href="/cups-to-grams/sesame-seeds/">sesame seeds</a> (about 142 g) blends down to roughly 1/2 cup of tahini, a bit more once you add oil to loosen it.</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
