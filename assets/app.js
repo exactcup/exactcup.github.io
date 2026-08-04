@@ -795,6 +795,72 @@
     calc();
   }
 
+  function initYield(c) {
+    var food = $("yl-food"), dir = $("yl-dir"), amt = $("yl-amt"), unit = $("yl-unit"),
+        out = $("yl-out"), sub = $("yl-sub"), note = $("yl-note");
+    if (!food || !amt || !out) return;
+    var foods = c.foods || [];
+    function cur() {
+      for (var i = 0; i < foods.length; i++) if (foods[i].slug === food.value) return foods[i];
+      return foods[0];
+    }
+    // accepts "3/4", "1 1/2", "0.75", "2"
+    function parseAmt(s) {
+      s = (s || "").trim();
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    // cook-friendly cups: snap to the nearest quarter or third when close, else 1 decimal
+    function fmtCups(x) {
+      var SNAP = [[1 / 3, "1/3"], [2 / 3, "2/3"], [0.25, "1/4"], [0.5, "1/2"], [0.75, "3/4"]];
+      var whole = Math.floor(x + 1e-9), rest = x - whole, frac = "";
+      if (rest > 0.04) {
+        for (var i = 0; i < SNAP.length; i++) if (Math.abs(rest - SNAP[i][0]) < 0.06) { frac = SNAP[i][1]; break; }
+        if (!frac) return round(x, 1) + " cups";
+      }
+      var n = whole ? whole + (frac ? " " + frac : "") : (frac || "0");
+      var plural = whole > 1 || (whole === 1 && frac) || (!whole && !frac);
+      return n + " cup" + (plural ? "s" : "");
+    }
+    function gRound(g) { return g >= 100 ? Math.round(g / 5) * 5 : Math.round(g); }
+    function calc() {
+      var f = cur(), a = parseAmt(amt.value), u = unit ? unit.value : "grams", d2c = !dir || dir.value === "d2c";
+      if (!f) return;
+      if (isNaN(a) || a < 0) { out.textContent = "—"; if (sub) sub.textContent = ""; if (note) note.textContent = ""; return; }
+      var inGpc = d2c ? f.dryGpc : f.cookedGpc;
+      var inG;
+      if (u === "grams") inG = a;
+      else if (u === "oz") inG = a * OZ;
+      else {
+        if (!inGpc) {
+          out.textContent = "—";
+          if (sub) sub.textContent = "Dry " + f.name.toLowerCase() + " doesn't measure reliably by the cup (shapes differ) — enter grams or ounces instead.";
+          if (note) note.textContent = "";
+          return;
+        }
+        inG = a * inGpc;
+      }
+      var outG = d2c ? inG * f.w : inG / f.w;
+      var outGpc = d2c ? f.cookedGpc : f.dryGpc;
+      var cupsTxt = outGpc ? " (about " + fmtCups(outG / outGpc) + ")" : "";
+      out.textContent = "≈ " + gRound(outG) + " g " + (d2c ? "cooked" : "dry / uncooked") + cupsTxt;
+      if (sub) {
+        var inTxt = u === "cups" ? fmtCups(a) + " (" + gRound(inG) + " g)" : gRound(inG) + " g";
+        sub.textContent = "from " + inTxt + " of " + (d2c ? "dry" : "cooked") + " " + f.name.toLowerCase();
+      }
+      if (note) note.textContent = f.note || "";
+    }
+    amt.addEventListener("input", calc);
+    if (unit) unit.addEventListener("change", calc);
+    if (dir) dir.addEventListener("change", calc);
+    if (food) food.addEventListener("change", calc);
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -817,4 +883,5 @@
   else if (t === "cakeflour") initCakeFlour();
   else if (t === "thickener") initThickener();
   else if (t === "leavener") initLeavener();
+  else if (t === "yield") initYield(c);
 })();

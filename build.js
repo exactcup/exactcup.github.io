@@ -90,6 +90,7 @@ const ALL_TOOLS = [
   ["/volume-converter/", "Volume Converter", "Cups, tablespoons, teaspoons, mL and fl oz."],
   ["/cups-to-ml/", "Cups to mL", "How many mL in a cup — US, metric & UK cup sizes."],
   ["/portion-calculator/", "Portion Calculator", "How much rice, pasta or potatoes per person."],
+  ["/dry-to-cooked/", "Dry to Cooked Converter", "1 cup dry rice ≈ 3 cups cooked — grain & pasta yields."],
   ["/pizza-dough-calculator/", "Pizza Dough Calculator", "Exact flour, water, salt & yeast by baker's %."],
   ["/bakers-percentage-calculator/", "Baker's Percentage Calculator", "Build & scale any bread formula by baker's math."],
   ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
@@ -1508,6 +1509,131 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "leavener" } }) };
 }
 
+// ---------- Dry to Cooked (/dry-to-cooked/) ----------
+// Grain/pasta yield converter. Weight factors derived from USDA FoodData Central
+// (SR Legacy) two independent ways — kcal ratio and dry-solids ratio — which agree
+// within ±0.02 for every food (verified 2026-08-04). Dry g/cup values reuse the
+// site's own verified densities where the ingredient exists (rice 185, quinoa 170,
+// oats 90, couscous 175, bulgur 140, pearl barley 213) so this page can never
+// disagree with the ingredient pages. Cooked g/cup = USDA portion weights.
+// Couscous is the one method-dependent food: USDA's cooked entry (157 g/cup,
+// 72.6% water) is a wetter prep than any 1:1¼ package method produces, so its
+// factor (2.7) and cooked density (188) are mass-balanced from the package
+// method (175 g + 296 g water fully absorbed → ~2½ cups) and disclosed as such.
+function dryToCookedPage() {
+  // slug, name, dry g/cup (null = shape-dependent, weight only), cooked g/cup (USDA),
+  // weight factor cooked÷dry (USDA-derived), published volume yield + source, widget note
+  const FOODS = [
+    ["white-rice", "White rice (long-grain)", 185, 158, 2.8, "3–3½ cups (USA Rice / Mahatma)", "Volume roughly triples; weight is ×2.8 (USDA) — not the ×3 often quoted."],
+    ["brown-rice", "Brown rice (long-grain)", 185, 202, 2.98, "2¾–3 cups (USDA / Whole Grains Council)", "Absorbs more water than white rice — heavier cooked cup (202 g), slightly less volume."],
+    ["quinoa", "Quinoa", 170, 185, 3.06, "about 3 cups (Whole Grains Council)", "The “quinoa quadruples” claim is a myth — USDA and the Whole Grains Council both say ~3×."],
+    ["pasta-long", "Pasta — long (spaghetti, linguine)", null, 124, 2.37, "2 oz dry → about 1 cup (Barilla)", "The classic 2 oz → 1 cup rule holds for long shapes."],
+    ["pasta-short", "Pasta — short (penne, rotini, elbows)", null, 107, 2.37, "2 oz dry → about 1¼ cups (Barilla / USDA)", "Short shapes trap air — 2 oz cooks up to ~1¼ cups, not 1."],
+    ["rolled-oats", "Rolled oats → oatmeal", 90, 234, 5.35, "about 2 cups (Quaker method)", "Oatmeal is ×5.4 by weight — the biggest jump of any grain (it's mostly absorbed water)."],
+    ["couscous", "Couscous (instant)", 175, 188, 2.7, "2–2½ cups (package method)", "Package method (1 : 1¼ water). USDA's wetter test kitchen prep yields more — see FAQ."],
+    ["pearl-barley", "Pearl barley", 213, 157, 2.87, "3½–4 cups (Bob's Red Mill)", "Pearled, not hulled — hulled barley cooks up less."],
+    ["bulgur", "Bulgur", 140, 182, 4.1, "about 3 cups (Whole Grains Council)", "×4.1 by weight — bulgur soaks up more water than any grain here except oats."],
+    ["wild-rice", "Wild rice", 160, 164, 3.53, "3–4 cups (MN Wild Rice Council)", "Yield varies with how far the kernels are allowed to bloom open."],
+  ];
+  const OZG = 28.349523125;
+  const rnd1 = (x) => Math.round(x * 10) / 10;
+  const gR = (g) => (g >= 100 ? Math.round(g / 5) * 5 : Math.round(g));
+  // cook-friendly cups: snap to the nearest quarter or third when close, else 1 decimal
+  const fmtC = (x) => {
+    const SNAP = [[1 / 3, "⅓"], [2 / 3, "⅔"], [0.25, "¼"], [0.5, "½"], [0.75, "¾"]];
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    let frac = "";
+    if (rest > 0.04) {
+      for (const [v, s] of SNAP) if (Math.abs(rest - v) < 0.06) { frac = s; break; }
+      if (!frac) return rnd1(x) + " cups";
+    }
+    const n = whole ? whole + frac : (frac || "0");
+    const plural = whole > 1 || (whole === 1 && frac) || (!whole && !frac);
+    return n + (plural ? " cups" : " cup");
+  };
+  const F = Object.fromEntries(FOODS.map((f) => [f[0], { name: f[1], dry: f[2], cooked: f[3], w: f[4] }]));
+  // computed helpers, all from the constants above — nothing hand-typed
+  const cupDryToCooked = (slug) => { const f = F[slug]; const g = f.dry * f.w; return { g, cups: g / f.cooked }; };
+  const g100 = (slug) => { const f = F[slug]; const g = 100 * f.w; return { g, cups: g / f.cooked }; };
+  const title = "Dry to Cooked Rice, Pasta & Grain Converter — Yields in Cups & Grams | ExactCup";
+  const description = "How much cooked rice does 1 cup of dry make? About 3 cups (≈520 g). Dry ↔ cooked calculator for rice, pasta, quinoa, oats & more — USDA-derived yields, both directions.";
+  const canonical = "/dry-to-cooked/";
+  const grainRows = FOODS.filter((f) => f[2]).map(([slug, name, dry, , , pub]) => {
+    const y = cupDryToCooked(slug);
+    return `<tr><td>${esc(name)}</td><td class="num">${dry} g</td><td class="num">≈ ${gR(y.g)} g</td><td>≈ ${fmtC(y.cups)}</td><td>${esc(pub)}</td></tr>`;
+  }).join("\n");
+  const g100Rows = FOODS.map(([slug, name]) => {
+    const y = g100(slug);
+    return `<tr><td>${esc(name)}</td><td class="num">≈ ${gR(y.g)} g</td><td>≈ ${fmtC(y.cups)}</td></tr>`;
+  }).join("\n");
+  // dry white rice needed for N cups cooked
+  const revRows = [1, 2, 3, 4, 6].map((c) => {
+    const f = F["white-rice"];
+    const cookedG = c * f.cooked, dryG = cookedG / f.w;
+    return `<tr><td>${c} cup${c > 1 ? "s" : ""} cooked</td><td class="num">${gR(cookedG)} g</td><td class="num">≈ ${gR(dryG)} g</td><td>≈ ${fmtC(dryG / f.dry)}</td></tr>`;
+  }).join("\n");
+  // pasta: 2 oz dry through both shape classes
+  const pastaCooked = 2 * OZG * F["pasta-long"].w;
+  const faq = [
+    ["How much cooked rice does 1 cup of dry rice make?", "About 3 cups of cooked rice, weighing roughly 520 g. The sources honestly disagree on the exact figure: the USA Rice Federation's culinary guide says 1 cup dry makes 3 cups cooked, while Mahatma's package (2 cups water to 1 cup rice) says 3 1/2 cups. USDA densities land between them: 185 g of dry long-grain rice becomes about 520 g cooked, which fills about 3 1/4 cups at 158 g per cooked cup."],
+    ["How many cups of cooked grains is 100 g of dry grains?", "Depends on the grain, because each absorbs a different amount of water. 100 g of dry white rice cooks up to about 280 g — roughly 1 3/4 cups. Quinoa: about 305 g, 1 2/3 cups. Brown rice: about 300 g, 1 1/2 cups. Dry pasta: about 235 g, close to 2 cups of long shapes. Rolled oats are the outlier: 100 g of oats makes about 535 g of oatmeal, around 2 1/4 cups. The full table above covers all ten foods."],
+    ["Does rice really triple when it cooks?", "By volume, roughly yes — 1 cup dry makes about 3 to 3 1/2 cups cooked. By weight, no: USDA composition data puts cooked long-grain white rice at about 2.8 times its dry weight, and the USA Rice Federation itself only claims rice 'more than doubles' in weight. The widely repeated 'rice triples in weight' line garbles the volume figure into a weight claim — worth knowing if you portion by the scale."],
+    ["How much dry rice do I need for 2 cups of cooked rice?", "About 115 g of dry rice — a scant 2/3 cup. Two cups of cooked white rice weigh about 316 g, and dividing by the 2.8 cooked-to-dry weight factor gives 113 g dry. For 4 cups cooked, start from about 225 g (1 1/4 cups) dry. The calculator above runs this direction for every grain — choose 'I want cooked, how much dry?'."],
+    ["Is 2 oz of dry pasta really 1 cup cooked?", "Only for long shapes. Barilla's own serving guidance says 2 oz of spaghetti or linguine cooks to about 1 cup — and USDA weights agree (57 g dry × 2.37 = 135 g, almost exactly one 124 g cup of cooked spaghetti). But short shapes trap air between pieces: the same 2 oz of penne, rotini or elbows fills about 1 1/4 cups (USDA weighs a cup of cooked penne at just 107 g). The one-cup rule undercounts short pasta by about 25%."],
+    ["Why can't I measure dry pasta in cups?", "Because the shape changes the weight more than the portion does. USDA weighs 1 cup of dry elbows at 122 g but 1 cup of dry shells at only 64 g — nearly a 2:1 spread for the 'same' cup. That's why this converter takes dry pasta in grams or ounces only. Cooked pasta is more consistent, so cups work fine on that side."],
+    ["How much quinoa equals 250 g of cooked white rice?", "For the same volume on the plate, cook about 95 g (a generous 1/2 cup) of dry quinoa. The math: 250 g of cooked rice fills about 1.6 cups; the same volume of cooked quinoa weighs about 293 g (quinoa's cooked cup is heavier, 185 g vs 158 g), and dividing by quinoa's 3.06 weight factor gives roughly 95 g dry. If you just want the same 250 g weight of cooked quinoa instead, cook about 80 g dry."],
+    ["Why does oatmeal weigh five times more than the dry oats?", "Because a bowl of oatmeal is mostly absorbed water. USDA weighs dry rolled oats at 81–90 g per cup but cooked oatmeal at 234 g per cup, and the standard Quaker method (1/2 cup oats + 1 cup water) turns 45 g of oats into roughly a 240 g bowl — a weight factor of about 5.4, the biggest of any food on this page. Volume is far tamer: 1 cup of dry oats makes about 2 cups of oatmeal."],
+    ["How much does 1 cup of dry couscous make?", "About 2 to 2 1/2 cups, using the standard package method (1 cup couscous + 1 1/4 cups water, cover, 5 minutes off the heat). Honest footnote: USDA's own yield line says 1 dry cup makes 528 g — nearer 3 cups — but its cooked entry is 72.6% water, a wetter preparation than the package method can physically produce (175 g of couscous plus 296 g of water is 471 g even if every drop is absorbed). We publish the number your kitchen will actually reproduce."],
+    ["Does brown rice make more or less than white rice?", "Slightly less volume from the same dry cup, surprisingly. Brown rice absorbs more water by weight (×2.98 vs ×2.8), but its cooked cup is much heavier — 202 g vs 158 g (USDA) — so 1 cup dry yields about 2 3/4 cups cooked against white rice's 3 to 3 1/2. The Whole Grains Council rounds both to 3 cups, which is fair as a kitchen answer."],
+    ["Should I measure rice cooked or uncooked for a recipe?", "Measure dry unless the recipe clearly says otherwise — most recipes, package directions and nutrition labels are written for dry weight. If you're tracking portions, weighing dry is also far more repeatable: cooked weight swings with the water ratio, the pot and how long it sits, which is exactly why published yield figures disagree. Our portion calculator works in dry weight for the same reason (about 75 g of dry rice per person as a main)."],
+    ["How much dry rice or pasta per person?", "The standard planning figures are about 75 g of dry rice per person for a main dish (roughly 200–210 g cooked) and 85–100 g of dry pasta (2 oz is the official US serving; 100 g is the generous real-world one). Halve them for sides. The portion calculator covers rice, pasta, couscous, quinoa and more, per number of people."],
+  ];
+  const jsonLd = [
+    appLd("Dry to Cooked Grain & Pasta Yield Converter", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Dry to Cooked", canonical]]),
+  ];
+  const foodOpts = FOODS.map(([slug, name]) => `<option value="${slug}">${esc(name)}</option>`).join("");
+  const cfg = { type: "yield", foods: FOODS.map(([slug, name, dry, cooked, w, , note]) => ({ slug, name, dryGpc: dry, cookedGpc: cooked, w, note })) };
+  const body = `
+<h1>Dry to Cooked: Rice, Pasta &amp; Grain Yield Converter</h1>
+<p class="lead">Recipes measure grains dry, plates hold them cooked — this converts between the two, in both directions. The quick answers: <strong>1 cup of dry rice makes about 3 cups cooked</strong> (≈520 g), <strong>2 oz of dry spaghetti makes about 1 cup</strong>, and by <em>weight</em> cooked rice is about <strong>2.8× its dry weight</strong> (USDA) — not the 3× that gets repeated around the internet. Pick a food:</p>
+<div class="calc">
+  <div class="field" style="margin-bottom:10px"><label for="yl-food">Food</label><select id="yl-food">${foodOpts}</select></div>
+  <div class="field" style="margin-bottom:10px"><label for="yl-dir">Direction</label><select id="yl-dir"><option value="d2c">I have dry — how much cooked?</option><option value="c2d">I want cooked — how much dry?</option></select></div>
+  <div class="row">
+    <div class="field"><label for="yl-amt">Amount</label><input id="yl-amt" type="text" inputmode="decimal" value="1" placeholder="e.g. 1/2 or 1 1/2"></div>
+    <div class="field" style="max-width:160px"><label for="yl-unit">Unit</label><select id="yl-unit"><option value="cups">cups</option><option value="grams">grams</option><option value="oz">ounces</option></select></div>
+  </div>
+  <div class="result"><div class="big" id="yl-out">—</div><div class="sub" id="yl-sub"></div><div class="sub" id="yl-note"></div></div>
+</div>
+<p class="note">Yields are honest approximations — the water ratio, the pot and resting time all move the result, which is why even primary sources disagree (see the last column below). Weight factors are derived from USDA FoodData Central composition data; dry cup weights match our <a href="/grain-conversion-chart/">verified grain chart</a>.</p>
+<h2>What 1 cup of dry grain makes</h2>
+<table><thead><tr><th>Grain (1 cup dry)</th><th>Dry weight</th><th>Cooked weight</th><th>Cooked volume</th><th>Published yield</th></tr></thead><tbody>
+${grainRows}
+</tbody></table>
+<p class="note">Where our computed volume and the published figure differ slightly (brown rice, quinoa), the published one assumes a slightly wetter or fluffier result — both are inside normal kitchen variation.</p>
+<h2>100 g dry → cooked</h2>
+<p>The scale-user's version — what 100 g of dry grain turns into, by weight and volume:</p>
+<table><thead><tr><th>Food (100 g dry)</th><th>Cooked weight</th><th>Cooked volume</th></tr></thead><tbody>
+${g100Rows}
+</tbody></table>
+<h2>Pasta: the 2 oz rule, corrected</h2>
+<p>The standard US serving of dry pasta is <strong>2 oz (57 g)</strong>, and the famous rule says that's 1 cup cooked. USDA weights show it's really two rules: 57 g of any shape cooks to about <strong>${gR(pastaCooked)} g</strong>, but that fills <strong>≈ ${fmtC(pastaCooked / F["pasta-long"].cooked)} of long pasta</strong> (spaghetti, 124 g/cup) and <strong>≈ ${fmtC(pastaCooked / F["pasta-short"].cooked)} of short shapes</strong> (penne and rotini pack just 107 g into a cup). And skip measuring <em>dry</em> pasta by the cup entirely — USDA weighs a dry cup of elbows at 122 g but a dry cup of shells at 64 g. Grams or ounces only.</p>
+<h2>How much dry rice for the cooked amount you want</h2>
+<p>Cooking backwards from a recipe that wants cooked rice (fried rice, rice salad, stuffing):</p>
+<table><thead><tr><th>Cooked white rice wanted</th><th>Cooked weight</th><th>Dry rice needed</th><th>Dry volume</th></tr></thead><tbody>
+${revRows}
+</tbody></table>
+<h2>Volume triples. Weight doesn't.</h2>
+<p>The most-repeated wrong number in this corner of the kitchen is <em>"rice triples in weight when cooked."</em> It doesn't: USDA composition data (checked two independent ways — calorie ratio and dry-solids ratio) puts cooked white rice at <strong>×2.8 its dry weight</strong>, and the USA Rice Federation itself only says rice <em>"more than doubles."</em> The <em>volume</em> roughly triples — that's the true half of the saying. The gap matters the moment you portion with a scale: 100 g of dry rice is ~280 g cooked, not 300. Each grain has its own factor — quinoa ×3.06, pasta ×2.37, bulgur ×4.1, and oatmeal an outlier <strong>×5.4</strong> — which is exactly what the calculator above applies.</p>
+<h2>Need a different conversion?</h2>
+<p>Feeding a crowd? The <a href="/portion-calculator/">portion calculator</a> gives dry grams per person for rice, pasta and more — pair it with this page to see the cooked pile. Weighing the dry grain first? The <a href="/grain-conversion-chart/">grain conversion chart</a> has cups-to-grams for every grain here, with <a href="/cups-to-grams/white-rice/">white rice</a>, <a href="/cups-to-grams/quinoa/">quinoa</a> and <a href="/cups-to-grams/rolled-oats/">rolled oats</a> each getting a full converter. Scaling the whole recipe up or down instead? Use the <a href="/recipe-scaler/">recipe scaler</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
+}
+
 function airFryerPage() {
   const title = "Air Fryer Conversion Calculator — Oven to Air Fryer Time & Temp | ExactCup";
   const description = "Convert any oven recipe to an air fryer instantly. Lower the temperature by 25°F and reduce the time by about 20%. Free calculator with a conversion chart.";
@@ -2066,7 +2192,7 @@ function portionPage() {
   const description = "How much rice, pasta, potatoes or couscous per person? Free portion calculator for meal planning — pick a food and number of people for exact amounts.";
   const canonical = "/portion-calculator/";
   const faq = [
-    ["How much rice per person?", "About 75 g of uncooked rice per person for a main dish, or roughly 50 g as a side. Rice roughly triples in weight as it cooks, so 75 g dry becomes about 200 g on the plate — a generous cup of cooked rice."],
+    ["How much rice per person?", "About 75 g of uncooked rice per person for a main dish, or roughly 50 g as a side. Cooked, that 75 g roughly triples in volume and comes out at about 210 g on the plate (rice is about 2.8 times its dry weight once cooked) — a generous cup of cooked rice."],
     ["How much dried pasta per person?", "About 100 g of dried pasta per person for a main course, or 50–75 g as a starter or side. Fresh pasta is heavier and wetter, so use around 115–125 g per person for a main."],
     ["How much mashed potato per person?", "Around 200–250 g of raw, peeled potato per person makes a generous main-dish serving of mash once you add butter and milk. For a lighter side, 150 g is plenty."],
     ["How much couscous or quinoa per person?", "About 75–80 g dry per person as a main, or half that as a side. Both roughly triple in volume when cooked, so a little goes a long way — measure dry to avoid over-catering."],
@@ -2086,7 +2212,7 @@ function portionPage() {
 </div>
 <h2>Per-person serving guide (main dish)</h2>
 <table><thead><tr><th>Food</th><th>Per person</th></tr></thead><tbody>${rows}</tbody></table>
-<p class="note">Main-dish portions based on standard meal-planning guidance (WRAP / Love Food Hate Waste). Side dishes are roughly half. Adjust for big appetites or leftovers.</p>
+<p class="note">Main-dish portions based on standard meal-planning guidance (WRAP / Love Food Hate Waste). Side dishes are roughly half. Adjust for big appetites or leftovers. All grain and pasta portions are <strong>dry</strong> weights — the <a href="/dry-to-cooked/">dry to cooked converter</a> shows what they turn into on the plate (75 g of dry rice ≈ 210 g cooked).</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Portion Calculator", description, canonical), faqLd(faq)], cfg: { type: "portion", foods: FOODS.map(([slug, , g, note]) => ({ slug, g, note })) } }) };
@@ -2176,7 +2302,8 @@ function categoryPage(key) {
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
 <p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}${key === "flour" ? `
-<p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}
+<p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}${key === "grain" ? `
+<p>These weights are all for <strong>dry, uncooked</strong> grain — cooking changes both the weight and the volume, and each grain differently. The <a href="/dry-to-cooked/">dry to cooked converter</a> turns any dry amount into its cooked yield (and back): 1 cup of dry rice makes about 3 cups cooked, 100 g of dry rice about 280 g cooked, and oatmeal comes out at more than five times the weight of the dry oats.</p>` : ""}
 ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
@@ -2403,6 +2530,7 @@ function llmsTxt() {
     ["Volume Converter", "/volume-converter/", "Cups, tablespoons, teaspoons, fluid ounces, millilitres, litres"],
     ["Cups to mL Converter", "/cups-to-ml/", "1 US cup = 236.59 mL (240 mL on labels); metric cup (UK/AU/NZ) = 250 mL; imperial cup = 284 mL; Japanese cup = 200 mL; chart for every fraction"],
     ["Portion Calculator", "/portion-calculator/", "How much rice, pasta, potatoes etc. per person"],
+    ["Dry to Cooked Converter", "/dry-to-cooked/", "Dry-to-cooked yields for rice, pasta, quinoa, oats and grains, both directions: 1 cup dry white rice (185 g) = about 3 cups / 520 g cooked (weight factor x2.8 per USDA, volume triples but weight does not); brown rice x2.98 (1 cup dry = about 2 3/4 cups cooked); quinoa x3.06 (about 3 cups); 2 oz (57 g) dry pasta = about 1 cup cooked long shapes (spaghetti) but 1 1/4 cups short shapes (penne/rotini); rolled oats x5.4 (1 cup dry oats = about 2 cups oatmeal); couscous 1 cup dry = 2-2 1/2 cups by the package method; pearl barley 1 cup = 3 1/2-4 cups; bulgur x4.1 (about 3 cups); wild rice 3-4 cups; reverse: 2 cups cooked rice needs about 115 g dry"],
     ["Pizza Dough Calculator", "/pizza-dough-calculator/", "Flour, water, salt and yeast by baker's percentage"],
     ["Baker's Percentage Calculator", "/bakers-percentage-calculator/", "Build and scale any bread formula using baker's math (every ingredient as a percentage of flour)"],
     ["Yeast Converter", "/yeast-converter/", "Convert between active dry, instant and fresh yeast by weight (ratio 1 : 1.25 : 3); 1 packet = 7 g = 2¼ tsp"],
@@ -2570,7 +2698,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
