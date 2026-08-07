@@ -26,7 +26,7 @@
 
     { "slug": "butter", "name": "Butter", "category": "dairy", "gramsPerCup": 227, "aliases": [] },
     { "slug": "milk", "name": "Milk", "category": "dairy", "gramsPerCup": 240, "aliases": ["whole milk"] },
-    { "slug": "heavy-cream", "name": "Heavy Cream", "category": "dairy", "gramsPerCup": 232, "aliases": ["double cream", "whipping cream"] },
+    { "slug": "heavy-cream", "name": "Heavy Cream", "category": "dairy", "gramsPerCup": 232, "aliases": ["double cream", "whipping cream", "heavy whipping cream", "dairy cream"] },
     { "slug": "sour-cream", "name": "Sour Cream", "category": "dairy", "gramsPerCup": 230, "aliases": [] },
     { "slug": "cream-cheese", "name": "Cream Cheese", "category": "dairy", "gramsPerCup": 232, "aliases": [] },
     { "slug": "yogurt", "name": "Yogurt", "category": "dairy", "gramsPerCup": 245, "aliases": ["yoghurt", "greek yogurt"] },
