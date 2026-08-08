@@ -192,6 +192,8 @@ a{color:inherit;text-decoration:none}
 
 function layout(opts) {
   const { title, description, canonical, bodyHtml, jsonLd, cfg } = opts;
+  // Social share card: pages can pass their own og (image/w/h/alt); default is the site card.
+  const og = opts.og || { image: "/assets/og-default.png", w: 1200, h: 630, alt: "ExactCup — accurate cups to grams for 80+ ingredients" };
   // Capture the page's meaningful content for per-page lastmod hashing (see DATES_FILE).
   PAGE_CONTENT[canonical] = JSON.stringify([title, description, bodyHtml, jsonLd, cfg]);
   const url = SITE.baseUrl + canonical;
@@ -210,6 +212,12 @@ function layout(opts) {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(url)}">
+<meta property="og:image" content="${SITE.baseUrl}${og.image}">
+<meta property="og:image:width" content="${og.w}">
+<meta property="og:image:height" content="${og.h}">
+<meta property="og:image:alt" content="${esc(og.alt)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE.baseUrl}${og.image}">
 <meta name="robots" content="index,follow,max-image-preview:large">
 ${SITE.googleVerify ? `<meta name="google-site-verification" content="${esc(SITE.googleVerify)}">` : ""}
 <style>${CSS}</style>
@@ -762,12 +770,18 @@ function kitchenChartPage() {
 <h2>How to use this chart</h2>
 <p>The volume table is universal &mdash; 1/2 cup is 8 tablespoons whether it holds milk or flour, because those are all volume units. The <strong>ingredient weights</strong> table is the one that changes per ingredient: it gives the weight in grams of one level US cup, using the same verified densities as our <a href="/cups-to-grams/">cups to grams converter</a> (which covers ${DATA.ingredients.length}+ ingredients and every fraction of a cup, both <a href="/grams-to-cups/">directions</a>). For brown sugar that means packed into the cup; for flour, spooned in and leveled &mdash; scooping straight from the bag compacts flour by up to 30%, which is why serious bakers <a href="/ingredient-density-data/">weigh instead</a>.</p>
 <p>Halving a recipe and stuck on half of 3/4 cup? That is its own chart: the <a href="/recipe-halving-chart/">recipe halving chart</a>. Scaling the whole ingredient list, use the <a href="/recipe-scaler/">recipe scaler</a>; converting an oven recipe for the air fryer, the <a href="/air-fryer-conversion-calculator/">air fryer converter</a>. The butter rows come from the <a href="/butter-converter/">butter converter</a>, which also handles odd amounts like 1 1/2 sticks in grams, and the temperature rows from the <a href="/oven-temperature-converter/">oven temperature converter</a>.</p>
+<h2>Pin or share this chart</h2>
+<figure style="margin:14px 0">
+<a href="/assets/kitchen-conversion-chart-pin.png"><img src="/assets/kitchen-conversion-chart-pin.png" alt="Kitchen conversion chart: cup, tablespoon, fluid ounce and mL volume equivalents, grams per cup for flour, sugar, brown sugar, butter, honey and cocoa, oven temperatures in Fahrenheit, Celsius and gas mark, and butter stick weights — free printable from ExactCup" width="1000" height="1500" loading="lazy" style="width:100%;max-width:320px;height:auto;border:1px solid var(--line);border-radius:var(--radius)"></a>
+<figcaption style="font-size:13px;color:var(--muted)">Save or pin this preview &mdash; the printable version comes out of the Print button above, crisp and black-and-white friendly.</figcaption>
+</figure>
 <h2>Want this on your own site?</h2>
 <p>The interactive version of this chart is <a href="/embed/">free to embed</a> &mdash; one HTML snippet adds a live cups&#8596;grams converter to any recipe post. And the ingredient densities behind it are published as an <a href="/ingredient-density-data/">open dataset (CC BY 4.0)</a>, free to reuse with attribution.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 </div>`;
-  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd,
+    og: { image: "/assets/og-kitchen-conversion-chart.png", w: 1200, h: 630, alt: "Free printable kitchen conversion chart: volume equivalents, grams per cup, oven temperatures" } }) };
 }
 
 function homePage() {
@@ -2764,6 +2778,9 @@ function build() {
   // assets
   fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
   fs.copyFileSync(path.join(ROOT, "assets", "app.js"), path.join(OUT, "assets", "app.js"));
+  // share images (og cards + Pinterest pin), pre-rendered by scripts/make-images.js
+  fs.readdirSync(path.join(ROOT, "assets")).filter((f) => f.endsWith(".png"))
+    .forEach((f) => fs.copyFileSync(path.join(ROOT, "assets", f), path.join(OUT, "assets", f)));
 
   // open-data downloads served from our own domain (next to the dataset page)
   { const df = datasetFiles();
