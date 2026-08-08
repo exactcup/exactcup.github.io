@@ -2380,13 +2380,18 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
 
 function bakersPercentagePage() {
   const title = "Baker's Percentage Calculator — Bread Formula by Weight | ExactCup";
-  const description = "Free baker's percentage calculator. Enter your flour weight and ingredients to get baker's percentages instantly, or scale any bread recipe up or down by changing the flour weight.";
+  const description = "Free baker's percentage calculator. Enter your flour weight and ingredients to get baker's percentages instantly, or scale any bread formula. Includes gluten-free baker's math: psyllium husk 5–7% of the flour blend, 100–135% hydration.";
   const canonical = "/bakers-percentage-calculator/";
   const faq = [
     ["What is baker's percentage?", "Baker's percentage (also called baker's math) expresses every ingredient in a recipe as a percentage of the total flour weight. Flour is always 100%, and everything else is measured relative to it. It lets bakers compare and scale formulas regardless of batch size."],
     ["How do you calculate baker's percentage?", "Divide the weight of an ingredient by the total flour weight and multiply by 100. For example, 350 g water with 500 g flour is 350 ÷ 500 × 100 = 70% (a 70% hydration dough). Salt of 10 g on 500 g flour is 2%."],
     ["What is hydration in bread baking?", "Hydration is the water (or other liquid) expressed as a baker's percentage of the flour. A lean bread is usually 60–75% hydration; higher hydration gives a more open, airy crumb but stickier dough that is harder to handle."],
     ["Why can baker's percentages add up to more than 100%?", "Because flour alone is the 100% reference, not the whole recipe. Adding water (≈65%), salt (≈2%) and yeast (≈1%) gives a formula total around 168% — that's normal. The total simply tells you the dough weight relative to the flour."],
+    ["How do you figure out the baker's percentage of psyllium husk in gluten-free bread?", "The same way as any other ingredient: divide the psyllium weight by the total weight of the gluten-free flour blend — every flour AND starch in the recipe added together — and multiply by 100. A loaf with 20 g of psyllium husk over 320 g of combined buckwheat flour, potato starch and rice flour is 20 ÷ 320 × 100 ≈ 6% psyllium. The starches count inside the 100% flour reference; the psyllium itself does not — like water or salt, it sits on top."],
+    ["How much psyllium husk should I use in gluten-free bread?", "About 5–7% of the flour-blend weight is the mainstream guidance — The Loopy Whisk's published rule is 5–7 g of whole psyllium husk per 100 g of gluten-free flour mix, and Gluten Free Alchemist says most of her recipes fall at 5.5–6%. Working the numbers from published artisan gluten-free loaves lands in the same band, roughly 5–6.5%. Food-science studies have tested far higher levels (up to about 17% of flour weight, mainly for shelf life), but home formulas stay near 5–7%."],
+    ["Can I use psyllium husk powder instead of whole psyllium husk?", "Yes, but use less: the powder's finer particles bind more water per gram. The Loopy Whisk's rule is 85% of the whole-husk weight (so 17 g of powder replaces 20 g of husk); Gluten Free Alchemist says about 90%. Swapping 1:1 gives a stiffer, drier dough. Going the other way, multiply a powder amount by about 1.15 to get whole husk. Texture preference genuinely splits the experts — whole husk tends toward a more open crumb, while some bakers prefer fine powder for an even one."],
+    ["Why do gluten-free bread recipes have more than 100% hydration?", "It's not a typo. Psyllium and gluten-free flours and starches absorb far more water than wheat flour, so psyllium-based gluten-free doughs typically run about 100–135% hydration — computed from published loaves: King Arthur's gluten-free artisan bread is 113%, The Loopy Whisk's loaves 106–122%, Aran Goyoaga's up to 133% — versus roughly 60–85% for wheat doughs. Percentages over 100 are fine because the flour, not the whole dough, is the reference."],
+    ["Can I substitute xanthan gum for psyllium husk in gluten-free bread?", "Not in a shaped, free-standing loaf. Psyllium's soluble fiber binds many times its weight in water into an elastic gel that stands in for the gluten network, letting the dough be kneaded, shaped and hold gas — The Loopy Whisk (a chemistry PhD) is blunt that xanthan gum cannot replace it. The exception is batter-style pan loaves: Artisan Bread in Five's stored-dough mix lists ground psyllium or xanthan interchangeably at about 2% of flour weight. Note too that some commercial blends (King Arthur's gluten-free bread and pizza flours) already build psyllium and xanthan into the flour itself — which is why recipes using those blends add none."],
   ];
   const jsonLd = [faqLd(faq), appLd("Baker's Percentage Calculator", description, canonical)];
   // Seed a classic lean-bread formula at 500 g flour.
@@ -2406,6 +2411,14 @@ function bakersPercentagePage() {
     ["Butter or oil — enriched dough", "5–20%"],
     ["Milk (in place of water)", "60–70%"],
   ].map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${esc(v)}</td></tr>`).join("");
+  const gfRef = [
+    ["Gluten-free flour blend (all flours + starches)", "100% (the reference)"],
+    ["Psyllium husk, whole", "5–7%"],
+    ["Psyllium husk powder", "4.5–6% (85–90% of the husk amount)"],
+    ["Water", "100–135%"],
+    ["Salt", "1.8–2.2%"],
+    ["Instant dry yeast", "0.5–1.5%"],
+  ].map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${esc(v)}</td></tr>`).join("");
   const body = `
 <h1>Baker's Percentage Calculator</h1>
 <p class="lead">Work in baker's math like a pro. Set your flour weight, type ingredient weights <em>or</em> percentages, and everything stays in sync. Change the flour to scale the whole recipe.</p>
@@ -2423,6 +2436,12 @@ function bakersPercentagePage() {
 <h2>Typical baker's percentages</h2>
 <table><thead><tr><th>Ingredient</th><th>Typical baker's %</th></tr></thead><tbody>${ref}</tbody></table>
 <p class="note">Ranges are typical starting points for common breads — adjust to your flour, climate and the crumb you want. Salt is almost always near 2% of the flour; hydration is the main lever for crumb structure.</p>
+<h2>Baker's percentage in gluten-free bread (psyllium husk)</h2>
+<p>Baker's math works exactly the same in gluten-free baking, with one convention to know: the <strong>100% is the whole gluten-free flour blend</strong> — every flour <em>and</em> every starch in the recipe added together. A loaf built on 130 g buckwheat flour, 100 g potato starch and 90 g brown rice flour has a 320 g flour reference; the tapioca or potato starch is not a separate ingredient percentage, it is part of the flour. Psyllium husk, water, salt and yeast are then expressed on top of that 100%, just like in a wheat formula.</p>
+<p>So to figure out the baker's percentage of psyllium husk in a gluten-free bread, divide the psyllium weight by the total blend weight: 20 g of psyllium in the 320 g blend above is 20 ÷ 320 × 100 ≈ <strong>6.3%</strong>. That is a typical amount — published guidance clusters at <strong>5–7% whole psyllium husk</strong> (The Loopy Whisk's stated rule; Gluten Free Alchemist puts most of her loaves at 5.5–6%, and working the numbers from Aran Goyoaga's and other published artisan gluten-free recipes lands at 5–6.5%). Using the finer <strong>psyllium husk powder</strong>, reduce to 85–90% of the whole-husk weight — the powder binds more water per gram.</p>
+<p>Psyllium is what makes a kneadable gluten-free dough possible: its soluble fiber binds many times its weight in water into a sticky, elastic gel that stands in for the gluten network, so the dough can hold gas, be shaped, and rise. That extra absorption is also why gluten-free hydration numbers look wild — <strong>100–135% water</strong> is the normal range for psyllium-based loaves, versus roughly 60–85% for wheat bread. One honesty note: some commercial blends, like King Arthur's gluten-free bread and pizza flours, already contain psyllium and xanthan inside the blend — recipes written for them add no separate psyllium, and adding your own on top would double the binder.</p>
+<table><thead><tr><th>Gluten-free ingredient</th><th>Typical baker's %</th></tr></thead><tbody>${gfRef}</tbody></table>
+<p class="note">Computed from published gluten-free formulas (The Loopy Whisk, Gluten Free Alchemist, Aran Goyoaga, King Arthur's gluten-free artisan loaves). Method varies honestly between experts: some pre-mix the psyllium and water into a gel before adding it, others whisk the dry psyllium straight into the flour — both approaches have published, well-tested results.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <p style="margin-top:16px">Making pizza? The <a href="/pizza-dough-calculator/">pizza dough calculator</a> applies baker's math to a target number of dough balls. Baking sourdough? The <a href="/sourdough-hydration-calculator/">sourdough hydration calculator</a> counts the flour and water in your starter. Weighing flour from cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
