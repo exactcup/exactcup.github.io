@@ -321,6 +321,8 @@ function ingredientPage(ing) {
     ? `How many grams does 1 cup of buttermilk weigh? About ${g2(gpc)} g (USDA measures 245 g), 1/2 cup = ${g2(gpc / 2)} g. Free converter, full chart, plus the milk + lemon juice substitute ratio.`
     : ing.slug === "heavy-cream"
     ? `How many grams is a cup of heavy cream? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free converter and chart — plus half-and-half, whipping and double cream weights.`
+    : ing.slug === "rolled-oats"
+    ? `How many grams is a cup of oats? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g — rolled or quick. A 250 mL metric (NZ/AU) cup = ${Math.round(gpc / 236.588 * 250)} g. Full chart plus jumbo, porridge and steel-cut oat weights.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
@@ -404,6 +406,17 @@ function ingredientPage(ing) {
       [`How many grams is a cup of whipped cream?`, `About 120 grams — half the weight of a cup of liquid cream. Whipping folds in air, doubling the volume without changing the weight: USDA lists 1 cup of fluid heavy whipping cream as yielding 2 cups whipped, at about 120 g per whipped cup. Plan on 1 cup of liquid cream for every 2 cups of whipped cream a recipe needs. And it must be real whipping or heavy cream: below about 30% milkfat (half-and-half, light cream), the foam won't hold.`],
     );
   }
+  if (ing.slug === "rolled-oats") {
+    const metricCup = Math.round(gpc / 236.588 * 250);
+    const halfMetricCup = Math.round(gpc / 236.588 * 125);
+    faq.push(
+      [`How many grams is 1 cup of oats?`, `About ${g2(gpc)} grams for old-fashioned rolled or quick oats measured in a US cup — the value this page uses. Published figures honestly spread from 80 to 98 g per cup (Quaker's label works out to 80 g, USDA lists 81 g, King Arthur 89 g, Bob's Red Mill 98 g), so any value in that band is defensible. Steel-cut oats are a different story at about 160 g per cup, and a 250 mL metric cup of rolled oats holds about ${metricCup} g.`],
+      [`How much does half a cup of wholemeal oats weigh in NZ?`, `About ${halfMetricCup} grams. New Zealand (and Australian) recipes use the 250 mL metric cup, so a full metric cup of rolled oats is about ${metricCup} g and half a metric cup about ${halfMetricCup} g. The "wholegrain" or "wholemeal" oats on NZ packs like Harraways are ordinary wholegrain rolled oats — all rolled oats keep the bran and germ — so they weigh the same. Using a US half cup instead? That's about ${g2(gpc / 2)} g.`],
+      [`Do quick oats weigh the same as old-fashioned rolled oats?`, `Yes — use the same chart for both. King Arthur's ingredient chart lists old-fashioned and quick-cooking oats as a single entry (89 g per cup), and Quaker's labels give both the identical 40 g per half-cup serving. Quick oats are just rolled oats cut smaller and rolled thinner, which changes cooking time and baked texture, not weight per cup. Instant oatmeal is sold in packets instead — typically 28 g each.`],
+      [`What are jumbo oats and porridge oats in grams?`, `They're UK names on the same family tree. Jumbo oats are thick flakes rolled from the whole groat — the match for US old-fashioned or thick-rolled oats, and the thick flakes run heavier (King Arthur's own thick-rolled oats weigh 113 g per cup). Porridge oats are the standard smaller UK flake, rolled from cut groats — use the regular ~${g2(gpc)} g chart. Pinhead oatmeal is steel-cut oats (about 160 g per cup), and Scottish oatmeal is stone-ground, not flaked.`],
+      [`How much does a cup of cooked oatmeal weigh?`, `About 234 grams per US cup (USDA, cooked with water) — much more than the ${g2(gpc)} g of a cup of dry oats, because oatmeal is mostly absorbed water. One cup of dry rolled oats (${g2(gpc)} g) cooks up to roughly 2 cups of porridge. When a US baking recipe calls for "1 cup oatmeal" in cookies or crumble, it means dry rolled oats, not cooked porridge.`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
@@ -469,7 +482,21 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 <tr><td>Heavy cream / heavy whipping cream</td><td class="num">36%+</td><td class="num">238 g</td></tr>
 </tbody></table>
 <p>British recipe in hand? UK names run on a different ladder: <strong>single cream</strong> is 18% fat minimum, <strong>whipping cream</strong> 35%, and <strong>double cream</strong> a rich 48% — so double cream is the usual stand-in for US heavy cream but noticeably fatter, and it whips faster (and over-whips into grainy near-butter sooner). Half-and-half, at the other end, is simply a blend of milk and cream; if a recipe calls for it, equal parts whole milk and light cream get you there, and 3 cups weigh about 726 g (USDA).</p>
-<p>Whipping changes volume, not weight: air is free. USDA's own entry lists <strong>1 cup of fluid heavy whipping cream as yielding 2 cups whipped</strong>, which is why <strong>a cup of whipped cream weighs only about 120 g</strong> — and why recipes distinguish "1 cup cream, whipped" from "1 cup whipped cream" (the first gives you twice as much). One hard floor to remember: cream needs roughly <strong>30% milkfat or more to whip</strong> at all, so heavy and whipping cream foam up while half-and-half and light cream never will, no matter how long the mixer runs.</p>` : ""}
+<p>Whipping changes volume, not weight: air is free. USDA's own entry lists <strong>1 cup of fluid heavy whipping cream as yielding 2 cups whipped</strong>, which is why <strong>a cup of whipped cream weighs only about 120 g</strong> — and why recipes distinguish "1 cup cream, whipped" from "1 cup whipped cream" (the first gives you twice as much). One hard floor to remember: cream needs roughly <strong>30% milkfat or more to whip</strong> at all, so heavy and whipping cream foam up while half-and-half and light cream never will, no matter how long the mixer runs.</p>` : ""}${ing.slug === "rolled-oats" ? `
+<h2>Quick, jumbo, porridge or wholegrain: which oats does your recipe mean?</h2>
+<p>If a recipe just says <strong>oats</strong>, it almost always means these — old-fashioned rolled oats — and the chart above applies. <strong>1 cup of oats is about ${g2(gpc)} g</strong>, and quick-cooking oats weigh the same: King Arthur's chart lists old-fashioned and quick as one entry (89 g per cup), and Quaker's labels give both an identical 40 g per half-cup. Published cup weights honestly spread from about <strong>80 to 98 g</strong> (Quaker 80 g, USDA 81 g, King Arthur 89 g, Bob's Red Mill 98 g) because oat flakes bridge and trap air in the cup — we use ${g2(gpc)} g, mid-range. When the oat-to-liquid ratio matters, weigh.</p>
+<table><thead><tr><th>Oat type</th><th>Grams per US cup</th></tr></thead><tbody>
+<tr><td>Old-fashioned / rolled oats (this page)</td><td class="num">${g2(gpc)} g</td></tr>
+<tr><td>Quick-cooking oats (same flake, cut smaller)</td><td class="num">${g2(gpc)} g</td></tr>
+<tr><td>Thick-rolled / jumbo oats</td><td class="num">~113 g</td></tr>
+<tr><td><a href="/cups-to-grams/steel-cut-oats/">Steel-cut oats</a> (pinhead, Irish)</td><td class="num">~160 g</td></tr>
+<tr><td>Oat bran (raw, USDA)</td><td class="num">~94 g</td></tr>
+<tr><td><a href="/cups-to-grams/oat-flour/">Oat flour</a> (spooned)</td><td class="num">92 g</td></tr>
+<tr><td>Muesli (USDA average — mixes vary)</td><td class="num">~85 g</td></tr>
+<tr><td>Oatmeal / porridge, cooked with water</td><td class="num">~234 g</td></tr>
+</tbody></table>
+<p>Measuring with a <strong>250 mL metric cup</strong> — the standard in New Zealand and Australia? A level metric cup of rolled oats holds about <strong>${Math.round(gpc / 236.588 * 250)} g</strong>, and half a metric cup about ${Math.round(gpc / 236.588 * 125)} g. The <strong>wholegrain (or "wholemeal") oats</strong> on NZ and Australian packs — Harraways, Uncle Tobys — are ordinary wholegrain rolled oats, not a different product: every rolled oat keeps its bran and germ, so the same weights apply. One more Down-Under trap: the Australian tablespoon is 20 mL (4 teaspoons), not the 15 mL US/NZ/UK spoon.</p>
+<p>British bags use their own ladder of names. <strong>Porridge oats</strong> are the standard UK flake — rolled from cut groats, so smaller and faster-cooking than US old-fashioned, but measured with the same ~${g2(gpc)} g chart. <strong>Jumbo oats</strong> are thick flakes rolled from the whole groat (the US "thick-rolled" match — figure ~113 g per cup, King Arthur's own thick-rolled weight). <strong>Pinhead oatmeal</strong> is what Americans call <a href="/cups-to-grams/steel-cut-oats/">steel-cut oats</a>, and <strong>Scottish oatmeal</strong> is stone-ground meal in coarse, medium and fine grades. Cooking porridge rather than baking? A cup of dry oats (${g2(gpc)} g) swells to about 2 cups of cooked oatmeal at ~234 g per cup — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math for any amount.</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
@@ -2298,7 +2325,7 @@ const CATEGORY_FAQ = {
   ],
   grain: [
     ["How many grams is 1 cup of uncooked rice?", "One cup of uncooked white rice weighs about 185 g. Quinoa is lighter at 170 g, and couscous about 175 g — all measured dry."],
-    ["How many grams is 1 cup of rolled oats?", "Rolled (old-fashioned) oats weigh about 90 g per cup. Steel-cut oats are much denser at 140 g because the grains are cut, not flattened."],
+    ["How many grams is 1 cup of rolled oats?", "Rolled (old-fashioned) oats weigh about 90 g per cup. Steel-cut oats are much denser at about 160 g because the grains are cut, not flattened."],
     ["How many grams is 1 cup of water?", "One cup of water weighs about 237 g (close to 240 ml, or 8 fluid ounces). Water is the reference most other liquids are measured against."],
     ["How much does 1 cup of breadcrumbs weigh?", "Dry breadcrumbs are about 108 g per cup, but light, airy panko is only 50 g — so always convert by the specific type of crumb."],
   ],

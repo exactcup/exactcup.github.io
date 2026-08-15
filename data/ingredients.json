@@ -39,7 +39,7 @@
     { "slug": "shredded-coconut", "name": "Shredded Coconut", "category": "baking", "gramsPerCup": 80, "aliases": ["desiccated coconut"] },
     { "slug": "raisins", "name": "Raisins", "category": "baking", "gramsPerCup": 145, "aliases": [] },
     { "slug": "chopped-nuts", "name": "Chopped Nuts", "category": "baking", "gramsPerCup": 120, "aliases": ["walnuts", "pecans"] },
-    { "slug": "rolled-oats", "name": "Rolled Oats", "category": "grain", "gramsPerCup": 90, "aliases": ["old fashioned oats"] },
+    { "slug": "rolled-oats", "name": "Rolled Oats", "category": "grain", "gramsPerCup": 90, "aliases": ["old fashioned oats", "quick oats", "porridge oats", "wholegrain oats"] },
 
     { "slug": "white-rice", "name": "White Rice (uncooked)", "category": "grain", "gramsPerCup": 185, "aliases": ["long grain rice"] },
     { "slug": "quinoa", "name": "Quinoa (uncooked)", "category": "grain", "gramsPerCup": 170, "aliases": [] },
@@ -84,7 +84,7 @@
     { "slug": "poppy-seeds", "name": "Poppy Seeds", "category": "baking", "gramsPerCup": 144, "aliases": ["poppyseed"] },
 
     { "slug": "panko-breadcrumbs", "name": "Panko Breadcrumbs", "category": "grain", "gramsPerCup": 50, "aliases": ["panko", "japanese breadcrumbs"] },
-    { "slug": "steel-cut-oats", "name": "Steel-Cut Oats", "category": "grain", "gramsPerCup": 140, "aliases": ["pinhead oats", "irish oats"] },
+    { "slug": "steel-cut-oats", "name": "Steel-Cut Oats", "category": "grain", "gramsPerCup": 160, "aliases": ["pinhead oats", "irish oats"] },
     { "slug": "couscous-dry", "name": "Couscous (Dry)", "category": "grain", "gramsPerCup": 175, "aliases": ["dry couscous"] },
     { "slug": "bulgur-dry", "name": "Bulgur (Dry)", "category": "grain", "gramsPerCup": 140, "aliases": ["dry bulgur", "bulgur wheat", "cracked wheat"] },
     { "slug": "pearl-barley", "name": "Pearl Barley (Dry)", "category": "grain", "gramsPerCup": 213, "aliases": ["pearled barley", "dry barley"] },
