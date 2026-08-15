@@ -2655,14 +2655,7 @@ function embedWidgetPage() {
   const canonical = "/embed/cups-to-grams/";
   const opts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
   const cfg = { type: "master", ingredients: DATA.ingredients.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
-  const css = `*{box-sizing:border-box}body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2328;background:#fff;padding:12px}
-.ec-w{max-width:400px;margin:0 auto}label{display:block;font-size:12px;color:#5b6470;font-weight:600;margin:8px 0 3px}
-select,input{width:100%;font-size:16px;padding:9px 10px;border:1px solid #e6e8eb;border-radius:8px;font-family:inherit}
-.ec-row{display:flex;gap:8px}.ec-row>div{flex:1}
-.ec-out{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;text-align:center;margin-top:10px}
-.ec-big{font-size:26px;font-weight:800;color:#c2410c}.ec-sub{color:#5b6470;font-size:14px}
-.ec-attr{text-align:center;font-size:12px;color:#5b6470;margin-top:10px}.ec-attr a{color:#c2410c;text-decoration:none;font-weight:600}`;
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Cups to Grams Converter — ExactCup</title><style>${css}</style></head><body>
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Cups to Grams Converter — ExactCup</title><style>${EMBED_CSS}</style></head><body>
 <div class="ec-w">
 <label for="ingredient">Ingredient</label><select id="ingredient">${opts}</select>
 <div class="ec-row" style="margin-top:2px">
@@ -2679,41 +2672,114 @@ select,input{width:100%;font-size:16px;padding:9px 10px;border:1px solid #e6e8eb
   return { canonical, html };
 }
 
+// Shared minimal CSS for the bare embed widgets (iframe targets).
+const EMBED_CSS = `*{box-sizing:border-box}body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2328;background:#fff;padding:12px}
+.ec-w{max-width:400px;margin:0 auto}label{display:block;font-size:12px;color:#5b6470;font-weight:600;margin:8px 0 3px}
+select,input{width:100%;font-size:16px;padding:9px 10px;border:1px solid #e6e8eb;border-radius:8px;font-family:inherit}
+.ec-row{display:flex;gap:8px}.ec-row>div{flex:1}
+.ec-out{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;text-align:center;margin-top:10px}
+.ec-big{font-size:26px;font-weight:800;color:#c2410c}.ec-sub{color:#5b6470;font-size:14px}
+.ec-attr{text-align:center;font-size:12px;color:#5b6470;margin-top:10px}.ec-attr a{color:#c2410c;text-decoration:none;font-weight:600}`;
+
+// Grams-first variant (grams -> cups/tbsp/tsp), for blogs whose posts run in that
+// direction. Same rmaster logic as /grams-to-cups/, same ?ingredient= preset.
+function embedGramsWidgetPage() {
+  const canonical = "/embed/grams-to-cups/";
+  const opts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
+  const cfg = { type: "rmaster", ingredients: DATA.ingredients.map((i) => ({ slug: i.slug, gramsPerCup: i.gramsPerCup })) };
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Grams to Cups Converter — ExactCup</title><style>${EMBED_CSS}</style></head><body>
+<div class="ec-w">
+<label for="ingredient">Ingredient</label><select id="ingredient">${opts}</select>
+<div class="ec-row" style="margin-top:2px">
+<div><label for="grams">Grams</label><input id="grams" type="number" inputmode="decimal" value="100" min="0" step="any"></div>
+<div><label for="unit">Convert to</label><select id="unit"><option value="cups">cups</option><option value="tbsp">tbsp</option><option value="tsp">tsp</option></select></div>
+</div>
+<div class="ec-out"><div class="ec-big" id="out-amount">—</div><div class="ec-sub" id="out-oz">—</div></div>
+<div class="ec-attr"><a href="${SITE.baseUrl}/grams-to-cups/" target="_blank" rel="noopener">Grams to Cups Converter</a> by ExactCup</div>
+</div>
+<script>(function(){var m=location.search.match(/[?&]ingredient=([a-z0-9-]+)/);if(m){var s=document.getElementById("ingredient");if(s&&s.querySelector('option[value="'+m[1]+'"]'))s.value=m[1];}})();</script>
+<script type="application/json" id="cfg">${JSON.stringify(cfg)}</script><script src="/assets/app.js" defer></script>
+</body></html>`;
+  return { canonical, html };
+}
+
+// Butter variant: sticks/cups/tbsp/tsp/grams/oz, all bidirectional (initButter).
+function embedButterWidgetPage() {
+  const canonical = "/embed/butter-converter/";
+  const cfg = { type: "butter" };
+  const f = (lab, id, val) => `<div><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" step="any" min="0"${val != null ? ` value="${val}"` : ""}></div>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>Butter Converter — Sticks, Cups & Grams — ExactCup</title><style>${EMBED_CSS}</style></head><body>
+<div class="ec-w">
+<div class="ec-row">${f("Sticks", "sticks", 1)}${f("Cups", "cups")}${f("Tbsp", "tbsp")}</div>
+<div class="ec-row">${f("Grams", "grams")}${f("Ounces", "oz")}${f("Tsp", "tsp")}</div>
+<div class="ec-attr"><a href="${SITE.baseUrl}/butter-converter/" target="_blank" rel="noopener">Butter Converter — Sticks, Cups &amp; Grams</a> by ExactCup</div>
+</div>
+<script type="application/json" id="cfg">${JSON.stringify(cfg)}</script><script src="/assets/app.js" defer></script>
+<script>window.addEventListener("load",function(){var s=document.getElementById("sticks");if(s)s.dispatchEvent(new Event("input"));});</script>
+</body></html>`;
+  return { canonical, html };
+}
+
 function embedInfoPage() {
   const canonical = "/embed/";
-  const title = "Free Embeddable Cups-to-Grams Converter for Your Recipe Blog | ExactCup";
-  const description = "Add a free, accurate cups-to-grams converter to your recipe blog or website. Copy-paste one line of HTML — no sign-up, no cost. Just keep the attribution link.";
-  const snippet = `<iframe src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="Cups to Grams Converter" loading="lazy"></iframe>
+  const title = "Free Embeddable Converter Widgets for Your Recipe Blog — Cups to Grams, Grams to Cups, Butter | ExactCup";
+  const description = "Add a free, accurate converter to your recipe blog: cups-to-grams, grams-to-cups, or a butter sticks/cups/grams widget. Copy-paste one line of HTML — no sign-up, no cost. Just keep the attribution link.";
+  const iframeSnip = (src, height, titleAttr) => `<iframe src="${src}" width="100%" height="${height}" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="${titleAttr}" loading="lazy"></iframe>`;
+  const c2gSnippet = `${iframeSnip(`${SITE.baseUrl}/embed/cups-to-grams/`, 380, "Cups to Grams Converter")}
 <p style="font-size:13px"><a href="${SITE.baseUrl}/cups-to-grams/">Cups to Grams Converter</a> by ExactCup</p>`;
+  const g2cSnippet = `${iframeSnip(`${SITE.baseUrl}/embed/grams-to-cups/`, 380, "Grams to Cups Converter")}
+<p style="font-size:13px"><a href="${SITE.baseUrl}/grams-to-cups/">Grams to Cups Converter</a> by ExactCup</p>`;
+  const butterSnippet = `${iframeSnip(`${SITE.baseUrl}/embed/butter-converter/`, 260, "Butter Converter — Sticks, Cups and Grams")}
+<p style="font-size:13px"><a href="${SITE.baseUrl}/butter-converter/">Butter Converter &mdash; Sticks, Cups &amp; Grams</a> by ExactCup</p>`;
   const ebOpts = DATA.ingredients.map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("");
+  const presetPicker = (id) => `
+<p style="margin-bottom:4px"><label for="${id}" style="font-size:13px;font-weight:600">Preset ingredient (optional)</label> &mdash; the widget opens on this ingredient; the preview and snippet update automatically. Readers can still switch to any of the ${DATA.ingredients.length}+ ingredients.</p>
+<select id="${id}" style="max-width:440px;width:100%"><option value="">None &mdash; general converter</option>${ebOpts}</select>`;
   const body = `
-<h1>Free Embeddable Cups-to-Grams Converter</h1>
-<p class="lead">Give your readers an accurate, instant cups&#8596;grams converter right inside your recipe posts. Free, no sign-up &mdash; just copy the snippet below.</p>
-<h2>Live preview</h2>
+<h1>Free Embeddable Converter Widgets</h1>
+<p class="lead">Give your readers an accurate, instant converter right inside your recipe posts. Three widgets, all free, no sign-up &mdash; copy the snippet for the one that fits your post (in WordPress: paste into a <strong>Custom&nbsp;HTML</strong> block). Weights come from ${DATA.ingredients.length}+ ingredient densities verified against authoritative baking references, and widgets update automatically as we add ingredients &mdash; you never touch the code again.</p>
+
+<h2>1. Cups to grams converter</h2>
+<p>Volume-first: readers enter cups/tbsp/tsp and get grams. Best for US-style recipe posts.</p>
 <iframe id="eb-preview" src="${SITE.baseUrl}/embed/cups-to-grams/" width="100%" height="380" style="border:1px solid var(--line);border-radius:12px;max-width:440px" title="Cups to Grams Converter preview" loading="lazy"></iframe>
-<h2>Match it to your post (optional)</h2>
-<p>Writing about a specific ingredient? Pick it here and the widget opens preset to that ingredient &mdash; the preview and snippet update automatically. Readers can still switch to any of the ${DATA.ingredients.length}+ ingredients.</p>
-<label for="eb-ing" style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">Preset ingredient</label>
-<select id="eb-ing" style="max-width:440px;width:100%"><option value="">None &mdash; general converter</option>${ebOpts}</select>
-<h2>Copy this snippet</h2>
-<p>Paste it anywhere in your post&#8217;s HTML (in WordPress: a <strong>Custom&nbsp;HTML</strong> block):</p>
-<textarea readonly id="eb-snippet" rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(snippet)}</textarea>
+${presetPicker("eb-ing")}
+<p style="margin-top:12px;margin-bottom:4px"><strong>Copy this snippet:</strong></p>
+<textarea readonly id="eb-snippet" rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(c2gSnippet)}</textarea>
+
+<h2>2. Grams to cups converter</h2>
+<p>Weight-first: readers enter grams and get cups, tablespoons or teaspoons. Best for metric recipes and &ldquo;grams to cups&rdquo; conversion posts.</p>
+<iframe id="eb-preview-g" src="${SITE.baseUrl}/embed/grams-to-cups/" width="100%" height="380" style="border:1px solid var(--line);border-radius:12px;max-width:440px" title="Grams to Cups Converter preview" loading="lazy"></iframe>
+${presetPicker("eb-ing-g")}
+<p style="margin-top:12px;margin-bottom:4px"><strong>Copy this snippet:</strong></p>
+<textarea readonly id="eb-snippet-g" rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(g2cSnippet)}</textarea>
+
+<h2>3. Butter converter (sticks &#8596; cups &#8596; grams)</h2>
+<p>Type in any field &mdash; sticks, cups, tablespoons, teaspoons, grams or ounces &mdash; and the rest fill in. Best for baking posts that call for butter by the stick.</p>
+<iframe src="${SITE.baseUrl}/embed/butter-converter/" width="100%" height="260" style="border:1px solid var(--line);border-radius:12px;max-width:440px" title="Butter Converter preview" loading="lazy"></iframe>
+<p style="margin-top:12px;margin-bottom:4px"><strong>Copy this snippet:</strong></p>
+<textarea readonly rows="6" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(butterSnippet)}</textarea>
+
 <h2>License</h2>
-<p>Free to embed on any site, commercial or personal. The only condition: <strong>keep the &ldquo;by ExactCup&rdquo; attribution link</strong> shown under the widget. That link is how we keep the tool free. Thanks!</p>
-<p class="note">Covers ${DATA.ingredients.length}+ ingredients with weights verified against authoritative baking references. The widget updates automatically as we add ingredients &mdash; you never touch the code again.</p>
+<p>Free to embed on any site, commercial or personal. The only condition: <strong>keep the &ldquo;by ExactCup&rdquo; attribution link</strong> shown under the widget. That link is how we keep the tools free. Thanks!</p>
 <script type="application/json" id="eb-data">${JSON.stringify(DATA.ingredients.map((i) => ({ s: i.slug, n: i.name })))}</script>
 <script>(function(){
-var el=document.getElementById("eb-data"),sel=document.getElementById("eb-ing"),ta=document.getElementById("eb-snippet"),pv=document.getElementById("eb-preview");
-if(!el||!sel||!ta)return;
+var el=document.getElementById("eb-data");if(!el)return;
 var names={};JSON.parse(el.textContent).forEach(function(i){names[i.s]=i.n;});
 var base="${SITE.baseUrl}";
-function widgetSrc(slug){return base+"/embed/cups-to-grams/"+(slug?"?ingredient="+slug:"");}
-function snippet(slug){
-var href=slug?base+"/cups-to-grams/"+slug+"/":base+"/cups-to-grams/";
-var text=slug?names[slug]+" cups to grams converter":"Cups to Grams Converter";
-return '<iframe src="'+widgetSrc(slug)+'" width="100%" height="380" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="Cups to Grams Converter" loading="lazy"></iframe>\\n<p style="font-size:13px"><a href="'+href+'">'+text+'</a> by ExactCup</p>';
+function wire(selId,taId,pvId,path,anchorSuffix,anchorDefault){
+var sel=document.getElementById(selId),ta=document.getElementById(taId),pv=document.getElementById(pvId);
+if(!sel||!ta)return;
+sel.addEventListener("change",function(){
+var slug=sel.value;
+var src=base+"/embed/"+path+"/"+(slug?"?ingredient="+slug:"");
+var href=slug?base+"/cups-to-grams/"+slug+"/":base+"/"+path+"/";
+var text=slug?names[slug]+" "+anchorSuffix:anchorDefault;
+ta.value='<iframe src="'+src+'" width="100%" height="380" style="border:1px solid #e6e8eb;border-radius:12px;max-width:440px" title="'+anchorDefault+'" loading="lazy"></iframe>\\n<p style="font-size:13px"><a href="'+href+'">'+text+'</a> by ExactCup</p>';
+if(pv)pv.src=src;
+});
 }
-sel.addEventListener("change",function(){ta.value=snippet(sel.value);if(pv)pv.src=widgetSrc(sel.value);});
+wire("eb-ing","eb-snippet","eb-preview","cups-to-grams","cups to grams converter","Cups to Grams Converter");
+wire("eb-ing-g","eb-snippet-g","eb-preview-g","grams-to-cups","grams to cups converter","Grams to Cups Converter");
 })();</script>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body }) };
 }
@@ -2799,8 +2865,8 @@ function build() {
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
-  // bare embeddable widget: written to disk but kept OUT of the sitemap (it's noindex)
-  { const ew = embedWidgetPage(); writePage(ew.canonical, ew.html); }
+  // bare embeddable widgets: written to disk but kept OUT of the sitemap (noindex)
+  [embedWidgetPage(), embedGramsWidgetPage(), embedButterWidgetPage()].forEach((ew) => writePage(ew.canonical, ew.html));
 
   // assets
   fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
