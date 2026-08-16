@@ -2326,6 +2326,8 @@ const CATEGORY_FAQ = {
     ["How many grams is 1 cup of chopped nuts?", "Chopped nuts are roughly 120 g per cup. Whole almonds, hazelnuts and pine nuts are denser at 142 g, pecan halves lighter at 105 g, and chopped walnuts about 113 g."],
     ["How many grams is 1 cup of shredded coconut?", "Shredded coconut is very light — about 80 g per cup — so a cup weighs far less than most other baking add-ins."],
     ["Do seeds weigh the same per cup?", "Roughly. Sesame and poppy seeds are about 142–144 g per cup and chia seeds 148 g, while ground flaxseed is lighter at 100 g."],
+    ["How many cups is 100 g of nuts or seeds?", "It depends on the nut. 100 g of ground flaxseed is exactly 1 cup, shredded coconut 1.25 cups, pecan halves about 0.95 cups, chopped walnuts or cashews about 0.88 cups, generic chopped nuts about 0.83 cups, and dense whole nuts and small seeds — almonds, hazelnuts, pine nuts, sesame, chia — only about 0.68–0.7 cups. The reverse-lookup table above has every value."],
+    ["How many grams is half a cup of nuts and seeds?", "For mixed chopped nuts, about 60 g. Whole almonds, hazelnuts, pine nuts and sesame seeds are about 71 g per half cup, chia seeds 74 g, chopped walnuts and cashews about 57 g, pecan halves 53 g, and ground flaxseed 50 g."],
   ],
   grain: [
     ["How many grams is 1 cup of uncooked rice?", "One cup of uncooked white rice weighs about 185 g. Quinoa is lighter at 170 g, and couscous about 175 g — all measured dry."],
@@ -2353,6 +2355,8 @@ function categoryPage(key) {
   // (targets the observed query class "cheese cup equivalents chart").
   const description = key === "dairy"
     ? `Free dairy conversion chart: grams per cup for butter, milk, cream, yogurt and every cheese — plus a cheese cup equivalents table (4 oz block = 1 cup shredded = 113 g; grated parmesan, crumbled feta, cream cheese and more).`
+    : key === "baking"
+    ? `Free baking conversion chart: grams per cup for chocolate chips, nuts and seeds — plus a 100 g in cups reverse table (100 g of almonds ≈ 0.7 cups, chopped nuts ≈ 0.83, flaxseed = 1 cup). Cups, half-cups and quarter-cups at a glance.`
     : `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
   const rows = items.map((i) =>
     `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
@@ -2389,7 +2393,15 @@ function categoryPage(key) {
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
 <p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}${key === "flour" ? `
 <p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}${key === "grain" ? `
-<p>These weights are all for <strong>dry, uncooked</strong> grain — cooking changes both the weight and the volume, and each grain differently. The <a href="/dry-to-cooked/">dry to cooked converter</a> turns any dry amount into its cooked yield (and back): 1 cup of dry rice makes about 3 cups cooked, 100 g of dry rice about 280 g cooked, and oatmeal comes out at more than five times the weight of the dry oats.</p>` : ""}${key === "dairy" ? `
+<p>These weights are all for <strong>dry, uncooked</strong> grain — cooking changes both the weight and the volume, and each grain differently. The <a href="/dry-to-cooked/">dry to cooked converter</a> turns any dry amount into its cooked yield (and back): 1 cup of dry rice makes about 3 cups cooked, 100 g of dry rice about 280 g cooked, and oatmeal comes out at more than five times the weight of the dry oats.</p>` : ""}${key === "baking" ? `
+<h2 id="nuts-seeds-100g">Nuts &amp; seeds: 100 g in cups (reverse lookup)</h2>
+<p>Recipe gives you a weight and you only have measuring cups? Because every nut and seed packs differently, <strong>100&nbsp;g is a different number of cups for each one</strong> &mdash; from a level cup of ground flaxseed down to barely two-thirds of a cup of chia seeds. The handy anchor: 100&nbsp;g of ground flaxseed is exactly 1 cup, and most <em>whole</em> nuts and small seeds land near &frac23;&ndash;&frac34; cup per 100&nbsp;g.</p>
+<table><thead><tr><th>Nut / seed</th><th>100 g in cups</th><th>50 g in cups</th></tr></thead><tbody>${
+  items.filter((i) => ["shredded-coconut", "ground-flaxseed", "pecan-halves", "walnuts-chopped", "cashews", "chopped-nuts", "whole-almonds", "hazelnuts", "pine-nuts", "sesame-seeds", "poppy-seeds", "chia-seeds"].includes(i.slug))
+    .sort((a, b) => a.gramsPerCup - b.gramsPerCup)
+    .map((i) => `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${cups2(100 / i.gramsPerCup)} ${cups2(100 / i.gramsPerCup) === 1 ? "cup" : "cups"}</td><td class="num">${cups2(50 / i.gramsPerCup)} cups</td></tr>`).join("")
+}</tbody></table>
+<p class="note">Computed from the same verified grams-per-cup weights as the chart above (100 &divide; grams per cup), so the two tables always agree. For any other gram amount, use the <a href="/grams-to-cups/">grams to cups converter</a> &mdash; every ingredient here is in its dropdown.</p>` : ""}${key === "dairy" ? `
 <h2 id="cheese-equivalents">Cheese cup equivalents: blocks, shreds, grates and crumbles</h2>
 <p>The rule printed on cheese producers' own sites (Cabot spells it out) and matched by King Arthur's weight chart: <strong>a 4&nbsp;oz piece of block cheese shreds into about 1 cup (113&nbsp;g)</strong>. So an 8&nbsp;oz block makes 2 cups shredded and a 1&nbsp;lb block 4 cups. USDA's measured cup weights agree for hand-shredded <a href="/cups-to-grams/shredded-cheddar/">cheddar</a> (113&nbsp;g) and low-moisture <a href="/cups-to-grams/shredded-mozzarella/">mozzarella</a> (112&ndash;113&nbsp;g) &mdash; but the rule quietly fails as soon as the cheese isn't shredded on a box grater. Here is the whole family, as actually measured:</p>
 <table><thead><tr><th>Cheese, as measured</th><th>1 cup weighs</th><th>&asymp; cheese used</th></tr></thead><tbody>
