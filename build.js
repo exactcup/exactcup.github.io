@@ -2316,6 +2316,10 @@ const CATEGORY_FAQ = {
     ["How many grams is 1 cup of butter?", "One cup of butter weighs 227 g, which is 2 sticks. Half a cup is about 113 g — a single stick."],
     ["Is a cup of oil the same weight as a cup of butter?", "No. A cup of vegetable, olive or coconut oil weighs about 216–218 g, a little less than butter's 227 g, because liquid oil is less dense than solid fat."],
     ["How many grams is 1 cup of shredded cheese?", "Shredded cheddar or mozzarella is about 113 g per cup and finely grated parmesan around 100 g. Soft cheeses are much heavier — cream cheese and ricotta are roughly 227–232 g per cup."],
+    ["How many cups does an 8 oz block of cheese make shredded?", "About 2 cups. The producer rule of thumb — published by Cabot and matching King Arthur's chart and USDA's measured 113 g cup — is that 4 oz of block cheese shreds into 1 cup, so 8 oz gives 2 cups and a 1 lb block about 4 cups. It holds for cheddar, jack, mozzarella and Swiss shredded on a box grater; bagged pre-shredded cheese is fluffier, and USDA measures a cup of bagged part-skim mozzarella at only 86 g."],
+    ["Is grated cheese the same as shredded cheese when measuring by the cup?", "No — the grate size changes the cup weight dramatically. America's Test Kitchen's yields for hard cheese: 1 oz comes to about 1/2 cup rasp-grated (microplane), 1/3 cup on a medium grater, or 1/4 cup coarsely shredded. That means a cup of fluffy microplaned parmesan weighs around 57 g while canister-style fine grated parmesan is 100 g or more, and coarse shreds about 113 g. When a recipe says \"grated\", weight in grams is the only unambiguous measure."],
+    ["How much grated parmesan does a wedge of parmesan make?", "By weight nothing changes — 100 g of wedge is 100 g grated. By volume, America's Test Kitchen's rule gives about 1/2 cup per ounce microplaned or 1/3 cup per ounce on a medium grater, so a typical 4 oz wedge makes roughly 2 cups of fluffy microplaned parmesan or about 1 1/3 cups medium-grated."],
+    ["How much does a cup of ricotta or cottage cheese weigh?", "Ricotta is 227 g per cup on King Arthur's chart (the value this site uses), while USDA measures 246 g — an honest published range of 227–246 g depending on how firmly it's packed. Cottage cheese depends on the curd: USDA measures 210 g for large curd and 225 g for small curd, not packed. Both are wet, clumpy cheeses, so press lightly to close air gaps or simply weigh."],
   ],
   baking: [
     ["How many grams is 1 cup of chocolate chips?", "One cup of chocolate chips weighs about 170 g. White chocolate chips are the same weight per cup."],
@@ -2345,7 +2349,11 @@ function categoryPage(key) {
     baking: "Chocolate Chips, Nuts & Seeds",
   }[key] || cname;
   const title = `${titleName} Conversion Chart — Cups to Grams | ExactCup`;
-  const description = `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
+  // dairy gets a hand-written description surfacing the cheese cup-equivalents table
+  // (targets the observed query class "cheese cup equivalents chart").
+  const description = key === "dairy"
+    ? `Free dairy conversion chart: grams per cup for butter, milk, cream, yogurt and every cheese — plus a cheese cup equivalents table (4 oz block = 1 cup shredded = 113 g; grated parmesan, crumbled feta, cream cheese and more).`
+    : `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
   const rows = items.map((i) =>
     `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
   ).join("");
@@ -2381,7 +2389,23 @@ function categoryPage(key) {
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
 <p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}${key === "flour" ? `
 <p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}${key === "grain" ? `
-<p>These weights are all for <strong>dry, uncooked</strong> grain — cooking changes both the weight and the volume, and each grain differently. The <a href="/dry-to-cooked/">dry to cooked converter</a> turns any dry amount into its cooked yield (and back): 1 cup of dry rice makes about 3 cups cooked, 100 g of dry rice about 280 g cooked, and oatmeal comes out at more than five times the weight of the dry oats.</p>` : ""}
+<p>These weights are all for <strong>dry, uncooked</strong> grain — cooking changes both the weight and the volume, and each grain differently. The <a href="/dry-to-cooked/">dry to cooked converter</a> turns any dry amount into its cooked yield (and back): 1 cup of dry rice makes about 3 cups cooked, 100 g of dry rice about 280 g cooked, and oatmeal comes out at more than five times the weight of the dry oats.</p>` : ""}${key === "dairy" ? `
+<h2 id="cheese-equivalents">Cheese cup equivalents: blocks, shreds, grates and crumbles</h2>
+<p>The rule printed on cheese producers' own sites (Cabot spells it out) and matched by King Arthur's weight chart: <strong>a 4&nbsp;oz piece of block cheese shreds into about 1 cup (113&nbsp;g)</strong>. So an 8&nbsp;oz block makes 2 cups shredded and a 1&nbsp;lb block 4 cups. USDA's measured cup weights agree for hand-shredded <a href="/cups-to-grams/shredded-cheddar/">cheddar</a> (113&nbsp;g) and low-moisture <a href="/cups-to-grams/shredded-mozzarella/">mozzarella</a> (112&ndash;113&nbsp;g) &mdash; but the rule quietly fails as soon as the cheese isn't shredded on a box grater. Here is the whole family, as actually measured:</p>
+<table><thead><tr><th>Cheese, as measured</th><th>1 cup weighs</th><th>&asymp; cheese used</th></tr></thead><tbody>
+<tr><td>Shredded cheddar, jack, mozzarella or Swiss (box grater)</td><td class="num">113 g</td><td class="num">4 oz</td></tr>
+<tr><td>Bagged pre-shredded mozzarella (part-skim)</td><td class="num">86 g</td><td class="num">3 oz</td></tr>
+<tr><td><a href="/cups-to-grams/grated-parmesan/">Grated parmesan</a> (canister-style, fine)</td><td class="num">100 g</td><td class="num">3&frac12; oz</td></tr>
+<tr><td>Parmesan, microplane-grated (fluffy)</td><td class="num">&asymp;57 g</td><td class="num">2 oz</td></tr>
+<tr><td>Hard cheese, medium grate</td><td class="num">&asymp;85 g</td><td class="num">3 oz</td></tr>
+<tr><td>Crumbled feta</td><td class="num">150 g</td><td class="num">5&frac13; oz</td></tr>
+<tr><td>Crumbled blue cheese</td><td class="num">135 g</td><td class="num">4&frac34; oz</td></tr>
+<tr><td>Diced or cubed cheddar</td><td class="num">132 g</td><td class="num">4&frac23; oz</td></tr>
+<tr><td><a href="/cups-to-grams/cream-cheese/">Cream cheese</a></td><td class="num">232 g</td><td class="num">8-oz brick &asymp; 1 cup</td></tr>
+<tr><td><a href="/cups-to-grams/ricotta-cheese/">Ricotta</a></td><td class="num">227 g</td><td class="num">8 oz</td></tr>
+<tr><td><a href="/cups-to-grams/cottage-cheese/">Cottage cheese</a></td><td class="num">226 g</td><td class="num">8 oz</td></tr>
+</tbody></table>
+<p class="note">Sources: USDA FoodData Central measured cup weights (shredded cheddar 113&nbsp;g, diced 132&nbsp;g, crumbled feta 150&nbsp;g, crumbled blue 135&nbsp;g, cream cheese 232&nbsp;g; the 86&nbsp;g figure is USDA's separate entry for <em>bagged</em> pre-shredded part-skim mozzarella, which is fluffier and carries anti-caking starch); King Arthur's chart for the 113&nbsp;g shredded family and 100&nbsp;g grated parmesan; America's Test Kitchen for the grate-style yields &mdash; 1&nbsp;oz of hard cheese makes about &frac12; cup rasp-grated, &frac13; cup on a medium grater, or &frac14; cup coarse. Two honest disagreements: ricotta is King Arthur's 227&nbsp;g here, while USDA measures 246&nbsp;g; and USDA's crumbled feta (150&nbsp;g) is well above what King Arthur's chart implies (&asymp;114&nbsp;g). Soft-cheese cups vary with how firmly you pack &mdash; when the recipe is fussy, weigh.</p>` : ""}
 ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}` : ""}
 <h2>Other conversion charts</h2>
 <div class="chips">${Object.keys(DATA.categories).filter((k) => k !== key).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</div>
