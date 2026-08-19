@@ -41,7 +41,7 @@
     { "slug": "chopped-nuts", "name": "Chopped Nuts", "category": "baking", "gramsPerCup": 120, "aliases": ["walnuts", "pecans"] },
     { "slug": "rolled-oats", "name": "Rolled Oats", "category": "grain", "gramsPerCup": 90, "aliases": ["old fashioned oats", "quick oats", "porridge oats", "wholegrain oats"] },
 
-    { "slug": "white-rice", "name": "White Rice (uncooked)", "category": "grain", "gramsPerCup": 185, "aliases": ["long grain rice"] },
+    { "slug": "white-rice", "name": "White Rice (uncooked)", "category": "grain", "gramsPerCup": 185, "aliases": ["long grain rice", "basmati rice", "jasmine rice"] },
     { "slug": "quinoa", "name": "Quinoa (uncooked)", "category": "grain", "gramsPerCup": 170, "aliases": [] },
     { "slug": "cornmeal", "name": "Cornmeal", "category": "grain", "gramsPerCup": 122, "aliases": ["polenta"] },
     { "slug": "breadcrumbs", "name": "Breadcrumbs (dry)", "category": "grain", "gramsPerCup": 108, "aliases": [] },

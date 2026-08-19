@@ -286,6 +286,31 @@ function gramsToCupsTable(gpc) {
   return `<table><thead><tr><th>Grams</th><th>Cups</th><th>Tablespoons</th><th>Ounces</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Rice is bought by variety name but weighed by grain length. USDA FoodData
+// Central publishes cup weights per grain class (long 185 g, medium 195 g,
+// short 200 g, brown long 185 g, brown medium 190 g, wild 160 g, instant 95 g);
+// basmati and jasmine are long-grain, arborio/carnaroli and sushi rice are
+// short/medium. Only rendered on the white-rice page. Half-cup and 100 g
+// columns are computed, never typed.
+const RICE_TYPES = [
+  ["White rice, long-grain (this page)", 185, false],
+  ["Basmati (long-grain)", 185, true],
+  ["Jasmine (long-grain)", 185, true],
+  ["White rice, medium-grain (Calrose)", 195, false],
+  ["White rice, short-grain / sushi rice", 200, false],
+  ["Arborio, carnaroli & risotto rice", 200, true],
+  ["Brown rice, long-grain", 185, false],
+  ["Brown rice, medium-grain", 190, false],
+  ["Wild rice (a grass seed, not rice)", 160, false],
+  ["Instant / precooked rice, dry", 95, false],
+];
+function riceTypesTable() {
+  const rows = RICE_TYPES.map(([label, g, approx]) =>
+    `<tr><td>${label}</td><td class="num">${approx ? "~" : ""}${g2(g)} g</td><td class="num">${approx ? "~" : ""}${g2(g / 2)} g</td><td class="num">${cups2(100 / g)} cups</td></tr>`
+  ).join("");
+  return `<table><thead><tr><th>Rice (uncooked)</th><th>1 US cup</th><th>1/2 cup</th><th>100 g =</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 // Genuinely-relevant tool links per ingredient category. Also flows crawl
 // equity from the most-crawled cluster (ingredient pages) to the tool pages,
 // which are otherwise only linked from the homepage. Every tool page appears in
@@ -321,6 +346,8 @@ function ingredientPage(ing) {
     ? `How many grams does 1 cup of buttermilk weigh? About ${g2(gpc)} g (USDA measures 245 g), 1/2 cup = ${g2(gpc / 2)} g. Free converter, full chart, plus the milk + lemon juice substitute ratio.`
     : ing.slug === "heavy-cream"
     ? `How many grams is a cup of heavy cream? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free converter and chart — plus half-and-half, whipping and double cream weights.`
+    : ing.slug === "white-rice"
+    ? `How many grams is a cup of rice? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 100 g = ${cups2(100 / gpc)} cups. Full chart plus basmati, jasmine, arborio, brown and sushi rice weights.`
     : ing.slug === "rolled-oats"
     ? `How many grams is a cup of oats? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g — rolled or quick. A 250 mL metric (NZ/AU) cup = ${Math.round(gpc / 236.588 * 250)} g. Full chart plus jumbo, porridge and steel-cut oat weights.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
@@ -417,6 +444,18 @@ function ingredientPage(ing) {
       [`How much does a cup of cooked oatmeal weigh?`, `About 234 grams per US cup (USDA, cooked with water) — much more than the ${g2(gpc)} g of a cup of dry oats, because oatmeal is mostly absorbed water. One cup of dry rolled oats (${g2(gpc)} g) cooks up to roughly 2 cups of porridge. When a US baking recipe calls for "1 cup oatmeal" in cookies or crumble, it means dry rolled oats, not cooked porridge.`],
     );
   }
+  if (ing.slug === "white-rice") {
+    const cookerCup = Math.round(gpc / 236.588 * 180);
+    const cookerCupShort = Math.round(200 / 236.588 * 180);
+    faq.push(
+      [`How many grams is half a cup of rice?`, `About ${g2(gpc / 2)} grams of uncooked long-grain white rice — half of the ${g2(gpc)} g in a full US cup (USDA). Grain length shifts it a little: half a cup of medium-grain rice is about 97.5 g and short-grain or sushi rice about 100 g, while brown long-grain rice matches white at ${g2(gpc / 2)} g. Using a 250 mL metric cup (UK, Australia, New Zealand)? Half of one holds about ${Math.round(gpc / 236.588 * 125)} g.`],
+      [`How many cups is 100 grams of rice?`, `About ${cups2(100 / gpc)} cups of uncooked long-grain white rice — a half cup plus roughly 1 tablespoon. For other kinds: 100 g of medium-grain rice is about ${cups2(100 / 195)} cups, short-grain or sushi rice about ${cups2(100 / 200)} cups, brown medium-grain about ${cups2(100 / 190)} cups, and dry instant rice about ${cups2(100 / 95)} cups (it is by far the lightest per cup). All of these are uncooked weights.`],
+      [`Do basmati and jasmine rice weigh the same as regular white rice?`, `Yes, near enough to use one chart. Both are long-grain varieties, and USDA measures rice by grain length rather than variety name: long-grain white rice is ${g2(gpc)} g per US cup, so basmati and jasmine both land at about ${g2(gpc)} g (brand labels using a 1/4-cup serving mostly print 45–50 g, which works out to 180–200 g per cup). Risotto rices — arborio and carnaroli — are the short and medium-grain end, closer to 195–200 g per cup.`],
+      [`How much rice does a rice cooker cup hold?`, `A rice-cooker cup is 180 mL — the Japanese gō, not a US cup — so it is about 3/4 of a US cup and holds roughly ${cookerCup} g of long-grain rice or ${cookerCupShort} g of short-grain Japanese rice. That is why a "5-cup" cooker is not five US cups: rice-cooker capacities count 180 mL cups of uncooked rice. Use the cup that came with the machine, since its water lines are calibrated to it.`],
+      [`Should I weigh rice before or after rinsing?`, `Before. Rinsing washes off surface starch but also leaves water clinging to and soaking into the grains — published soaking figures put the weight gain at roughly 20% once rice sits in water — so drained rice weighs unpredictably more than the recipe means. Measure or weigh dry (${g2(gpc)} g per cup), then rinse. For the same reason, keep rinsing water out of your cooking-water measurement.`],
+      [`How many grams is 1 cup of instant rice?`, `About 95 grams (USDA) — barely half the ${g2(gpc)} g of regular uncooked rice. Instant or "minute" rice is pre-cooked and dehydrated, so its grains are puffed and full of air. Never swap it by weight with regular rice: a cup of instant rice is about the same amount of food as half a cup of regular rice, and it needs far less water and time.`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
@@ -496,7 +535,13 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 <tr><td>Oatmeal / porridge, cooked with water</td><td class="num">~234 g</td></tr>
 </tbody></table>
 <p>Measuring with a <strong>250 mL metric cup</strong> — the standard in New Zealand and Australia? A level metric cup of rolled oats holds about <strong>${Math.round(gpc / 236.588 * 250)} g</strong>, and half a metric cup about ${Math.round(gpc / 236.588 * 125)} g. The <strong>wholegrain (or "wholemeal") oats</strong> on NZ and Australian packs — Harraways, Uncle Tobys — are ordinary wholegrain rolled oats, not a different product: every rolled oat keeps its bran and germ, so the same weights apply. One more Down-Under trap: the Australian tablespoon is 20 mL (4 teaspoons), not the 15 mL US/NZ/UK spoon.</p>
-<p>British bags use their own ladder of names. <strong>Porridge oats</strong> are the standard UK flake — rolled from cut groats, so smaller and faster-cooking than US old-fashioned, but measured with the same ~${g2(gpc)} g chart. <strong>Jumbo oats</strong> are thick flakes rolled from the whole groat (the US "thick-rolled" match — figure ~113 g per cup, King Arthur's own thick-rolled weight). <strong>Pinhead oatmeal</strong> is what Americans call <a href="/cups-to-grams/steel-cut-oats/">steel-cut oats</a>, and <strong>Scottish oatmeal</strong> is stone-ground meal in coarse, medium and fine grades. Cooking porridge rather than baking? A cup of dry oats (${g2(gpc)} g) swells to about 2 cups of cooked oatmeal at ~234 g per cup — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math for any amount.</p>` : ""}
+<p>British bags use their own ladder of names. <strong>Porridge oats</strong> are the standard UK flake — rolled from cut groats, so smaller and faster-cooking than US old-fashioned, but measured with the same ~${g2(gpc)} g chart. <strong>Jumbo oats</strong> are thick flakes rolled from the whole groat (the US "thick-rolled" match — figure ~113 g per cup, King Arthur's own thick-rolled weight). <strong>Pinhead oatmeal</strong> is what Americans call <a href="/cups-to-grams/steel-cut-oats/">steel-cut oats</a>, and <strong>Scottish oatmeal</strong> is stone-ground meal in coarse, medium and fine grades. Cooking porridge rather than baking? A cup of dry oats (${g2(gpc)} g) swells to about 2 cups of cooked oatmeal at ~234 g per cup — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math for any amount.</p>` : ""}${ing.slug === "white-rice" ? `
+<h2>Basmati, jasmine, arborio or sushi rice: what a cup of each weighs</h2>
+<p>Rice is bought by variety name but weighed by grain length, and that is the whole trick to converting it. USDA publishes cup weights by grain class, not brand: <strong>long-grain white rice is ${g2(gpc)} g per US cup</strong> (the value this page uses), medium-grain 195 g and short-grain 200 g. So <strong>half a cup of rice is about ${g2(gpc / 2)} g</strong>, a quarter cup about ${g2(gpc / 4)} g, and <strong>100 g of rice is about ${cups2(100 / gpc)} cups</strong> — a half cup plus a tablespoon. Basmati and jasmine are long-grain, so they take the ${g2(gpc)} g line; arborio, carnaroli and Japanese sushi rice sit at the plump short and medium-grain end.</p>
+${riceTypesTable()}
+<p class="note">Uncooked weights. USDA FoodData Central for the grain classes; basmati, jasmine and risotto rices are mapped to their grain class (brand labels printing a 1/4-cup serving mostly run 45–52 g, or 180–208 g per cup). Half-cup and 100 g figures are computed from the cup weight.</p>
+<p>Two rows above are worth a second look. <strong>Brown rice weighs the same as white</strong> at the same grain length (${g2(gpc)} g per cup long-grain, 190 g medium) — the bran adds cooking time and water, not weight — so recipes swap by volume or weight without recalculating. <strong>Instant rice is the outlier at about 95 g per cup</strong>, roughly half of regular rice: it is pre-cooked and dried, so its grains are puffed and airy. Swapping it cup for cup by weight is the single most common rice-conversion mistake. Wild rice, at 160 g per cup, is not really rice at all — it is the seed of an aquatic grass.</p>
+<p>Cooking rather than baking? A <strong>rice-cooker cup is 180 mL</strong> (the Japanese <em>gō</em>), about three-quarters of a US cup — roughly <strong>${Math.round(gpc / 236.588 * 180)} g</strong> of long-grain rice or ${Math.round(200 / 236.588 * 180)} g of short-grain, which is why a "5-cup" cooker holds less than five US cups. A 250 mL metric cup (UK, Australia, New Zealand) holds about ${Math.round(gpc / 236.588 * 250)} g. And weigh rice <em>dry, before rinsing</em>: rinsed grains hold surface and absorbed water (soaking can add around 20% to the weight), so a drained cup is no longer ${g2(gpc)} g. Want the cooked amount instead? A cup of dry rice cooks up to roughly 3 cups — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math both ways, and the <a href="/portion-calculator/">portion calculator</a> turns it into grams of dry rice per person.</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
