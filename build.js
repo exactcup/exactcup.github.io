@@ -2349,6 +2349,11 @@ const CATEGORY_FAQ = {
     ["Do all flours weigh the same per cup?", "No. Most wheat flours are close to 120 g per cup, but density varies a lot: almond flour is only 96 g and oat flour 92 g, while semolina is 163 g. Always convert by the specific flour rather than using one ratio."],
     ["How do you measure a cup of flour accurately?", "Spoon the flour into the cup and level it off with a knife — don't dip the cup and scoop, which packs the flour and can add 20% more weight. For real accuracy, weigh it in grams."],
     ["Is a cup of bread flour the same as all-purpose flour?", "By weight, yes — both are about 120 g per cup. They differ in protein content, not density, so you can swap the weights directly."],
+    ["What is the difference between half a cup of bread flour and half a cup of whole wheat flour?", "Half a cup of bread flour is 60 g and half a cup of whole wheat flour is 56.5 g, so whole wheat is about 3.5 g lighter. Over a full cup the gap is 7 g — 120 g of bread flour against 113 g of whole wheat. All-purpose flour weighs the same as bread flour, so the same comparison holds for it."],
+    ["Is whole wheat flour heavier than white flour?", "No — it is lighter by the cup. A cup of whole wheat flour is 113 g against 120 g for all-purpose or bread flour. The bran and germ flakes left in whole wheat are coarse and irregular, so they hold the cup open instead of settling tightly the way fine white flour does."],
+    ["Which flour weighs the most per cup?", "Semolina, at 163 g per cup — 43 g more than all-purpose flour. Coconut flour and arrowroot powder come next at 128 g. The lightest entries on this chart are cocoa powder at 85 g and oat flour at 92 g."],
+    ["How much does half a cup of flour weigh?", "Half a cup of all-purpose, bread or cake flour is 60 g. Whole wheat, self-rising and tapioca flour are 56.5 g, cornstarch 56 g, rye flour 53 g, almond flour 48 g, oat flour 46 g and cocoa powder 42.5 g. Coconut flour and arrowroot powder are heavier at 64 g."],
+    ["Can I substitute one flour for another cup for cup?", "Not safely by volume. Swap by weight instead — measure the grams the recipe calls for, then weigh the same grams of the replacement. A cup-for-cup swap quietly changes how much flour is in the bowl: putting whole wheat in place of all-purpose by the cup removes about 7 g, and almond flour removes 24 g."],
   ],
   sugar: [
     ["How many grams is 1 cup of sugar?", "One cup of granulated white sugar weighs 200 g. Packed brown sugar is heavier at 213 g, caster sugar is 190 g, and powdered (icing) sugar is much lighter at 113 g."],
@@ -2402,10 +2407,15 @@ function categoryPage(key) {
     ? `Free dairy conversion chart: grams per cup for butter, milk, cream, yogurt and every cheese — plus a cheese cup equivalents table (4 oz block = 1 cup shredded = 113 g; grated parmesan, crumbled feta, cream cheese and more).`
     : key === "baking"
     ? `Free baking conversion chart: grams per cup for chocolate chips, nuts and seeds — plus a 100 g in cups reverse table (100 g of almonds ≈ 0.7 cups, chopped nuts ≈ 0.83, flaxseed = 1 cup). Cups, half-cups and quarter-cups at a glance.`
+    : key === "flour"
+    ? `Free flour conversion chart: grams per cup for all-purpose, bread, cake, whole wheat, almond and coconut flour — plus every flour compared side by side against all-purpose (half a cup of bread flour is 60 g, whole wheat 56.5 g).`
     : `Free ${cname.toLowerCase()} conversion chart: grams per cup for ${items.slice(0, 4).map((i) => i.name.toLowerCase()).join(", ")} and more. Cups, half-cups and quarter-cups to grams at a glance.`;
   const rows = items.map((i) =>
     `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${g2(i.gramsPerCup / 4)} g</td></tr>`
   ).join("");
+  // Weight lookup by slug, so prose can interpolate the same verified numbers the tables
+  // render — the text can never drift out of step with the chart.
+  const w = (slug) => (items.find((i) => i.slug === slug) || {}).gramsPerCup;
   // Category-specific FAQ — answers the real questions each chart ranks for, and feeds
   // FAQPage JSON-LD (rich results). Every gram value below is pulled straight from the
   // verified ingredients.json weights shown in the chart above, so the two never disagree.
@@ -2437,7 +2447,25 @@ function categoryPage(key) {
 <table><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th></tr></thead><tbody>${rows}</tbody></table>
 <p class="note">Remember: every ${esc(cname.toLowerCase().replace(/s$/, ""))} has a different density, so always convert by ingredient rather than using one ratio. For other amounts, open the individual converter.</p>${key === "sugar" ? `
 <p>Replacing the sugar with honey rather than just measuring it? The <a href="/sugar-to-honey/">sugar to honey conversion chart</a> covers the ½–¾ ratio, the liquid reduction and the baking-soda rule.</p>` : ""}${key === "flour" ? `
-<p>Out of cake flour? The <a href="/cake-flour-substitute/">cake flour substitute</a> is 2 tablespoons of cornstarch swapped into every cup of all-purpose flour — chart and calculator for any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}${key === "grain" ? `
+<h2 id="flour-vs-flour">Which flour weighs more? Every flour against all-purpose</h2>
+<p>Comparing two flours before you swap them? Start with the pair people ask about most: <strong>half a cup of bread flour is ${g2(w("bread-flour") / 2)}&nbsp;g and half a cup of whole wheat flour is ${g2(w("whole-wheat-flour") / 2)}&nbsp;g</strong> &mdash; whole wheat is about ${g2((w("bread-flour") - w("whole-wheat-flour")) / 2)}&nbsp;g lighter, or ${g2(w("bread-flour") - w("whole-wheat-flour"))}&nbsp;g over a full cup (${g2(w("bread-flour"))}&nbsp;g against ${g2(w("whole-wheat-flour"))}&nbsp;g). That catches most bakers out, because whole wheat <em>feels</em> like the heartier flour. The bran and germ flakes left in it are coarse and irregular, so they hold the cup open instead of settling tight the way fine white flour does.</p>
+<p>The table below lines every flour and starch on this page up against all-purpose, so you can compare any pair at a glance &mdash; full cup, half cup, and the gap per cup.</p>
+<table><thead><tr><th>Flour or starch</th><th>1 cup</th><th>&frac12; cup</th><th>vs 1 cup all-purpose</th></tr></thead><tbody>${
+  items.slice().sort((a, b) => b.gramsPerCup - a.gramsPerCup).map((i) => {
+    const d = i.gramsPerCup - w("all-purpose-flour");
+    const pct = Math.round((d / w("all-purpose-flour")) * 100);
+    const cell = i.slug === "all-purpose-flour"
+      ? "the reference"
+      : d === 0
+      ? "same as all-purpose"
+      : `${d > 0 ? "+" : "&minus;"}${g2(Math.abs(d))} g (${d > 0 ? "+" : "&minus;"}${Math.abs(pct)}%)`;
+    return `<tr><td><a href="/cups-to-grams/${i.slug}/">${esc(i.name)}</a></td><td class="num">${g2(i.gramsPerCup)} g</td><td class="num">${g2(i.gramsPerCup / 2)} g</td><td class="num">${cell}</td></tr>`;
+  }).join("")
+}</tbody></table>
+<p class="note">Every figure is computed from the same verified grams-per-cup weights as the chart above (half cup = weight &divide; 2; the last column = weight &minus; ${g2(w("all-purpose-flour"))}&nbsp;g), so the two tables can never disagree. The ${g2(w("all-purpose-flour"))}&nbsp;g all-purpose / ${g2(w("whole-wheat-flour"))}&nbsp;g whole wheat pair is King Arthur Baking's published chart &mdash; the reference most US recipes are written against.</p>
+<p><strong>Bread flour and all-purpose flour weigh exactly the same:</strong> ${g2(w("bread-flour"))}&nbsp;g a cup, both of them. What separates them is protein, not density &mdash; bread flour carries more, which builds more gluten and a chewier crumb. Because the weights match, you can swap them gram for gram and cup for cup and only the texture changes. <a href="/cups-to-grams/cake-flour/">Cake flour</a> is the same ${g2(w("cake-flour"))}&nbsp;g on this chart but far softer and lower in protein, so it is not interchangeable by feel &mdash; see the <a href="/cake-flour-substitute/">cake flour substitute</a>, which is 2 tablespoons of cornstarch swapped into every cup of all-purpose.</p>
+<p><strong>How you fill the cup swamps most of these differences.</strong> Dipping the measuring cup straight into the bag packs the flour and can add around 20% &mdash; roughly 25&nbsp;g on a ${g2(w("all-purpose-flour"))}&nbsp;g cup. That one habit is more than three times the ${g2(w("bread-flour") - w("whole-wheat-flour"))}&nbsp;g bread-flour-to-whole-wheat gap, and bigger than the gap between all-purpose and almost every other flour on this chart. Spoon the flour in and level it off, or skip the argument entirely and weigh it.</p>
+<p>Putting whole wheat in place of white flour? Do it <strong>by weight, not by cup</strong> &mdash; a cup-for-cup swap quietly takes ${g2(w("all-purpose-flour") - w("whole-wheat-flour"))}&nbsp;g of flour out of the recipe and leaves the dough wetter than intended. Whole wheat's bran also keeps soaking up water as the dough sits, so replace part of the white flour rather than all of it the first time and expect a denser crumb. The <a href="/cups-to-grams/whole-wheat-flour/">whole wheat flour converter</a> and <a href="/cups-to-grams/bread-flour/">bread flour converter</a> handle any amount. Thickening a sauce rather than baking? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> swaps between them: cornstarch has twice the thickening power, so use half as much.</p>` : ""}${key === "grain" ? `
 <p>These weights are all for <strong>dry, uncooked</strong> grain — cooking changes both the weight and the volume, and each grain differently. The <a href="/dry-to-cooked/">dry to cooked converter</a> turns any dry amount into its cooked yield (and back): 1 cup of dry rice makes about 3 cups cooked, 100 g of dry rice about 280 g cooked, and oatmeal comes out at more than five times the weight of the dry oats.</p>` : ""}${key === "baking" ? `
 <h2 id="nuts-seeds-100g">Nuts &amp; seeds: 100 g in cups (reverse lookup)</h2>
 <p>Recipe gives you a weight and you only have measuring cups? Because every nut and seed packs differently, <strong>100&nbsp;g is a different number of cups for each one</strong> &mdash; from a level cup of ground flaxseed down to barely two-thirds of a cup of chia seeds. The handy anchor: 100&nbsp;g of ground flaxseed is exactly 1 cup, and most <em>whole</em> nuts and small seeds land near &frac23;&ndash;&frac34; cup per 100&nbsp;g.</p>
