@@ -17,7 +17,7 @@
     { "slug": "cornstarch", "name": "Cornstarch", "category": "flour", "gramsPerCup": 112, "aliases": ["corn flour", "cornflour"] },
     { "slug": "cocoa-powder", "name": "Cocoa Powder", "category": "flour", "gramsPerCup": 85, "aliases": ["unsweetened cocoa"] },
 
-    { "slug": "granulated-sugar", "name": "Granulated Sugar", "category": "sugar", "gramsPerCup": 200, "aliases": ["white sugar", "caster sugar"] },
+    { "slug": "granulated-sugar", "name": "Granulated Sugar", "category": "sugar", "gramsPerCup": 200, "aliases": ["white sugar", "granulated white sugar"] },
     { "slug": "brown-sugar", "name": "Brown Sugar (packed)", "category": "sugar", "gramsPerCup": 213, "aliases": ["light brown sugar", "dark brown sugar"] },
     { "slug": "powdered-sugar", "name": "Powdered Sugar", "category": "sugar", "gramsPerCup": 113, "aliases": ["confectioners sugar", "icing sugar"] },
     { "slug": "honey", "name": "Honey", "category": "sugar", "gramsPerCup": 340, "aliases": [] },
