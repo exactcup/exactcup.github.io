@@ -305,6 +305,48 @@ const RICE_TYPES = [
   ["Wild rice (a grass seed, not rice)", 160, false],
   ["Instant / precooked rice, dry", 95, false],
 ];
+// Chocolate is sold by piece size, and the piece size is what changes the cup
+// weight (chips bridge and trap air; smaller and larger pieces pack differently).
+// Every figure is USDA FoodData Central, measured per cup: semisweet chips
+// "1 cup chips (6 oz package)" 168 g, "1 cup mini chips" 173 g, "1 cup large
+// chips" 182 g (#167976); milk chocolate "1 cup chips" 168 g (#167587); white
+// chocolate "1 cup chips" 170 g (#167571); unsweetened baking chocolate
+// "1 cup, grated" 132 g (#167568); cocoa powder 86 g (#169593). Rows carrying a
+// slug pull their weight from ingredients.json so this table can never drift
+// from the pages it links to. Only rendered on the chocolate-chips page.
+const CHOCOLATE_TYPES = [
+  ["Chocolate chips, standard (semisweet or dark)", { slug: "chocolate-chips" }, null],
+  ["Mini chocolate chips", 173, null],
+  ["Chocolate chunks / large chips", 182, null],
+  ["Milk chocolate chips", 168, null],
+  ["White chocolate chips", { slug: "white-chocolate-chips" }, "/cups-to-grams/white-chocolate-chips/"],
+  ["Chocolate, grated or shaved from a bar", 132, null],
+  ["Cocoa powder, unsweetened", { slug: "cocoa-powder" }, "/cups-to-grams/cocoa-powder/"],
+];
+function chocolateTypesTable() {
+  const rows = CHOCOLATE_TYPES.map(([label, w, href]) => {
+    const g = typeof w === "number" ? w : ingBySlug(w.slug).gramsPerCup;
+    const cell = href ? `<a href="${href}">${label}</a>` : label;
+    return `<tr><td>${cell}</td><td class="num">${g2(g)} g</td><td class="num">${g2(g / 2)} g</td><td class="num">${g2(g / 4)} g</td><td class="num">${cups2(100 / g)} cups</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Chocolate</th><th>1 US cup</th><th>1/2 cup</th><th>1/4 cup</th><th>100 g =</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// US chocolate-chip bag sizes, taken from the package weights printed in USDA's
+// Branded Foods data (Nestle and store brands: 6 oz/170 g, 9 oz/255 g,
+// 10 oz/283 g, 12 oz/340 g, 24 oz/680 g). Grams and cups are both computed —
+// ounces x 28.3495, then divided by the page's cup weight — so the classic
+// "one 12 oz bag = 2 cups" falls out of the data rather than being asserted.
+const CHIP_BAGS = [6, 9, 10, 12, 24];
+function chipBagsTable(gpc) {
+  const rows = CHIP_BAGS.map((oz) => {
+    const g = oz * OZ;
+    const c = cups2(g / gpc);
+    return `<tr><td>${oz} oz bag</td><td class="num">${Math.round(g)} g</td><td class="num">${c} cup${c === 1 ? "" : "s"}</td><td class="num">${g2(g / gpc * 16)} tbsp</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Bag size</th><th>Grams</th><th>Cups</th><th>Tablespoons</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function riceTypesTable() {
   const rows = RICE_TYPES.map(([label, g, approx]) =>
     `<tr><td>${label}</td><td class="num">${approx ? "~" : ""}${g2(g)} g</td><td class="num">${approx ? "~" : ""}${g2(g / 2)} g</td><td class="num">${cups2(100 / g)} cups</td></tr>`
@@ -349,6 +391,8 @@ function ingredientPage(ing) {
     ? `How many grams is a cup of heavy cream? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free converter and chart — plus half-and-half, whipping and double cream weights.`
     : ing.slug === "white-rice"
     ? `How many grams is a cup of rice? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 100 g = ${cups2(100 / gpc)} cups. Full chart plus basmati, jasmine, arborio, brown and sushi rice weights.`
+    : ing.slug === "chocolate-chips"
+    ? `How many grams is a cup of chocolate chips? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, and a 12 oz bag = ${cups2(12 * OZ / gpc)} cups. Full chart plus mini chips, chunks and every bag size in grams.`
     : ing.slug === "rolled-oats"
     ? `How many grams is a cup of oats? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g — rolled or quick. A 250 mL metric (NZ/AU) cup = ${Math.round(gpc / 236.588 * 250)} g. Full chart plus jumbo, porridge and steel-cut oat weights.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
@@ -445,6 +489,17 @@ function ingredientPage(ing) {
       [`How much does a cup of cooked oatmeal weigh?`, `About 234 grams per US cup (USDA, cooked with water) — much more than the ${g2(gpc)} g of a cup of dry oats, because oatmeal is mostly absorbed water. One cup of dry rolled oats (${g2(gpc)} g) cooks up to roughly 2 cups of porridge. When a US baking recipe calls for "1 cup oatmeal" in cookies or crumble, it means dry rolled oats, not cooked porridge.`],
     );
   }
+  if (ing.slug === "chocolate-chips") {
+    const bag12 = 12 * OZ;
+    faq.push(
+      [`How many grams is half a cup of chocolate chips?`, `About ${g2(gpc / 2)} grams — half of the ${g2(gpc)} g in a full US cup. A third of a cup is about ${g2(gpc / 3)} g and a quarter cup about ${g2(gpc / 4)} g, which matches the 42 g that Nestle's own label prints for a 1/4-cup serving. Piece size shifts it a little: USDA measures mini chips at 173 g per cup and large chips or chunks at 182 g, against 168 g for standard morsels, so half a cup of chunks is nearer 91 g.`],
+      [`How many cups is 440 grams of chocolate chips?`, `About ${cups2(440 / gpc)} cups — call it 2 1/2 cups plus a tablespoon and a half. At ${g2(gpc)} g per US cup, 440 g is roughly ${g2(440 / OZ)} oz, so it is one standard 12 oz bag (${cups2(bag12 / gpc)} cups) plus about ${cups2((440 - bag12) / gpc)} of a cup more.`],
+      [`How many cups is a 12 oz bag of chocolate chips?`, `Exactly ${cups2(bag12 / gpc)} cups. A 12 oz bag holds ${Math.round(bag12)} g and a US cup of chips weighs about ${g2(gpc)} g (6 oz) — which is why so many cookie recipes call for "1 bag" and "2 cups" interchangeably. The other US sizes: a 6 oz bag is 1 cup, a 9 oz bag ${cups2(9 * OZ / gpc)} cups, a 10 oz bag ${cups2(10 * OZ / gpc)} cups and a 24 oz bag ${cups2(24 * OZ / gpc)} cups.`],
+      [`Do mini chips and chocolate chunks weigh the same as regular chocolate chips?`, `Close, but not identical — and the difference is not in the direction most people guess. USDA measured all three: standard chips 168 g per cup, mini chips 173 g, and large chips or chunks 182 g. Both the smaller and the bigger pieces pack heavier than a standard morsel, because standard chips are the shape that bridges and traps the most air. All of it sits inside a 15-gram band, so for a cookie dough the swap is free; for ganache or a bark where the chocolate-to-cream ratio matters, weigh.`],
+      [`Why does the bag say 1 tablespoon of chocolate chips is 15 grams?`, `Because the tablespoon on a nutrition label does not scale up to a cup. Nearly every brand prints a serving of 1 tablespoon at 14–15 g (Nestle, Wegmans, Publix, Target and the store brands all do), but 16 of those would be 224–240 g — far more than the ${g2(gpc)} g a measured cup actually holds. Nestle's own 3 oz bag settles it by printing the other unit: 1/4 cup = 42 g, or 168 g per cup, matching USDA's measured figure. Chips simply cannot level in a spoon the way they settle in a cup, so when a recipe calls for cups, use the cup line on the chart above.`],
+      [`How many grams is 1 square of baking chocolate?`, `About 29 grams — the classic Baker's square is 1 oz, and USDA lists it at 29 g. So a recipe calling for 4 squares of unsweetened chocolate wants roughly 116 g, which you can replace with the same weight of chips only if the sweetness works out (chips are sweetened, baking squares are not). Chopping a bar changes its cup weight completely: USDA measures grated chocolate at just 132 g per cup against 182 g for chunks, so a "cup of chopped chocolate" can swing 50 g on chop size alone. Weigh bars; don't cup them.`],
+    );
+  }
   if (ing.slug === "white-rice") {
     const cookerCup = Math.round(gpc / 236.588 * 180);
     const cookerCupShort = Math.round(200 / 236.588 * 180);
@@ -536,7 +591,18 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 <tr><td>Oatmeal / porridge, cooked with water</td><td class="num">~234 g</td></tr>
 </tbody></table>
 <p>Measuring with a <strong>250 mL metric cup</strong> — the standard in New Zealand and Australia? A level metric cup of rolled oats holds about <strong>${Math.round(gpc / 236.588 * 250)} g</strong>, and half a metric cup about ${Math.round(gpc / 236.588 * 125)} g. The <strong>wholegrain (or "wholemeal") oats</strong> on NZ and Australian packs — Harraways, Uncle Tobys — are ordinary wholegrain rolled oats, not a different product: every rolled oat keeps its bran and germ, so the same weights apply. One more Down-Under trap: the Australian tablespoon is 20 mL (4 teaspoons), not the 15 mL US/NZ/UK spoon.</p>
-<p>British bags use their own ladder of names. <strong>Porridge oats</strong> are the standard UK flake — rolled from cut groats, so smaller and faster-cooking than US old-fashioned, but measured with the same ~${g2(gpc)} g chart. <strong>Jumbo oats</strong> are thick flakes rolled from the whole groat (the US "thick-rolled" match — figure ~113 g per cup, King Arthur's own thick-rolled weight). <strong>Pinhead oatmeal</strong> is what Americans call <a href="/cups-to-grams/steel-cut-oats/">steel-cut oats</a>, and <strong>Scottish oatmeal</strong> is stone-ground meal in coarse, medium and fine grades. Cooking porridge rather than baking? A cup of dry oats (${g2(gpc)} g) swells to about 2 cups of cooked oatmeal at ~234 g per cup — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math for any amount.</p>` : ""}${ing.slug === "white-rice" ? `
+<p>British bags use their own ladder of names. <strong>Porridge oats</strong> are the standard UK flake — rolled from cut groats, so smaller and faster-cooking than US old-fashioned, but measured with the same ~${g2(gpc)} g chart. <strong>Jumbo oats</strong> are thick flakes rolled from the whole groat (the US "thick-rolled" match — figure ~113 g per cup, King Arthur's own thick-rolled weight). <strong>Pinhead oatmeal</strong> is what Americans call <a href="/cups-to-grams/steel-cut-oats/">steel-cut oats</a>, and <strong>Scottish oatmeal</strong> is stone-ground meal in coarse, medium and fine grades. Cooking porridge rather than baking? A cup of dry oats (${g2(gpc)} g) swells to about 2 cups of cooked oatmeal at ~234 g per cup — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math for any amount.</p>` : ""}${ing.slug === "chocolate-chips" ? `
+<h2>Half a cup, a whole bag, or 440 g: chocolate chips both ways</h2>
+<p>Chocolate is the one baking ingredient people convert in <em>both</em> directions — a recipe asks for cups, but the chocolate arrives in a bag marked in grams or ounces. Both answers come off the same number: <strong>1 cup of chocolate chips is about ${g2(gpc)} g</strong>, so <strong>half a cup is about ${g2(gpc / 2)} g</strong>, a third of a cup ${g2(gpc / 3)} g, a quarter cup ${g2(gpc / 4)} g — and going the other way, <strong>440 g of chocolate chips is about ${cups2(440 / gpc)} cups</strong> (2 1/2 cups plus a tablespoon and a half), while 200 g is ${cups2(200 / gpc)} cups and 500 g is ${cups2(500 / gpc)} cups. The number that makes all of this easy to remember: <strong>a cup of chips weighs 6 oz</strong>, exactly the size of the smallest bag.</p>
+${chipBagsTable(gpc)}
+<p class="note">Bag sizes are the package weights printed on US chip bags (USDA Branded Foods). Grams and cups are computed from the ounce size at ${g2(gpc)} g per cup — the familiar "one 12 oz bag = 2 cups" falls straight out of it.</p>
+<p>That bag ladder is why so many cookie recipes treat <strong>"1 bag" and "2 cups" as the same instruction</strong>: a 12 oz bag really does hold ${Math.round(12 * OZ)} g, or ${cups2(12 * OZ / gpc)} cups. Check the bag before you trust it, though: 10 oz (${Math.round(10 * OZ)} g, only ${cups2(10 * OZ / gpc)} cups) and 9 oz bags sit on the same shelf as the 12 oz standard, so an older recipe written around a 12 oz bag comes up as much as half a cup short if you tip in one smaller bag and call it done.</p>
+<h2>Chips, minis, chunks or grated: what each kind weighs per cup</h2>
+<p>Piece size, not chocolate type, is what moves the cup weight — and it moves in a direction most bakers guess wrong. USDA measured all three chip sizes: standard morsels come in <strong>lightest at 168 g per cup</strong>, with mini chips at 173 g and large chips or chunks at 182 g. The classic teardrop morsel is simply the shape that bridges best and traps the most air. Milk, semisweet and dark chips land within a couple of grams of each other, and so do white chocolate chips. This page uses ${g2(gpc)} g (6 oz), mid-band.</p>
+${chocolateTypesTable()}
+<p class="note">USDA FoodData Central measured cup weights (semisweet chips, mini chips and large chips; milk and white chocolate chips; grated baking chocolate). Rows linking to another page pull that page's own weight, so the numbers can't drift apart. Half-cup, quarter-cup and 100 g figures are computed.</p>
+<p>Two rows behave differently from the rest. <strong>Grated or shaved chocolate is far lighter at about 132 g per cup</strong> — shavings are mostly air — while chunks hacked off the same bar run 182 g, so "1 cup of chopped chocolate" can swing 50 g on how finely you chop. That is the one case where you should ignore the cup entirely and weigh the bar (a standard Baker's square is 1 oz, 29 g). And <a href="/cups-to-grams/cocoa-powder/">cocoa powder</a>, at ${g2(ingBySlug("cocoa-powder").gramsPerCup)} g per cup, weighs half what chips do: it is a fluffy, sift-able powder, not a solid, so never swap the two by volume.</p>
+<p>One last trap, and it catches almost everyone: <strong>don't multiply the tablespoon on the bag up to a cup</strong>. Brand labels put a serving at 1 tablespoon and 14–15 g, which would make a cup 224–240 g — nowhere near the ${g2(gpc)} g a measured cup holds. Nestle's own smaller bag prints the other unit and lands right on the data: 1/4 cup = 42 g, or 168 g per cup. Chips can't level in a spoon the way they settle in a cup, so use the cup line when a recipe says cups, and a scale when the chocolate-to-dough ratio actually matters — the <a href="/grams-to-cups/">grams to cups converter</a> and the <a href="/recipe-scaler/">recipe scaler</a> handle any amount in between.</p>` : ""}${ing.slug === "white-rice" ? `
 <h2>Basmati, jasmine, arborio or sushi rice: what a cup of each weighs</h2>
 <p>Rice is bought by variety name but weighed by grain length, and that is the whole trick to converting it. USDA publishes cup weights by grain class, not brand: <strong>long-grain white rice is ${g2(gpc)} g per US cup</strong> (the value this page uses), medium-grain 195 g and short-grain 200 g. So <strong>half a cup of rice is about ${g2(gpc / 2)} g</strong>, a quarter cup about ${g2(gpc / 4)} g, and <strong>100 g of rice is about ${cups2(100 / gpc)} cups</strong> — a half cup plus a tablespoon. Basmati and jasmine are long-grain, so they take the ${g2(gpc)} g line; arborio, carnaroli and Japanese sushi rice sit at the plump short and medium-grain end.</p>
 ${riceTypesTable()}

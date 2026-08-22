@@ -35,7 +35,7 @@
     { "slug": "coconut-oil", "name": "Coconut Oil", "category": "dairy", "gramsPerCup": 218, "aliases": [] },
     { "slug": "peanut-butter", "name": "Peanut Butter", "category": "dairy", "gramsPerCup": 256, "aliases": [] },
 
-    { "slug": "chocolate-chips", "name": "Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["choc chips"] },
+    { "slug": "chocolate-chips", "name": "Chocolate Chips", "category": "baking", "gramsPerCup": 170, "aliases": ["choc chips", "chocolate morsels", "semi-sweet chocolate chips"] },
     { "slug": "shredded-coconut", "name": "Shredded Coconut", "category": "baking", "gramsPerCup": 80, "aliases": ["desiccated coconut"] },
     { "slug": "raisins", "name": "Raisins", "category": "baking", "gramsPerCup": 145, "aliases": [] },
     { "slug": "chopped-nuts", "name": "Chopped Nuts", "category": "baking", "gramsPerCup": 120, "aliases": ["walnuts", "pecans"] },
