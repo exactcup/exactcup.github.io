@@ -170,6 +170,9 @@ td.num{font-variant-numeric:tabular-nums}
 details{border:1px solid var(--line);border-radius:9px;padding:6px 14px;margin:8px 0}
 summary{font-weight:600;cursor:pointer;padding:6px 0}
 .note{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px;margin:14px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:12px 14px;overflow-x:auto;margin:12px 0;line-height:1.5}
+pre code{background:none;border:0;padding:0}
 .btn{display:inline-block;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 .btn:hover{background:#9a3412}
 .bp-del{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;width:32px;height:32px;cursor:pointer;font-size:17px;line-height:1;padding:0}
@@ -240,7 +243,7 @@ ${bodyHtml}
 <p><strong>${SITE.brand}</strong> — ${SITE.tagline}.</p>
 <nav class="fcol"><span class="fh">Calculators &amp; converters</span>${ALL_TOOLS.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join("")}</nav>
 <nav class="fcol"><span class="fh">Conversion charts</span><a href="/cups-to-grams/">All ingredients</a>${Object.keys(DATA.categories).map((k) => `<a href="/${k}-conversion-chart/">${esc(catName(k))}</a>`).join("")}</nav>
-<p style="font-size:12px">Conversions are approximate; ingredient weights vary by brand, humidity, and how you measure. For best baking results, weigh with a kitchen scale. Open data: <a href="/ingredient-density-data/">ingredient density dataset</a> (CC BY 4.0) · <a href="/embed/">embed our converter</a>.</p>
+<p style="font-size:12px">Conversions are approximate; ingredient weights vary by brand, humidity, and how you measure. For best baking results, weigh with a kitchen scale. Open data: <a href="/ingredient-density-data/">ingredient density dataset</a> (CC BY 4.0) · <a href="/embed/">embed our converter</a> &middot; <a href="/api/">free JSON API</a>.</p>
 </div></footer>
 ${cfgScript}
 </body>
@@ -2856,6 +2859,7 @@ function llmsTxt() {
   out += `\n## Conversion charts by category\n`;
   Object.keys(DATA.categories).forEach((k) => { out += `- [${catName(k)} conversion chart](${b}/${k}-conversion-chart/)\n`; });
   out += `\n## Open data\n- [Ingredient Density Dataset](${b}/ingredient-density-data/): grams per US cup for ${DATA.ingredients.length}+ ingredients, CC BY 4.0, downloadable as [CSV](${b}/ingredient-density-data/ingredient-density.csv) or [JSON](${b}/ingredient-density-data/ingredient-density.json). Please cite ExactCup with a link when using the data.\n`;
+  out += `- [Ingredient Density API](${b}/api/): free JSON API over the same data — no key, no sign-up, CORS enabled. \`${b}${API_BASE}ingredients.json\` for all ${DATA.ingredients.length} ingredients, \`${b}${API_BASE}ingredients/{slug}.json\` for one (with precomputed cups→grams, tablespoons→grams and grams→cups tables), \`${b}${API_BASE}units.json\` for volume units in mL. CC BY 4.0 with attribution.\n`;
   return out;
 }
 
@@ -3043,6 +3047,8 @@ ${tables}
 <h2>License &amp; how to cite</h2>
 <p><strong>CC BY 4.0</strong> &mdash; free to use, share, and adapt, including commercially. The only requirement is attribution: credit ExactCup with a link. Suggested citation:</p>
 <textarea readonly rows="3" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(citation)}</textarea>
+<h2>Prefer an API to a download?</h2>
+<p>The same data is served as a <a href="/api/">free JSON API</a> &mdash; no key, no sign-up, CORS enabled &mdash; with one endpoint per ingredient (<code>/api/v1/ingredients/honey.json</code>) plus precomputed cups&#8594;grams tables and a unit table for metric and imperial cups. Same CC&nbsp;BY&nbsp;4.0 terms.</p>
 <p class="note">Want the interactive version instead of raw data? Use the <a href="/cups-to-grams/">cups to grams converter</a>, or <a href="/embed/">embed the free converter widget</a> on your own site.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
 }
@@ -3059,6 +3065,223 @@ function datasetFiles() {
   return { csv, json: JSON.stringify(rows, null, 2) + "\n" };
 }
 
+// ---------- public JSON API ----------
+// A free, key-less, CORS-enabled read API over the same verified density data that
+// powers the converters. GitHub Pages serves these as static files with
+// `access-control-allow-origin: *` and no rate limit, so they work from any
+// browser/app directly. Versioned under /api/v1/ so paths can stay stable.
+const API_VERSION = "v1";
+const API_BASE = "/api/" + API_VERSION + "/";
+// Volume units expressed in millilitres — lets a client convert ANY volume unit to
+// weight with one multiply, using an ingredient's grams_per_ml.
+const API_ML = {
+  milliliter: 1,
+  liter: 1000,
+  us_cup: 236.5882365,
+  us_tablespoon: 14.78676478125,
+  us_teaspoon: 4.92892159375,
+  us_fluid_ounce: 29.5735295625,
+  us_pint: 473.176473,
+  us_quart: 946.352946,
+  us_gallon: 3785.411784,
+  metric_cup: 250,
+  imperial_cup: 284.130625,
+  imperial_fluid_ounce: 28.4130625,
+  imperial_pint: 568.26125,
+  australian_tablespoon: 20,
+};
+const API_WEIGHT_G = { gram: 1, kilogram: 1000, ounce: OZ, pound: OZ * 16 };
+const API_LICENSE = { name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" };
+const API_ATTRIBUTION = {
+  required: true,
+  text: "Ingredient density data by ExactCup",
+  url: SITE.baseUrl + "/",
+  html: '<a href="' + SITE.baseUrl + '/">Ingredient density data by ExactCup</a>',
+};
+function rnd(n, p) { const f = Math.pow(10, p); return Math.round(n * f) / f; }
+
+function apiIngredient(i) {
+  const gpc = i.gramsPerCup;
+  return {
+    slug: i.slug,
+    name: i.name,
+    category: i.category,
+    category_name: catName(i.category),
+    aliases: i.aliases || [],
+    grams_per_us_cup: gpc,
+    grams_per_us_tablespoon: rnd(gpc / 16, 3),
+    grams_per_us_teaspoon: rnd(gpc / 48, 3),
+    grams_per_ml: rnd(gpc / API_ML.us_cup, 4),
+    ounces_per_us_cup: rnd(gpc / OZ, 3),
+    url: SITE.baseUrl + "/cups-to-grams/" + i.slug + "/",
+  };
+}
+// Per-ingredient document: the summary object plus precomputed tables, so a client
+// that only needs "how many grams is 2/3 cup" never has to do arithmetic.
+function apiIngredientDetail(i) {
+  const gpc = i.gramsPerCup;
+  const o = apiIngredient(i);
+  o.conversions = {
+    cups_to_grams: FRACTIONS.map(([label, n]) => ({ cups: label, grams: g2(n * gpc) })),
+    tablespoons_to_grams: [1, 2, 3, 4, 6, 8, 12, 16].map((n) => ({ tablespoons: n, grams: g2(n * gpc / 16) })),
+    grams_to_cups: [10, 25, 50, 100, 125, 150, 200, 250, 300, 500, 1000].map((g) => ({ grams: g, cups: rnd(g / gpc, 3) })),
+  };
+  o.source = SITE.baseUrl + "/ingredient-density-data/";
+  o.license = API_LICENSE;
+  o.attribution = API_ATTRIBUTION;
+  return o;
+}
+const API_ENDPOINTS = [
+  [API_BASE + "index.json", "This document: API metadata, license and the endpoint list."],
+  [API_BASE + "ingredients.json", "Every ingredient with its density (grams per US cup, tablespoon, teaspoon and mL)."],
+  [API_BASE + "ingredients/{slug}.json", "One ingredient, plus precomputed cups→grams, tablespoons→grams and grams→cups tables."],
+  [API_BASE + "categories.json", "Ingredient categories with the slugs in each."],
+  [API_BASE + "units.json", "Volume units in mL and weight units in grams, so you can convert any unit yourself."],
+];
+function apiRootDoc() {
+  return {
+    name: "ExactCup Ingredient Density API",
+    version: API_VERSION,
+    description: "Free read-only JSON API giving the weight in grams of one US cup (and per tablespoon, teaspoon and mL) for " +
+      DATA.ingredients.length + " cooking and baking ingredients. No API key, no sign-up, CORS enabled.",
+    documentation: SITE.baseUrl + "/api/",
+    auth: null,
+    https: true,
+    cors: true,
+    rate_limit: null,
+    updated: LASTMOD,
+    ingredient_count: DATA.ingredients.length,
+    license: API_LICENSE,
+    attribution: API_ATTRIBUTION,
+    dataset: SITE.baseUrl + "/ingredient-density-data/",
+    source_repository: "https://github.com/exactcup/ingredient-density-dataset",
+    endpoints: API_ENDPOINTS.map(([path, description]) => ({ path, url: SITE.baseUrl + path, description })),
+  };
+}
+// Map of output path (relative to dist/) -> file contents.
+function apiFiles() {
+  const files = {};
+  const J = (o) => JSON.stringify(o, null, 2) + "\n";
+  const meta = { updated: LASTMOD, license: API_LICENSE, attribution: API_ATTRIBUTION, documentation: SITE.baseUrl + "/api/" };
+  files[API_BASE + "index.json"] = J(apiRootDoc());
+  files[API_BASE + "ingredients.json"] = J(Object.assign({
+    count: DATA.ingredients.length,
+    unit: "grams per US customary cup (236.588 mL)",
+  }, meta, { ingredients: DATA.ingredients.map(apiIngredient) }));
+  files[API_BASE + "categories.json"] = J(Object.assign({}, meta, {
+    categories: Object.keys(DATA.categories).map((k) => ({
+      key: k, name: catName(k),
+      url: SITE.baseUrl + "/" + k + "-conversion-chart/",
+      ingredient_count: DATA.ingredients.filter((i) => i.category === k).length,
+      slugs: DATA.ingredients.filter((i) => i.category === k).map((i) => i.slug),
+    })),
+  }));
+  files[API_BASE + "units.json"] = J(Object.assign({}, meta, {
+    volume_ml: API_ML,
+    weight_grams: API_WEIGHT_G,
+    formula: {
+      volume_to_weight: "grams = volume_amount * volume_ml[unit] * grams_per_ml",
+      weight_to_volume: "volume_amount = grams / grams_per_ml / volume_ml[unit]",
+      note: "grams_per_ml comes from the ingredient object. Densities are nominal values for level, unpacked measures (brown sugar is packed); real weights vary by brand, humidity and technique by roughly 5%.",
+    },
+  }));
+  DATA.ingredients.forEach((i) => { files[API_BASE + "ingredients/" + i.slug + ".json"] = J(apiIngredientDetail(i)); });
+  return files;
+}
+
+// Human-facing docs for the API above. Indexed, linked sitewide — this is the page
+// developers cite when they use the data.
+function apiDocsPage() {
+  const canonical = "/api/";
+  const title = "Free Cups-to-Grams JSON API — Ingredient Density API (No Key) | ExactCup";
+  const description = "Free JSON API for ingredient densities: grams per US cup, tablespoon, teaspoon and mL for 80+ cooking ingredients. No API key, no sign-up, CORS enabled, CC BY 4.0.";
+  const sample = JSON.stringify((() => {
+    const d = apiIngredientDetail(ingBySlug("honey") || DATA.ingredients[0]);
+    // Full object, with only the long conversion tables trimmed for readability.
+    return Object.assign({}, d, {
+      conversions: { cups_to_grams: d.conversions.cups_to_grams.slice(3, 6), "…": "…" },
+    });
+  })(), null, 2);
+  const endpointRows = API_ENDPOINTS.map(([p, d]) =>
+    `<tr><td><code>GET ${esc(p)}</code></td><td>${esc(d)}</td></tr>`).join("");
+  const fieldRows = [
+    ["slug", "Stable identifier, also the URL segment on this site."],
+    ["name", "Display name, e.g. “All-Purpose Flour”."],
+    ["category / category_name", "One of " + Object.keys(DATA.categories).length + " groups (flour, sugar, dairy, baking, grain)."],
+    ["aliases", "Other names the ingredient goes by (“plain flour”, “confectioners sugar”) — useful for matching recipe text."],
+    ["grams_per_us_cup", "The core value: weight in grams of one level US customary cup (236.588 mL)."],
+    ["grams_per_us_tablespoon / grams_per_us_teaspoon", "The same density divided by 16 and 48."],
+    ["grams_per_ml", "Density in g/mL — multiply by any volume in mL to get grams."],
+    ["ounces_per_us_cup", "Weight in avoirdupois ounces per US cup."],
+    ["url", "The human page for that ingredient on ExactCup."],
+  ].map(([f, d]) => `<tr><td><code>${esc(f)}</code></td><td>${esc(d)}</td></tr>`).join("");
+  const faq = [
+    ["Do I need an API key?", "No. There is no key, no sign-up and no account. The endpoints are plain JSON files served over HTTPS from a CDN with permissive CORS headers, so you can fetch them straight from browser JavaScript, a server, a shell script or a spreadsheet."],
+    ["Is there a rate limit?", "There is no application rate limit — the files are static and cached by the CDN, so normal use costs nothing. Please cache responses on your side rather than re-fetching per request; the data changes rarely, and every response includes an 'updated' date you can check."],
+    ["Can I use it in a commercial app?", "Yes. The data is licensed CC BY 4.0, which permits commercial use, redistribution and adaptation. The only condition is attribution: credit ExactCup with a link, in your app's about/credits screen or near where the numbers appear."],
+    ["Where do the numbers come from?", "The same verified dataset behind the ExactCup converters: values follow the King Arthur Baking ingredient weight chart, cross-checked against USDA FoodData Central and standard culinary references. They are nominal weights for level, unpacked measures (brown sugar packed), accurate to roughly 5% in real kitchens."],
+    ["How do I convert grams back to cups?", "Divide by the density: cups = grams / grams_per_us_cup. Each per-ingredient document also ships a precomputed grams_to_cups table for common weights (100 g, 250 g, 500 g…), so simple apps need no arithmetic at all."],
+    ["Does it support metric or UK cups?", "Yes — units.json lists every volume unit in millilitres, including the 250 mL metric cup used in the UK, Australia and New Zealand, the 284 mL imperial cup and the 20 mL Australian tablespoon. Multiply the unit's mL value by grams_per_ml to get grams."],
+    ["Will the URLs keep working?", "The /api/v1/ paths are meant to be stable: new fields may be added, but existing fields and paths will not be removed or renamed inside v1. Anything breaking would ship as /api/v2/."],
+  ];
+  const jsonLd = [
+    {
+      "@context": "https://schema.org", "@type": "WebAPI",
+      name: "ExactCup Ingredient Density API",
+      description: description,
+      url: SITE.baseUrl + canonical,
+      documentation: SITE.baseUrl + canonical,
+      provider: { "@type": "Organization", name: SITE.brand, url: SITE.baseUrl },
+      license: API_LICENSE.url,
+      isAccessibleForFree: true,
+      termsOfService: SITE.baseUrl + canonical,
+    },
+    faqLd(faq),
+    breadcrumbLd([["Ingredient Density API", canonical]]),
+  ];
+  const body = `
+<h1>Ingredient Density API</h1>
+<p class="lead">A free JSON API for the question &ldquo;how many grams is one cup of&nbsp;___?&rdquo; &mdash; ${DATA.ingredients.length} cooking and baking ingredients, with grams per US cup, tablespoon, teaspoon and mL. No API key, no sign-up, CORS enabled, CC&nbsp;BY&nbsp;4.0.</p>
+<h2>Quick start</h2>
+<pre><code>curl ${SITE.baseUrl}${API_BASE}ingredients/honey.json</code></pre>
+<pre><code>${esc(sample)}</code></pre>
+<h2>Endpoints</h2>
+<div class="tw"><table><thead><tr><th>Endpoint</th><th>Returns</th></tr></thead><tbody>${endpointRows}</tbody></table></div>
+<p>Base URL: <code>${SITE.baseUrl}${API_BASE}</code> &mdash; start at <a href="${API_BASE}index.json">index.json</a>, which lists everything above. Browse the raw files: <a href="${API_BASE}ingredients.json">ingredients.json</a> &middot; <a href="${API_BASE}categories.json">categories.json</a> &middot; <a href="${API_BASE}units.json">units.json</a>.</p>
+<h2>The ingredient object</h2>
+<div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>${fieldRows}</tbody></table></div>
+<h2>Converting any unit</h2>
+<p>Because <code>grams_per_ml</code> is included, one multiply converts <em>any</em> volume unit &mdash; US cups, metric cups, imperial fluid ounces, Australian tablespoons &mdash; using the mL table in <a href="${API_BASE}units.json">units.json</a>:</p>
+<pre><code>const [ing, units] = await Promise.all([
+  fetch("${SITE.baseUrl}${API_BASE}ingredients/all-purpose-flour.json").then(r =&gt; r.json()),
+  fetch("${SITE.baseUrl}${API_BASE}units.json").then(r =&gt; r.json()),
+]);
+
+// 1.5 metric cups of flour, in grams
+const grams = 1.5 * units.volume_ml.metric_cup * ing.grams_per_ml;
+// -&gt; ${g2(1.5 * 250 * rnd((ingBySlug("all-purpose-flour") || DATA.ingredients[0]).gramsPerCup / API_ML.us_cup, 4))} g</code></pre>
+<p>Python is just as short:</p>
+<pre><code>import requests
+d = requests.get("${SITE.baseUrl}${API_BASE}ingredients/granulated-sugar.json").json()
+print(d["conversions"]["cups_to_grams"])   # [{"cups": "1/8", "grams": ...}, ...]</code></pre>
+<h2>Terms of use</h2>
+<ul>
+<li><strong>Free, no key, no limit.</strong> Static files on a CDN. Cache them &mdash; don&rsquo;t proxy a fetch per page view.</li>
+<li><strong>Licence: CC BY 4.0.</strong> Commercial use, redistribution and adaptation are all fine.</li>
+<li><strong>Attribution required.</strong> Credit ExactCup with a link wherever the numbers appear:</li>
+</ul>
+<textarea readonly rows="2" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">${esc(API_ATTRIBUTION.html)}</textarea>
+<ul>
+<li><strong>Accuracy.</strong> Nominal values (&plusmn;~5% in real kitchens) &mdash; see the <a href="/ingredient-density-data/">dataset page</a> for method and sources. Don&rsquo;t use them where a precise weight is safety-critical.</li>
+<li><strong>Versioning.</strong> Fields may be added inside <code>${API_BASE}</code>; nothing existing gets removed or renamed. Breaking changes would ship as <code>/api/v2/</code>.</li>
+</ul>
+<h2>Prefer something ready-made?</h2>
+<p>If you want the numbers rather than the plumbing: the same data is downloadable as <a href="/ingredient-density-data/">CSV or JSON</a>, there are <a href="/embed/">free embeddable converter widgets</a> for websites, and the <a href="/cups-to-grams/">cups to grams converter</a> covers every fraction of a cup by hand.</p>
+<h2>FAQ</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd }) };
+}
+
 // ---------- write ----------
 function writePage(canonical, html) {
   const dir = path.join(OUT, canonical.replace(/^\//, ""));
@@ -3070,7 +3293,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage(), apiDocsPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
@@ -3088,6 +3311,15 @@ function build() {
   { const df = datasetFiles();
     fs.writeFileSync(path.join(OUT, "ingredient-density-data", "ingredient-density.csv"), df.csv);
     fs.writeFileSync(path.join(OUT, "ingredient-density-data", "ingredient-density.json"), df.json); }
+
+  // free public JSON API: static, CORS-enabled endpoints under /api/v1/
+  { const af = apiFiles();
+    Object.keys(af).forEach((rel) => {
+      const out = path.join(OUT, rel.replace(/^\//, ""));
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      fs.writeFileSync(out, af[rel]);
+    });
+    console.log(`Wrote ${Object.keys(af).length} API files to ${API_BASE}`); }
 
   // Per-page lastmod: compare each page's content hash to the committed manifest.
   // Unchanged page -> keep its stored date. Changed/new page -> today's date.
