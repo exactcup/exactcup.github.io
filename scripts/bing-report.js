@@ -39,6 +39,20 @@ async function main() {
     out.topQueries = Array.isArray(q) ? q.slice(0, 15).map((x) => ({ query: x.Query, impr: x.Impressions, clicks: x.Clicks, pos: x.AvgImpressionPosition })) : [];
     const p = await call("GetPageStats");
     out.topPages = Array.isArray(p) ? p.slice(0, 15).map((x) => ({ page: x.Query || x.Url, impr: x.Impressions, clicks: x.Clicks })) : [];
+    // Clicks are what we actually optimise for, and they do NOT correlate with
+    // impressions — every click-carrying query we have has sat outside the top-15
+    // by impressions, so the slices above hid all of them (found in Review #12).
+    // Scan the FULL result sets for anything with a click and report it separately.
+    out.clickedQueries = Array.isArray(q)
+      ? q.filter((x) => x.Clicks > 0).sort((a, b) => b.Clicks - a.Clicks)
+          .map((x) => ({ query: x.Query, impr: x.Impressions, clicks: x.Clicks, pos: x.AvgImpressionPosition }))
+      : [];
+    out.clickedPages = Array.isArray(p)
+      ? p.filter((x) => x.Clicks > 0).sort((a, b) => b.Clicks - a.Clicks)
+          .map((x) => ({ page: x.Query || x.Url, impr: x.Impressions, clicks: x.Clicks }))
+      : [];
+    if (Array.isArray(q)) out.queryRowsTotal = q.length;
+    if (Array.isArray(p)) out.pageRowsTotal = p.length;
   } catch (e) {
     out.error = e.message;
   }
