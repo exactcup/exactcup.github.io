@@ -335,6 +335,42 @@ function chocolateTypesTable() {
   return `<table><thead><tr><th>Chocolate</th><th>1 US cup</th><th>1/2 cup</th><th>1/4 cup</th><th>100 g =</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Mix-ins a cookie/muffin recipe swaps for chocolate chips, for the swap-by-volume
+// table. Rows carrying a slug pull their weight from ingredients.json so they can
+// never drift from the page they link to; literal numbers are USDA FoodData Central
+// measured cup portions for forms that have no page of their own (mini chips 173 g
+// #167973, chunks 182 g #167976, chopped hazelnuts 115 g #170581, slivered almonds
+// 108 g #170567, shelled pistachios 123 g #170184, macadamias 134 g #170178, raw
+// shelled peanuts 146 g #172430). Only rendered on the chocolate-chips page.
+const CHIP_MIXINS = [
+  ["Chocolate chips, standard", { slug: "chocolate-chips" }, null],
+  ["Mini chocolate chips", 173, null],
+  ["Chocolate chunks / large chips", 182, null],
+  ["White chocolate chips", { slug: "white-chocolate-chips" }, "/cups-to-grams/white-chocolate-chips/"],
+  ["Chopped nuts, kind unspecified", { slug: "chopped-nuts" }, "/cups-to-grams/chopped-nuts/"],
+  ["Walnuts, chopped", { slug: "walnuts-chopped" }, "/cups-to-grams/walnuts-chopped/"],
+  ["Pecan halves", { slug: "pecan-halves" }, "/cups-to-grams/pecan-halves/"],
+  ["Hazelnuts, whole", { slug: "hazelnuts" }, "/cups-to-grams/hazelnuts/"],
+  ["Hazelnuts, chopped", 115, null],
+  ["Almonds, whole", { slug: "whole-almonds" }, "/cups-to-grams/whole-almonds/"],
+  ["Almonds, slivered", 108, null],
+  ["Cashews", { slug: "cashews" }, "/cups-to-grams/cashews/"],
+  ["Pistachios, shelled kernels", 123, null],
+  ["Macadamias", 134, null],
+  ["Peanuts, raw shelled", 146, null],
+  ["Raisins", { slug: "raisins" }, "/cups-to-grams/raisins/"],
+  ["Dried cranberries", { slug: "dried-cranberries" }, "/cups-to-grams/dried-cranberries/"],
+  ["Shredded coconut", { slug: "shredded-coconut" }, "/cups-to-grams/shredded-coconut/"],
+];
+function mixinSwapTable(gpc) {
+  const rows = CHIP_MIXINS.map(([label, w, href]) => {
+    const g = typeof w === "number" ? w : ingBySlug(w.slug).gramsPerCup;
+    const cell = href ? `<a href="${href}">${label}</a>` : label;
+    return `<tr><td>${cell}</td><td class="num">${g2(g / 4)} g</td><td class="num">${g2(g / 3)} g</td><td class="num">${g2(g / 2)} g</td><td class="num">${g2(g)} g</td><td class="num">${(gpc / g).toFixed(2)} cups</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Mix-in (swapped cup for cup)</th><th>1/4 cup</th><th>1/3 cup</th><th>1/2 cup</th><th>1 cup</th><th>Equal <em>weight</em> to 1 cup chips (${g2(gpc)} g)</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 // US chocolate-chip bag sizes, taken from the package weights printed in USDA's
 // Branded Foods data (Nestle and store brands: 6 oz/170 g, 9 oz/255 g,
 // 10 oz/283 g, 12 oz/340 g, 24 oz/680 g). Grams and cups are both computed —
@@ -552,6 +588,8 @@ function ingredientPage(ing) {
       [`How many cups is a 12 oz bag of chocolate chips?`, `Exactly ${cups2(bag12 / gpc)} cups. A 12 oz bag holds ${Math.round(bag12)} g and a US cup of chips weighs about ${g2(gpc)} g (6 oz) — which is why so many cookie recipes call for "1 bag" and "2 cups" interchangeably. The other US sizes: a 6 oz bag is 1 cup, a 9 oz bag ${cups2(9 * OZ / gpc)} cups, a 10 oz bag ${cups2(10 * OZ / gpc)} cups and a 24 oz bag ${cups2(24 * OZ / gpc)} cups.`],
       [`Do mini chips and chocolate chunks weigh the same as regular chocolate chips?`, `Close, but not identical — and the difference is not in the direction most people guess. USDA measured all three: standard chips 168 g per cup, mini chips 173 g, and large chips or chunks 182 g. Both the smaller and the bigger pieces pack heavier than a standard morsel, because standard chips are the shape that bridges and traps the most air. All of it sits inside a 15-gram band, so for a cookie dough the swap is free; for ganache or a bark where the chocolate-to-cream ratio matters, weigh.`],
       [`Why does the bag say 1 tablespoon of chocolate chips is 15 grams?`, `Because the tablespoon on a nutrition label does not scale up to a cup. Nearly every brand prints a serving of 1 tablespoon at 14–15 g (Nestle, Wegmans, Publix, Target and the store brands all do), but 16 of those would be 224–240 g — far more than the ${g2(gpc)} g a measured cup actually holds. Nestle's own 3 oz bag settles it by printing the other unit: 1/4 cup = 42 g, or 168 g per cup, matching USDA's measured figure. Chips simply cannot level in a spoon the way they settle in a cup, so when a recipe calls for cups, use the cup line on the chart above.`],
+      [`I want hazelnuts instead of 1/4 cup mini chocolate chips — how much should I use?`, `Use 1/4 cup of hazelnuts — about ${g2(ingBySlug("hazelnuts").gramsPerCup / 4)} g whole or ${g2(115 / 4)} g chopped, replacing the ${g2(173 / 4)} g of mini chips. Swap mix-ins by volume, not by weight: a cookie dough is built to carry a certain bulk of solid pieces, not a certain mass, so the cup measure is the part that has to stay the same. Matching the chips by weight instead would give you ${cups2(173 / ingBySlug("hazelnuts").gramsPerCup)} times the volume of nuts, because hazelnuts are lighter per cup than chocolate. One thing the swap does change is sweetness — chips are sweetened and hazelnuts are not — so going half chips and half nuts (1/8 cup each) is the common compromise.`],
+      [`Can I substitute nuts for chocolate chips by weight?`, `Better not to — go cup for cup instead. Nuts and dried fruit are all lighter per cup than chocolate, so an equal-weight swap silently overfills the dough: ${g2(gpc)} g (one cup of chips) is ${cups2(gpc / ingBySlug("walnuts-chopped").gramsPerCup)} cups of chopped walnuts, ${cups2(gpc / ingBySlug("raisins").gramsPerCup)} cups of raisins, and ${cups2(gpc / ingBySlug("shredded-coconut").gramsPerCup)} cups of shredded coconut. The one group where weight and volume agree is other chocolate — white chips, minis and chunks all sit within a few grams of standard morsels per cup, so those swap freely either way.`],
       [`How many grams is 1 square of baking chocolate?`, `About 29 grams — the classic Baker's square is 1 oz, and USDA lists it at 29 g. So a recipe calling for 4 squares of unsweetened chocolate wants roughly 116 g, which you can replace with the same weight of chips only if the sweetness works out (chips are sweetened, baking squares are not). Chopping a bar changes its cup weight completely: USDA measures grated chocolate at just 132 g per cup against 182 g for chunks, so a "cup of chopped chocolate" can swing 50 g on chop size alone. Weigh bars; don't cup them.`],
     );
   }
@@ -668,7 +706,13 @@ ${chipBagsTable(gpc)}
 ${chocolateTypesTable()}
 <p class="note">USDA FoodData Central measured cup weights (semisweet chips, mini chips and large chips; milk and white chocolate chips; grated baking chocolate). Rows linking to another page pull that page's own weight, so the numbers can't drift apart. Half-cup, quarter-cup and 100 g figures are computed.</p>
 <p>Two rows behave differently from the rest. <strong>Grated or shaved chocolate is far lighter at about 132 g per cup</strong> — shavings are mostly air — while chunks hacked off the same bar run 182 g, so "1 cup of chopped chocolate" can swing 50 g on how finely you chop. That is the one case where you should ignore the cup entirely and weigh the bar (a standard Baker's square is 1 oz, 29 g). And <a href="/cups-to-grams/cocoa-powder/">cocoa powder</a>, at ${g2(ingBySlug("cocoa-powder").gramsPerCup)} g per cup, weighs half what chips do: it is a fluffy, sift-able powder, not a solid, so never swap the two by volume.</p>
-<p>One last trap, and it catches almost everyone: <strong>don't multiply the tablespoon on the bag up to a cup</strong>. Brand labels put a serving at 1 tablespoon and 14–15 g, which would make a cup 224–240 g — nowhere near the ${g2(gpc)} g a measured cup holds. Nestle's own smaller bag prints the other unit and lands right on the data: 1/4 cup = 42 g, or 168 g per cup. Chips can't level in a spoon the way they settle in a cup, so use the cup line when a recipe says cups, and a scale when the chocolate-to-dough ratio actually matters — the <a href="/grams-to-cups/">grams to cups converter</a> and the <a href="/recipe-scaler/">recipe scaler</a> handle any amount in between.</p>` : ""}${ing.slug === "white-rice" ? `
+<p>One last trap, and it catches almost everyone: <strong>don't multiply the tablespoon on the bag up to a cup</strong>. Brand labels put a serving at 1 tablespoon and 14–15 g, which would make a cup 224–240 g — nowhere near the ${g2(gpc)} g a measured cup holds. Nestle's own smaller bag prints the other unit and lands right on the data: 1/4 cup = 42 g, or 168 g per cup. Chips can't level in a spoon the way they settle in a cup, so use the cup line when a recipe says cups, and a scale when the chocolate-to-dough ratio actually matters — the <a href="/grams-to-cups/">grams to cups converter</a> and the <a href="/recipe-scaler/">recipe scaler</a> handle any amount in between.</p>
+<h2>Swapping chips for nuts, raisins or another mix-in</h2>
+<p>Replacing the chips in a cookie with hazelnuts, walnuts or dried fruit is the one conversion where <strong>the obvious method is the wrong one</strong>. Weigh out ${g2(gpc)} g of hazelnuts to replace a ${g2(gpc)} g cup of chips and you will tip <strong>${cups2(gpc / ingBySlug("hazelnuts").gramsPerCup)} cups</strong> of nuts into a dough built for one — because hazelnuts are lighter per cup than chocolate. The rule that actually works: <strong>swap mix-ins cup for cup, not gram for gram.</strong> What a cookie dough can carry is <em>bulk</em>, not mass; the flour, butter and egg have to coat and hold a certain volume of solid pieces, and that is what stays fixed. So <strong>1/4 cup of mini chips comes out as 1/4 cup of hazelnuts</strong> — about ${g2(ingBySlug("hazelnuts").gramsPerCup / 4)} g whole or ${g2(115 / 4)} g chopped, against the ${g2(173 / 4)} g of chips they replace.</p>
+${mixinSwapTable(gpc)}
+<p class="note">Read across for the weight of each mix-in at the volume your recipe already calls for. The last column is the trap: it shows how many cups you would actually get if you matched the chips by weight instead — anything far from 1.00 cups changes the dough. Rows linking to another page pull that page's own weight; the rest are USDA measured cup portions.</p>
+<p>The last column sorts the mix-ins into three groups. <strong>Nuts and dried fruit are lighter than chocolate</strong>, so weight-swapping overfills the dough — ${g2(gpc)} g of <a href="/cups-to-grams/walnuts-chopped/">chopped walnuts</a> is ${cups2(gpc / ingBySlug("walnuts-chopped").gramsPerCup)} cups and ${g2(gpc)} g of <a href="/cups-to-grams/raisins/">raisins</a> is ${cups2(gpc / ingBySlug("raisins").gramsPerCup)} cups. <strong><a href="/cups-to-grams/shredded-coconut/">Shredded coconut</a> is the extreme case at ${cups2(gpc / ingBySlug("shredded-coconut").gramsPerCup)} cups</strong> — matching chips by weight would more than double the volume and give you a macaroon, not a cookie. Only the other chocolates sit near 1.00, which is why swapping <a href="/cups-to-grams/white-chocolate-chips/">white chips</a>, minis or chunks for standard morsels is genuinely free either way.</p>
+<p>Two caveats worth knowing before you swap. Chips are <strong>sweetened</strong> and nuts are not, so replacing all the chocolate in a recipe with nuts noticeably drops the sugar — most bakers split the difference and go half and half, which the cup-for-cup rule handles unchanged (1/2 cup each). And <strong>chopping changes a nut's cup weight in whichever direction its whole shape packed badly</strong>: hazelnuts fall from ${g2(ingBySlug("hazelnuts").gramsPerCup)} g a cup whole to about 115 g chopped, while walnuts <em>gain</em> going from halves to chopped. The <a href="/cups-to-grams/chopped-nuts/">chopped nuts page</a> has all 21 prep states measured, and the <a href="/baking-conversion-chart/">baking conversion chart</a> puts every chip, nut and seed weight side by side.</p>` : ""}${ing.slug === "white-rice" ? `
 <h2>Basmati, jasmine, arborio or sushi rice: what a cup of each weighs</h2>
 <p>Rice is bought by variety name but weighed by grain length, and that is the whole trick to converting it. USDA publishes cup weights by grain class, not brand: <strong>long-grain white rice is ${g2(gpc)} g per US cup</strong> (the value this page uses), medium-grain 195 g and short-grain 200 g. So <strong>half a cup of rice is about ${g2(gpc / 2)} g</strong>, a quarter cup about ${g2(gpc / 4)} g, and <strong>100 g of rice is about ${cups2(100 / gpc)} cups</strong> — a half cup plus a tablespoon. Basmati and jasmine are long-grain, so they take the ${g2(gpc)} g line; arborio, carnaroli and Japanese sushi rice sit at the plump short and medium-grain end.</p>
 ${riceTypesTable()}
