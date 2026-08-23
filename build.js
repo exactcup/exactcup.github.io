@@ -350,6 +350,56 @@ function chipBagsTable(gpc) {
   return `<table><thead><tr><th>Bag size</th><th>Grams</th><th>Cups</th><th>Tablespoons</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Nuts are sold and used in half a dozen prep states, and the state changes the
+// cup weight far more than the species does. Every figure below is a USDA
+// FoodData Central measured cup portion (SR Legacy): English walnuts #170187
+// (halves 100 g, chopped 117 g, pieces 120 g, ground 80 g), black walnuts
+// #170186 (chopped 125 g), pecans #170182 (halves 99 g, chopped 109 g), almonds
+// #170567 (whole 143 g, slivered 108 g, sliced 92 g, ground 95 g), hazelnuts
+// #170581 (whole 135 g, chopped 115 g, ground 75 g), cashews dry roasted
+// unsalted #170571 (137 g), pistachio kernels #170184 (123 g), macadamias
+// #170178 (134 g), Brazil nuts #170569 (133 g), pine nuts #170591 (135 g),
+// raw peanuts #172430 (146 g). The generic "chopped nuts" row pulls this page's
+// own weight from ingredients.json so it can never drift. Only rendered on the
+// chopped-nuts page.
+const NUT_FORMS = [
+  ["chopped-generic", "Chopped nuts, kind unspecified (this page)", null, { slug: "chopped-nuts" }],
+  ["walnut-chopped", "Walnuts, chopped", "/cups-to-grams/walnuts-chopped/", 117],
+  ["walnut-pieces", "Walnut pieces or chips", null, 120],
+  ["walnut-halves", "Walnuts, shelled halves", null, 100],
+  ["walnut-ground", "Walnuts, ground", null, 80],
+  ["black-walnut-chopped", "Black walnuts, chopped", null, 125],
+  ["pecan-chopped", "Pecans, chopped", null, 109],
+  ["pecan-halves", "Pecan halves", "/cups-to-grams/pecan-halves/", 99],
+  ["almond-whole", "Almonds, whole", "/cups-to-grams/whole-almonds/", 143],
+  ["almond-slivered", "Almonds, slivered", null, 108],
+  ["almond-sliced", "Almonds, sliced (flaked)", null, 92],
+  ["almond-ground", "Almonds, ground (almond meal)", "/cups-to-grams/almond-flour/", 95],
+  ["hazelnut-whole", "Hazelnuts, whole", "/cups-to-grams/hazelnuts/", 135],
+  ["hazelnut-chopped", "Hazelnuts, chopped", null, 115],
+  ["hazelnut-ground", "Hazelnuts, ground", null, 75],
+  ["cashew-roasted", "Cashews, dry-roasted halves and whole", "/cups-to-grams/cashews/", 137],
+  ["pistachio", "Pistachios, shelled kernels", null, 123],
+  ["macadamia", "Macadamias, whole or halves", null, 134],
+  ["brazil", "Brazil nuts, whole", null, 133],
+  ["pine-nut", "Pine nuts", "/cups-to-grams/pine-nuts/", 135],
+  ["peanut-raw", "Peanuts, raw shelled", null, 146],
+];
+function nutG(id) {
+  const row = NUT_FORMS.find((r) => r[0] === id);
+  const w = row[3];
+  return typeof w === "number" ? w : ingBySlug(w.slug).gramsPerCup;
+}
+function nutFormsTable() {
+  const rows = NUT_FORMS.map(([id, label, href]) => {
+    const g = nutG(id);
+    const cell = href ? `<a href="${href}">${label}</a>` : label;
+    const c = cups2(100 / g);
+    return `<tr><td>${cell}</td><td class="num">${g2(g)} g</td><td class="num">${g2(g / 2)} g</td><td class="num">${g2(g / 4)} g</td><td class="num">${c} cup${c === 1 ? "" : "s"}</td></tr>`;
+  }).join("");
+  return `<div class="tw"><table><thead><tr><th>Nuts, as prepared</th><th>1 US cup</th><th>1/2 cup</th><th>1/4 cup</th><th>100 g =</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 function riceTypesTable() {
   const rows = RICE_TYPES.map(([label, g, approx]) =>
     `<tr><td>${label}</td><td class="num">${approx ? "~" : ""}${g2(g)} g</td><td class="num">${approx ? "~" : ""}${g2(g / 2)} g</td><td class="num">${cups2(100 / g)} cups</td></tr>`
@@ -396,6 +446,8 @@ function ingredientPage(ing) {
     ? `How many grams is a cup of rice? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 100 g = ${cups2(100 / gpc)} cups. Full chart plus basmati, jasmine, arborio, brown and sushi rice weights.`
     : ing.slug === "chocolate-chips"
     ? `How many grams is a cup of chocolate chips? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, and a 12 oz bag = ${cups2(12 * OZ / gpc)} cups. Full chart plus mini chips, chunks and every bag size in grams.`
+    : ing.slug === "chopped-nuts"
+    ? `How many grams is 1 cup of chopped nuts? About ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Full chart plus USDA cup weights for chopped walnuts, pecans, hazelnuts, slivered almonds and ground nuts.`
     : ing.slug === "rolled-oats"
     ? `How many grams is a cup of oats? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g — rolled or quick. A 250 mL metric (NZ/AU) cup = ${Math.round(gpc / 236.588 * 250)} g. Full chart plus jumbo, porridge and steel-cut oat weights.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
@@ -515,6 +567,17 @@ function ingredientPage(ing) {
       [`How many grams is 1 cup of instant rice?`, `About 95 grams (USDA) — barely half the ${g2(gpc)} g of regular uncooked rice. Instant or "minute" rice is pre-cooked and dehydrated, so its grains are puffed and full of air. Never swap it by weight with regular rice: a cup of instant rice is about the same amount of food as half a cup of regular rice, and it needs far less water and time.`],
     );
   }
+  if (ing.slug === "chopped-nuts") {
+    faq.push(
+      [`How many grams is 1 cup of chopped nuts?`, `About ${g2(gpc)} grams — the working figure for the generic "1 cup chopped nuts" a cookie, brownie or banana-bread recipe means. USDA measured the common ones individually and they land in a tight band: chopped pecans ${nutG("pecan-chopped")} g per cup, chopped hazelnuts ${nutG("hazelnut-chopped")} g, chopped walnuts ${nutG("walnut-chopped")} g, walnut pieces ${nutG("walnut-pieces")} g and chopped black walnuts ${nutG("black-walnut-chopped")} g. Anything in that ${nutG("pecan-chopped")}–${nutG("black-walnut-chopped")} g range is defensible, so half a cup is about ${g2(gpc / 2)} g and a quarter cup about ${g2(gpc / 4)} g whichever nut you use.`],
+      [`Is "1 cup chopped nuts" the same as "1 cup nuts, chopped"?`, `No, and the comma is the whole difference. "1 cup chopped nuts" means chop first, then measure the pieces; "1 cup nuts, chopped" means measure the whole nuts, then chop them. With walnuts that is ${nutG("walnut-chopped")} g versus ${nutG("walnut-halves")} g — about ${Math.round((nutG("walnut-chopped") / nutG("walnut-halves") - 1) * 100)}% more nuts in the first reading, because the pieces fill the gaps that curved halves leave. If the recipe is ambiguous, chop-then-measure is the more common intent in US baking, and weighing removes the question entirely.`],
+      [`Do nuts weigh more chopped or whole?`, `It depends on the shape of the whole nut, which is why there is no single rule. Nuts that come as big curved halves gain weight per cup when chopped, because the small pieces fill the voids: walnut halves ${nutG("walnut-halves")} g per cup versus ${nutG("walnut-chopped")} g chopped, pecan halves ${nutG("pecan-halves")} g versus ${nutG("pecan-chopped")} g chopped. Compact round nuts go the other way, since chopping turns a well-packing sphere into angular flakes: whole hazelnuts ${nutG("hazelnut-whole")} g versus ${nutG("hazelnut-chopped")} g chopped, whole almonds ${nutG("almond-whole")} g versus ${nutG("almond-slivered")} g slivered and ${nutG("almond-sliced")} g sliced.`],
+      [`How many grams is 1 cup of ground nuts?`, `Much less than you would guess — grinding always makes a cup lighter. USDA measures ground walnuts at ${nutG("walnut-ground")} g per cup (against ${nutG("walnut-halves")} g for halves), ground hazelnuts at ${nutG("hazelnut-ground")} g (against ${nutG("hazelnut-whole")} g whole) and ground almonds at ${nutG("almond-ground")} g (against ${nutG("almond-whole")} g whole). Ground almonds are the same thing as almond meal or almond flour, which this site lists at ${g2(ingBySlug("almond-flour").gramsPerCup)} g per cup — near-identical to USDA's ${nutG("almond-ground")} g. So a recipe asking for "1 cup ground nuts" wants roughly a third less nut by weight than one asking for a cup of whole ones.`],
+      [`How many grams is 1 cup of chopped walnuts or chopped pecans?`, `Chopped walnuts are about ${nutG("walnut-chopped")} grams per US cup and chopped pecans about ${nutG("pecan-chopped")} g (USDA measured both). Half a cup is therefore ${g2(nutG("walnut-chopped") / 2)} g of walnuts or ${g2(nutG("pecan-chopped") / 2)} g of pecans, and a quarter cup ${g2(nutG("walnut-chopped") / 4)} g or ${g2(nutG("pecan-chopped") / 4)} g. Buying them as halves instead? A cup of walnut halves is ${nutG("walnut-halves")} g and a cup of pecan halves ${nutG("pecan-halves")} g.`],
+      [`How many cups is 100 grams of chopped nuts?`, `About ${cups2(100 / gpc)} cups — a little over 3/4 of a cup. Working from other common pack sizes: 200 g is about ${cups2(200 / gpc)} cups, 250 g about ${cups2(250 / gpc)} cups, and 500 g about ${cups2(500 / gpc)} cups. A US cup of chopped nuts is roughly ${g2(gpc / OZ)} oz, so a 1 lb (454 g) bag holds about ${cups2(454 / gpc)} cups.`],
+      [`Should I weigh nuts before or after toasting?`, `Before, if the recipe gives a weight and you are toasting them yourself. Toasting drives off moisture, so the same nuts weigh a little less afterwards — a few percent — and the recipe's gram figure was almost certainly written for raw nuts. The bigger effect is chop order: toast whole or in halves for even colour, then chop and weigh only if the recipe says "chopped nuts" rather than "nuts, chopped".`],
+    );
+  }
   const jsonLd = [
     faqLd(faq),
     breadcrumbLd([
@@ -611,7 +674,14 @@ ${chocolateTypesTable()}
 ${riceTypesTable()}
 <p class="note">Uncooked weights. USDA FoodData Central for the grain classes; basmati, jasmine and risotto rices are mapped to their grain class (brand labels printing a 1/4-cup serving mostly run 45–52 g, or 180–208 g per cup). Half-cup and 100 g figures are computed from the cup weight.</p>
 <p>Two rows above are worth a second look. <strong>Brown rice weighs the same as white</strong> at the same grain length (${g2(gpc)} g per cup long-grain, 190 g medium) — the bran adds cooking time and water, not weight — so recipes swap by volume or weight without recalculating. <strong>Instant rice is the outlier at about 95 g per cup</strong>, roughly half of regular rice: it is pre-cooked and dried, so its grains are puffed and airy. Swapping it cup for cup by weight is the single most common rice-conversion mistake. Wild rice, at 160 g per cup, is not really rice at all — it is the seed of an aquatic grass.</p>
-<p>Cooking rather than baking? A <strong>rice-cooker cup is 180 mL</strong> (the Japanese <em>gō</em>), about three-quarters of a US cup — roughly <strong>${Math.round(gpc / 236.588 * 180)} g</strong> of long-grain rice or ${Math.round(200 / 236.588 * 180)} g of short-grain, which is why a "5-cup" cooker holds less than five US cups. A 250 mL metric cup (UK, Australia, New Zealand) holds about ${Math.round(gpc / 236.588 * 250)} g. And weigh rice <em>dry, before rinsing</em>: rinsed grains hold surface and absorbed water (soaking can add around 20% to the weight), so a drained cup is no longer ${g2(gpc)} g. Want the cooked amount instead? A cup of dry rice cooks up to roughly 3 cups — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math both ways, and the <a href="/portion-calculator/">portion calculator</a> turns it into grams of dry rice per person.</p>` : ""}
+<p>Cooking rather than baking? A <strong>rice-cooker cup is 180 mL</strong> (the Japanese <em>gō</em>), about three-quarters of a US cup — roughly <strong>${Math.round(gpc / 236.588 * 180)} g</strong> of long-grain rice or ${Math.round(200 / 236.588 * 180)} g of short-grain, which is why a "5-cup" cooker holds less than five US cups. A 250 mL metric cup (UK, Australia, New Zealand) holds about ${Math.round(gpc / 236.588 * 250)} g. And weigh rice <em>dry, before rinsing</em>: rinsed grains hold surface and absorbed water (soaking can add around 20% to the weight), so a drained cup is no longer ${g2(gpc)} g. Want the cooked amount instead? A cup of dry rice cooks up to roughly 3 cups — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math both ways, and the <a href="/portion-calculator/">portion calculator</a> turns it into grams of dry rice per person.</p>` : ""}${ing.slug === "chopped-nuts" ? `
+<h2>How many grams is 1 cup of chopped nuts?</h2>
+<p>About <strong>${g2(gpc)} grams</strong> — that is the figure to use when a recipe just says "1 cup chopped nuts" without naming the nut, and it is close to the truth for all of them. USDA measured the common nuts one at a time and chopped cups sit in a narrow band: <strong>chopped pecans ${nutG("pecan-chopped")} g</strong>, <strong>chopped hazelnuts ${nutG("hazelnut-chopped")} g</strong>, <strong>chopped walnuts ${nutG("walnut-chopped")} g</strong>, walnut pieces ${nutG("walnut-pieces")} g and chopped black walnuts ${nutG("black-walnut-chopped")} g. So <strong>half a cup of chopped nuts is about ${g2(gpc / 2)} g</strong>, a third of a cup ${g2(gpc / 3)} g, a quarter cup ${g2(gpc / 4)} g — and <strong>100 g is about ${cups2(100 / gpc)} cups</strong>. The prep state, not the species, is what really moves the number:</p>
+${nutFormsTable()}
+<p class="note">USDA FoodData Central measured cup portions: English walnuts (#170187), black walnuts (#170186), pecans (#170182), almonds (#170567), hazelnuts (#170581), dry-roasted cashews (#170571), pistachio kernels (#170184), macadamias (#170178), Brazil nuts (#170569), pine nuts (#170591), raw peanuts (#172430). Half-cup, quarter-cup and 100 g figures are computed from the cup weight.</p>
+<p>Read down that table and the surprise is that <strong>chopping does not push the weight in one direction</strong> — it depends on the shape of the nut you started with. Nuts sold as big curved halves get <em>heavier</em> per cup when chopped, because the small pieces drop into voids that halves cannot fill: walnuts go from ${nutG("walnut-halves")} g a cup as halves to ${nutG("walnut-chopped")} g chopped, pecans from ${nutG("pecan-halves")} g to ${nutG("pecan-chopped")} g. Compact, roughly spherical nuts go the other way, since cutting a good-packing sphere into angular flakes only adds air: whole hazelnuts ${nutG("hazelnut-whole")} g a cup against ${nutG("hazelnut-chopped")} g chopped, whole almonds ${nutG("almond-whole")} g against ${nutG("almond-slivered")} g slivered and just ${nutG("almond-sliced")} g sliced.</p>
+<p>That is also why the comma in a recipe matters. <strong>"1 cup chopped nuts" means chop first, then measure; "1 cup nuts, chopped" means measure whole, then chop.</strong> With walnuts the two readings differ by about ${Math.round((nutG("walnut-chopped") / nutG("walnut-halves") - 1) * 100)}% (${nutG("walnut-chopped")} g versus ${nutG("walnut-halves")} g) — enough to matter in a batter that is already short on structure. Grinding exaggerates the same effect in the opposite direction: <strong>a cup of ground nuts is far lighter than a cup of whole ones</strong> — ground walnuts ${nutG("walnut-ground")} g, ground hazelnuts ${nutG("hazelnut-ground")} g, ground almonds ${nutG("almond-ground")} g. Ground almonds are exactly what almond meal and <a href="/cups-to-grams/almond-flour/">almond flour</a> are, and our flour page's ${g2(ingBySlug("almond-flour").gramsPerCup)} g per cup lines up with USDA's ${nutG("almond-ground")} g measurement.</p>
+<p>One honest caveat about nut weights generally: because nuts are irregular and vary by size grade and lot, published figures spread more than they do for flour or sugar — 10–15% between sources is normal. Raw cashews are the clearest example: US bag labels for whole raw cashews almost all print 1/4 cup = 28–30 g (112–120 g per cup, where our <a href="/cups-to-grams/cashews/">cashews</a> page sits), while USDA's only measured cup portion is the ${nutG("cashew-roasted")} g dry-roasted entry above. Our <a href="/cups-to-grams/hazelnuts/">hazelnut</a> and <a href="/cups-to-grams/pine-nuts/">pine nut</a> pages use the baking-chart convention of 142 g against USDA's ${nutG("hazelnut-whole")} g and ${nutG("pine-nut")} g for the same reason. None of that spread changes a cookie; all of it argues for the scale when the ratio matters. The <a href="/grams-to-cups/">grams to cups converter</a> runs it backwards from any pack weight, the <a href="/recipe-scaler/">recipe scaler</a> handles a doubled batch, and the <a href="/baking-conversion-chart/">baking conversion chart</a> has the 100 g reverse lookups for nuts and seeds side by side.</p>` : ""}
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
 <h2>Other ${esc(catName(ing.category)).toLowerCase()}</h2>
