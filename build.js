@@ -84,6 +84,7 @@ const ALL_TOOLS = [
   ["/air-fryer-conversion-calculator/", "Air Fryer Converter", "Turn any oven recipe into air-fryer time & temp."],
   ["/recipe-scaler/", "Recipe Scaler", "Scale a recipe up or down by servings, instantly."],
   ["/recipe-halving-chart/", "Recipe Halving Chart", "Half of 3/4 cup, 1/3 cup & every other measure."],
+  ["/recipe-weight-calculator/", "Recipe Weight Calculator", "Add up several ingredients — total grams for the whole list."],
   ["/kitchen-conversion-chart/", "Printable Kitchen Chart", "Every must-know conversion on one printable page."],
   ["/oven-temperature-converter/", "Oven Temperature", "°F ↔ °C ↔ gas mark, with a quick chart."],
   ["/pan-size-converter/", "Pan Size Converter", "Swapping pans? Scale the recipe by pan area."],
@@ -160,6 +161,7 @@ th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
 th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.03em}
 td.num{font-variant-numeric:tabular-nums}
 .tw{overflow-x:auto;margin:14px 0}.tw table{margin:0;min-width:640px}
+@media(max-width:560px){.mw-head{display:none}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 .chips a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:14px;color:var(--fg)}
 .chips a:hover{border-color:var(--accent);text-decoration:none}
@@ -762,7 +764,7 @@ function masterPage() {
 </div>
 <h2>Browse all ingredients</h2>
 ${lists}
-<p style="margin-top:10px">Working backwards from a weight? Use the <a href="/grams-to-cups/">grams to cups converter</a>.</p>
+<p style="margin-top:10px">Working backwards from a weight? Use the <a href="/grams-to-cups/">grams to cups converter</a>. Need several ingredients added into one number — the total weight of a whole recipe, or a running total to weigh into one bowl? That is the <a href="/recipe-weight-calculator/">recipe weight calculator</a>.</p>
 <p class="note">Why ingredient matters: 1 cup of all-purpose flour ≈ 120 g, but 1 cup of granulated sugar ≈ 200 g and 1 cup of honey ≈ 340 g. Always convert by ingredient, not by a single ratio.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: {
     "@context": "https://schema.org", "@type": "WebApplication", name: "Cups to Grams Converter",
@@ -1093,7 +1095,7 @@ function scalerPage() {
   <div style="margin-top:12px"><label>Scaled recipe</label><pre id="scaled-out" style="white-space:pre-wrap;background:var(--accent2);border:1px solid #fed7aa;border-radius:12px;padding:14px;margin:0">—</pre></div>
 </div>
 <p class="note">Tip: scaling works for most ingredients, but baking times, pan sizes, and leavening (baking soda/powder) don't always scale linearly. Adjust with judgment for big changes.</p>
-<p>Just cutting a recipe in half? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half (and a third) of every common cup and spoon measure — like half of 3/4 cup — as amounts you can actually measure.</p>
+<p>Just cutting a recipe in half? The <a href="/recipe-halving-chart/">recipe halving chart</a> shows half (and a third) of every common cup and spoon measure — like half of 3/4 cup — as amounts you can actually measure. And if you want the scaled list as one weight instead of a set of measures — for portioning dough, or weighing everything into a single bowl — the <a href="/recipe-weight-calculator/">recipe weight calculator</a> totals a whole ingredient list in grams.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: [appLd("Recipe Scaler", description, canonical), faqLd(faq)], cfg: { type: "scaler" } }) };
@@ -1936,6 +1938,232 @@ ${revRows}
 <p>The most-repeated wrong number in this corner of the kitchen is <em>"rice triples in weight when cooked."</em> It doesn't: USDA composition data (checked two independent ways — calorie ratio and dry-solids ratio) puts cooked white rice at <strong>×2.8 its dry weight</strong>, and the USA Rice Federation itself only says rice <em>"more than doubles."</em> The <em>volume</em> roughly triples — that's the true half of the saying. The gap matters the moment you portion with a scale: 100 g of dry rice is ~280 g cooked, not 300. Each grain has its own factor — quinoa ×3.06, pasta ×2.37, bulgur ×4.1, and oatmeal an outlier <strong>×5.4</strong> — which is exactly what the calculator above applies.</p>
 <h2>Need a different conversion?</h2>
 <p>Feeding a crowd? The <a href="/portion-calculator/">portion calculator</a> gives dry grams per person for rice, pasta and more — pair it with this page to see the cooked pile. Weighing the dry grain first? The <a href="/grain-conversion-chart/">grain conversion chart</a> has cups-to-grams for every grain here, with <a href="/cups-to-grams/white-rice/">white rice</a>, <a href="/cups-to-grams/quinoa/">quinoa</a> and <a href="/cups-to-grams/rolled-oats/">rolled oats</a> each getting a full converter. Scaling the whole recipe up or down instead? Use the <a href="/recipe-scaler/">recipe scaler</a>.</p>
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
+}
+
+// ---------- Recipe Weight Calculator (/recipe-weight-calculator/) ----------
+// Multi-ingredient combined-weight tool: the query shape no answer box handles
+// ("1 cup rice and 1/2 cup quinoa" = 270 g). Every gram figure on this page is
+// pulled from data/ingredients.json (the site's own verified weights), so the
+// page can never disagree with the ingredient pages it links to. The only data
+// added here is the egg ladder, verified first-hand against USDA FoodData
+// Central (SR Legacy, 2026-08-24): whole egg #171287 — small 38 / medium 44 /
+// large 50 / extra large 56 / jumbo 63 g out of the shell, 1 cup = 243 g
+// (4.86 large eggs); white #172183 = 33 g and yolk #172184 = 17 g per large egg
+// (33 + 17 = 50, internally consistent). Butter sticks are definitional:
+// 1 stick = 1/2 cup = half our verified 227 g/cup.
+const EGG_SIZES = [["Small", 38], ["Medium", 44], ["Large", 50], ["Extra large", 56], ["Jumbo", 63]];
+const EGG_LARGE = 50, EGG_CUP = 243, EGG_WHITE = 33, EGG_YOLK = 17;
+const STICK_CUPS = 0.5;
+
+function recipeWeightPage() {
+  const U2C = { cups: 1, tbsp: 1 / 16, tsp: 1 / 48, floz: 1 / 8 };
+  const VULG = [[0.125, "1/8"], [1 / 6, "1/6"], [0.25, "1/4"], [1 / 3, "1/3"], [0.375, "3/8"], [0.5, "1/2"], [2 / 3, "2/3"], [0.75, "3/4"]];
+  // "2 1/4" style amount label
+  function amtLabel(a) {
+    const whole = Math.floor(a + 1e-9), rest = a - whole;
+    if (rest < 0.01) return String(whole);
+    for (const [v, s] of VULG) if (Math.abs(rest - v) < 0.005) return (whole ? whole + " " : "") + s;
+    return String(Math.round(a * 100) / 100);
+  }
+  function unitWord(u, a) {
+    // English takes the singular for anything up to one: "1/2 cup", "1 cup", "1 1/2 cups"
+    const one = a <= 1 + 1e-9;
+    if (u === "cups") return one ? "cup" : "cups";
+    if (u === "floz") return "fl oz";
+    if (u === "stick") return one ? "stick" : "sticks";
+    if (u === "each") return one ? "large egg" : "large eggs";
+    return u;
+  }
+  // one recipe/combination line -> { g, cups, html }
+  function line([a, u, slug]) {
+    if (slug === "egg") {
+      const g = a * EGG_LARGE;
+      return { g, cups: g / EGG_CUP, html: `${amtLabel(a)} ${unitWord("each", a)}` };
+    }
+    const ing = ingBySlug(slug);
+    let cups, g;
+    if (u === "g") { g = a; cups = a / ing.gramsPerCup; }
+    else if (u === "oz") { g = a * OZ; cups = g / ing.gramsPerCup; }
+    else if (u === "stick") { cups = a * STICK_CUPS; g = cups * ing.gramsPerCup; }
+    else { cups = a * U2C[u]; g = cups * ing.gramsPerCup; }
+    const nm = ing.name.toLowerCase();
+    const amt = u === "g" || u === "oz" ? `${amtLabel(a)} ${u}` : `${amtLabel(a)} ${unitWord(u, a)}`;
+    return { g, cups, html: `${amt} <a href="/cups-to-grams/${ing.slug}/">${esc(nm)}</a>`, plain: `${amt} ${nm}` };
+  }
+  const gR = (g) => (g < 10 ? g2(g) : Math.round(g));
+  const sumG = (spec) => spec.reduce((t, s) => t + line(s).g, 0);
+  const sumC = (spec) => spec.reduce((t, s) => t + line(s).cups, 0);
+
+  // ---- combinations table: the "1 cup A and 1/2 cup B" query shape ----
+  const COMBOS = [
+    [[1, "cups", "white-rice"], [0.5, "cups", "quinoa"]],
+    [[1, "cups", "all-purpose-flour"], [1, "cups", "granulated-sugar"]],
+    [[2, "cups", "all-purpose-flour"], [1, "cups", "granulated-sugar"]],
+    [[1, "cups", "all-purpose-flour"], [0.5, "cups", "cocoa-powder"]],
+    [[1, "cups", "rolled-oats"], [1, "cups", "all-purpose-flour"]],
+    [[1, "cups", "butter"], [1, "cups", "granulated-sugar"]],
+    [[1, "cups", "brown-sugar"], [0.5, "cups", "granulated-sugar"]],
+    [[1, "cups", "milk"], [1, "each", "egg"]],
+    [[1, "cups", "white-rice"], [1, "cups", "water"]],
+    [[1, "cups", "chocolate-chips"], [1, "cups", "chopped-nuts"]],
+    [[0.5, "cups", "peanut-butter"], [0.5, "cups", "honey"]],
+    [[1, "cups", "all-purpose-flour"], [0.5, "cups", "butter"], [0.25, "cups", "granulated-sugar"]],
+  ];
+  const comboRows = COMBOS.map((spec) => {
+    const parts = spec.map(line);
+    const total = parts.reduce((t, p) => t + p.g, 0);
+    return `<tr><td>${parts.map((p) => p.html).join(" + ")}</td><td>${parts.map((p) => gR(p.g) + " g").join(" + ")}</td><td class="num"><strong>${gR(total)} g</strong></td><td class="num">${g2(total / OZ)} oz</td></tr>`;
+  }).join("\n");
+
+  // ---- worked recipes: totals + running totals, all computed ----
+  // Ordinary household proportions, used only to show the arithmetic. Teaspoon-
+  // scale extras (soda, vanilla, spices) are noted but not itemised: they move a
+  // kilo-scale total by a few grams.
+  const RECIPES = [
+    { name: "Chocolate chip cookies", per: 40, piece: "cookie",
+      spec: [[2.25, "cups", "all-purpose-flour"], [1, "cups", "butter"], [0.75, "cups", "granulated-sugar"], [0.75, "cups", "brown-sugar"], [2, "each", "egg"], [2, "cups", "chocolate-chips"], [1, "tsp", "salt"]] },
+    { name: "Pancake batter", per: 60, piece: "pancake",
+      spec: [[1.5, "cups", "all-purpose-flour"], [1, "tbsp", "granulated-sugar"], [1.25, "cups", "milk"], [1, "each", "egg"], [3, "tbsp", "butter"], [0.5, "tsp", "salt"]] },
+    { name: "Banana bread", per: null, piece: null,
+      spec: [[2, "cups", "all-purpose-flour"], [1, "cups", "granulated-sugar"], [0.5, "cups", "butter"], [2, "each", "egg"], [1.5, "cups", "mashed-banana"], [0.5, "cups", "chopped-nuts"], [1, "tsp", "salt"]] },
+  ];
+  function recipeTable(r) {
+    let run = 0;
+    const rows = r.spec.map((s) => {
+      const p = line(s);
+      run += p.g;
+      return `<tr><td>${p.html}</td><td class="num">${gR(p.g)} g</td><td class="num">${Math.round(run)} g</td></tr>`;
+    }).join("\n");
+    const total = run, cups = sumC(r.spec);
+    const yieldLine = r.per ? ` — about <strong>${Math.round(total / r.per)} ${r.piece}s</strong> at ${r.per} g each` : "";
+    return `<h3>${esc(r.name)}</h3>
+<table><thead><tr><th>Ingredient</th><th>Weight</th><th>Running total</th></tr></thead><tbody>
+${rows}
+</tbody><tfoot><tr><th>Total</th><th class="num">${Math.round(total)} g</th><th class="num">${total >= 1000 ? g2(total / 1000) + " kg" : g2(total / OZ) + " oz"}</th></tr></tfoot></table>
+<p class="note">${Math.round(total)} g = ${g2(total / OZ)} oz = ${g2(total / 453.59237)} lb, from about ${g2(cups)} cups of ingredients${yieldLine}. Baking soda, baking powder, vanilla and spices add only a few grams between them, so they are left off the list.</p>`;
+  }
+
+  // ---- density sanity band, computed from the dataset ----
+  const bands = Object.keys(DATA.categories).map((k) => {
+    const list = DATA.ingredients.filter((i) => i.category === k).map((i) => i.gramsPerCup).sort((a, b) => a - b);
+    const lightest = DATA.ingredients.filter((i) => i.category === k).sort((a, b) => a.gramsPerCup - b.gramsPerCup)[0];
+    const heaviest = DATA.ingredients.filter((i) => i.category === k).sort((a, b) => b.gramsPerCup - a.gramsPerCup)[0];
+    const mid = list[Math.floor(list.length / 2)];
+    return { k, lightest, heaviest, mid, n: list.length };
+  });
+  const bandRows = bands.map((b) => `<tr><td>${esc(catName(b.k))} <span class="note" style="border:0;padding:0;margin:0">(${b.n})</span></td><td class="num">${g2(b.lightest.gramsPerCup)}–${g2(b.heaviest.gramsPerCup)} g</td><td class="num">${g2(b.mid)} g</td><td>${esc(b.lightest.name.toLowerCase())} (lightest) → ${esc(b.heaviest.name.toLowerCase())} (heaviest)</td></tr>`).join("\n");
+  const allG = DATA.ingredients.map((i) => i.gramsPerCup);
+  const minAll = Math.min(...allG), maxAll = Math.max(...allG);
+  const lightestName = DATA.ingredients.find((i) => i.gramsPerCup === minAll).name.toLowerCase();
+  const heaviestName = DATA.ingredients.find((i) => i.gramsPerCup === maxAll).name.toLowerCase();
+
+  // ---- egg table ----
+  const eggRows = EGG_SIZES.map(([nm, g]) => `<tr><td>${nm}${g === EGG_LARGE ? " (the recipe default)" : ""}</td><td class="num">${g} g</td><td class="num">${g * 2} g</td><td class="num">${g * 3} g</td><td class="num">${g2(g / OZ)} oz</td></tr>`).join("\n");
+
+  // ---- widget options ----
+  const ITEMS = DATA.ingredients.map((i) => ({ slug: i.slug, name: i.name, gpc: i.gramsPerCup }));
+  ITEMS.forEach((it) => { if (it.slug === "butter") { it.each = 227 / 2; it.eachLabel = "stick"; } });
+  ITEMS.push({ slug: "egg", name: "Eggs, large (whole)", gpc: EGG_CUP, each: EGG_LARGE, eachLabel: "large egg", eachWhole: true });
+  const optGroups = Object.keys(DATA.categories).map((k) =>
+    `<optgroup label="${esc(catName(k))}">${DATA.ingredients.filter((i) => i.category === k).map((i) => `<option value="${i.slug}">${esc(i.name)}</option>`).join("")}</optgroup>`
+  ).join("") + `<optgroup label="Eggs"><option value="egg">Eggs, large (whole)</option></optgroup>`;
+  const UNIT_OPTS = [["cups", "cups"], ["tbsp", "tbsp"], ["tsp", "tsp"], ["floz", "fl oz"], ["g", "grams"], ["oz", "ounces"], ["each", "each (egg/stick)"]];
+  const PREFILL = [["2", "cups", "all-purpose-flour"], ["1", "cups", "granulated-sugar"], ["1/2", "cups", "butter"], ["2", "each", "egg"]];
+  const widgetRows = PREFILL.map(([a, u, slug]) => `  <div class="row mw-row" style="margin-bottom:8px">
+    <div class="field" style="flex:0 0 84px;max-width:84px"><input class="mw-amt" type="text" inputmode="decimal" value="${a}" aria-label="Amount" placeholder="1 1/2"></div>
+    <div class="field" style="flex:0 0 118px;max-width:118px"><select class="mw-unit" aria-label="Unit">${UNIT_OPTS.map(([v, l]) => `<option value="${v}"${v === u ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></div>
+    <div class="field" style="min-width:150px"><select class="mw-ing" aria-label="Ingredient">${optGroups.replace(`<option value="${slug}">`, `<option value="${slug}" selected>`)}</select></div>
+    <div class="field mw-g" style="flex:0 0 78px;max-width:78px;text-align:right;font-weight:700">—</div>
+    <button type="button" class="mw-del" aria-label="Remove ingredient" style="flex:0 0 30px;background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1">&times;</button>
+  </div>`).join("\n");
+
+  const riceQuinoa = sumG([[1, "cups", "white-rice"], [0.5, "cups", "quinoa"]]);
+  const flourSugar = sumG([[1, "cups", "all-purpose-flour"], [1, "cups", "granulated-sugar"]]);
+  const twoFlourSugarEggs = sumG([[2, "cups", "all-purpose-flour"], [1, "cups", "granulated-sugar"], [2, "each", "egg"]]);
+  const cookieTotal = sumG(RECIPES[0].spec), pancakeTotal = sumG(RECIPES[1].spec), breadTotal = sumG(RECIPES[2].spec);
+  const quinoaHalf = ingBySlug("quinoa").gramsPerCup / 2;
+
+  const title = "Recipe Weight Calculator — Add Up Several Ingredients in Grams | ExactCup";
+  const description = `Add several ingredients into one total: 1 cup rice + 1/2 cup quinoa = ${gR(riceQuinoa)} g, 1 cup flour + 1 cup sugar = ${gR(flourSugar)} g. Free multi-ingredient weight calculator with running totals for one-bowl weighing — eggs and butter sticks included.`;
+  const canonical = "/recipe-weight-calculator/";
+
+  const faq = [
+    ["How much do 1 cup of rice and 1/2 cup of quinoa weigh together?", `${gR(riceQuinoa)} g. A US cup of dry long-grain white rice is ${g2(ingBySlug("white-rice").gramsPerCup)} g and half a cup of dry quinoa is ${g2(quinoaHalf)} g (a full cup is ${g2(ingBySlug("quinoa").gramsPerCup)} g), so together they come to ${gR(riceQuinoa)} g — about ${g2(riceQuinoa / OZ)} oz. Both are dry, unrinsed weights; rinsed grains carry water and weigh more.`],
+    ["How do I work out the total weight of a recipe?", "Convert every line to grams, then add. That is the only reliable way, because a cup of one ingredient does not weigh the same as a cup of another — a cup of flour is 120 g while a cup of honey is 340 g. Count eggs at 50 g each (a US large egg out of the shell, per USDA) and butter sticks at 113.5 g. The calculator on this page does the conversion and the addition together, and also prints a running total so you can weigh the whole list into one bowl."],
+    ["How much do 1 cup of flour and 1 cup of sugar weigh together?", `${gR(flourSugar)} g — ${g2(ingBySlug("all-purpose-flour").gramsPerCup)} g of all-purpose flour plus ${g2(ingBySlug("granulated-sugar").gramsPerCup)} g of granulated sugar. Note how uneven that split is: the two cups look identical in the measuring cup, but the sugar is two thirds heavier. That is the single most common surprise when people start weighing.`],
+    ["Can I just add cups together?", "Only to guess at bowl size, never to get a weight. Two problems: each cup weighs something different (on this site a cup ranges from " + g2(minAll) + " g of " + lightestName + " to " + g2(maxAll) + " g of honey), and volumes stop being additive as soon as you mix — sugar dissolves into liquid, flour hydrates, and trapped air escapes, so 1 cup of flour plus 1 cup of milk makes visibly less than 2 cups of batter. Weight has neither problem: nothing leaves the bowl, so grams add exactly."],
+    ["How much do 2 cups of flour, 1 cup of sugar and 2 eggs weigh?", `${gR(twoFlourSugarEggs)} g: ${g2(2 * ingBySlug("all-purpose-flour").gramsPerCup)} g of flour, ${g2(ingBySlug("granulated-sugar").gramsPerCup)} g of sugar and ${2 * EGG_LARGE} g of egg (two large eggs, shells off). Add the fat and liquid and you have the batter weight for most simple cakes.`],
+    ["How much does a batch of cookie dough weigh?", `The standard drop-cookie batch on this page — ${amtLabel(2.25)} cups flour, 1 cup butter, ${amtLabel(0.75)} cup each of granulated and brown sugar, 2 eggs and 2 cups of chocolate chips — comes to about ${Math.round(cookieTotal)} g, which is ${g2(cookieTotal / 1000)} kg of dough. Divided into ${RECIPES[0].per} g balls that is roughly ${Math.round(cookieTotal / RECIPES[0].per)} cookies, which is how bakeries portion consistently: weigh the dough, divide, scoop by weight.`],
+    ["Half a cup of quinoa says 48 g on my app — is that wrong?", `Not wrong, but not the same measurement. Half a cup of dry quinoa is ${g2(quinoaHalf)} g on a scale (a cup is ${g2(ingBySlug("quinoa").gramsPerCup)} g). Half a cup of cooked quinoa is about ${g2(185 / 2)} g, using the USDA cooked-quinoa cup weight from our dry-to-cooked converter. A figure in the 40s is almost certainly a nutrition serving size rather than the weight of the grain in your measuring cup, so do not use it to weigh with.`],
+    ["Does the weight change when I mix or bake it?", "Mixing changes nothing — weight is conserved, which is exactly why totalling grams works. Baking does lose weight, because water leaves as steam: a baked loaf always weighs less than the dough that went into the tin. If that figure matters to you (bakers use it to judge crumb moisture), weigh your own tin before and after rather than trusting a published percentage — it depends on the oven, the shape and the bake time."],
+    ["How much does 1 stick of butter weigh?", `${g2(227 / 2)} g, which is 4 oz, ${amtLabel(0.5)} cup or 8 tablespoons. A full cup of butter is ${g2(ingBySlug("butter").gramsPerCup)} g and a 1 lb box of four sticks is 454 g. The calculator above takes butter in sticks — choose "each (egg/stick)" as the unit. The butter converter page covers sticks, cups, tablespoons and grams in every direction.`],
+    ["Will my mixing bowl hold it?", "The calculator totals the volume as well as the weight, and suggests a bowl. The rule of thumb is 1.5 times the ingredient volume so there is room to stir without throwing flour over the counter — and remember 1 quart is 4 cups, so a 5-quart stand mixer bowl is 20 cups. Batters that get whipped or doughs that rise need more headroom than that; doubling is safer for those."],
+    ["How many grams is 1 cup of mixed dry ingredients?", `There is no single answer, which is why this calculator exists. A cup of a flour-and-oats mix lands near 100–115 g; a cup of a flour-and-sugar mix nearer 160 g; a cup of granola with nuts and dried fruit can pass 150 g. The full range across the ${DATA.ingredients.length} ingredients on this site is ${g2(minAll)} g (${lightestName}) to ${g2(maxAll)} g (${heaviestName}) per cup. Weigh the components separately and total them; do not weigh one cup of the mix and multiply.`],
+    ["Is it better to weigh or to measure when the recipe gives both?", "Weigh. Cup measures depend on how you fill them: scooping flour straight from the bag compacts it and can add 20–25 g to a cup that should be 120 g, which is a fifth of the flour in the recipe. Grams remove that variable entirely, and they add up — which is the whole point of this page. Convert the recipe once with the cups to grams converter, write the grams in the margin, and weigh from then on."],
+  ];
+
+  const jsonLd = [
+    appLd("Recipe Weight Calculator", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Recipe Weight Calculator", canonical]]),
+  ];
+  const cfg = { type: "multi", items: ITEMS };
+
+  const body = `
+<h1>Recipe Weight Calculator: Add Up Several Ingredients</h1>
+<p class="lead">Every converter gives you one ingredient at a time. This one adds them together — pick each line in cups, spoons, grams or ounces and get the <strong>combined weight</strong> of the whole list, plus a running total you can weigh straight into one bowl. Quick answers: <strong>1 cup of rice + ${amtLabel(0.5)} cup of quinoa = ${gR(riceQuinoa)} g</strong>, <strong>1 cup of flour + 1 cup of sugar = ${gR(flourSugar)} g</strong> (not remotely equal halves), and a <strong>large egg is ${EGG_LARGE} g</strong> out of its shell.</p>
+<div class="calc">
+  <div class="row mw-head" style="margin-bottom:6px;font-size:12px;color:var(--muted);font-weight:600">
+    <div style="flex:0 0 84px;max-width:84px">Amount</div><div style="flex:0 0 118px;max-width:118px">Unit</div><div style="flex:1;min-width:150px">Ingredient</div><div style="flex:0 0 78px;max-width:78px;text-align:right">Weight</div><div style="flex:0 0 30px"></div>
+  </div>
+  <div id="mw-rows">
+${widgetRows}
+  </div>
+  <button type="button" id="mw-add" style="background:none;border:1px dashed #d4d4d8;border-radius:8px;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:8px 12px;margin-top:4px">+ Add another ingredient</button>
+  <div class="result"><div class="big" id="mw-total">—</div><div class="sub" id="mw-sub"></div></div>
+  <div style="margin-top:12px"><label for="mw-lines">Weigh into one bowl (running total)</label><pre id="mw-lines" style="white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:0;font-size:13px;overflow-x:auto">—</pre></div>
+  <div class="sub" id="mw-vol" style="margin-top:10px;color:var(--muted);font-size:14px"></div>
+</div>
+<p class="note">Ingredient weights are the same verified values used across the site (King Arthur Baking and USDA FoodData Central checked, ${DATA.ingredients.length} ingredients). Egg weights are USDA: a large egg is ${EGG_LARGE} g out of the shell. The arithmetic is exact, but a cup you scoop by hand can be 10–20% off, so read the total as a close estimate rather than a guarantee.</p>
+
+<h2>Grams add up. Cups don't.</h2>
+<p>This is the whole reason a combined-weight tool has to work in grams. Two cups of two different ingredients are not two comparable amounts of anything: across the ${DATA.ingredients.length} ingredients on this site a single cup runs from <strong>${g2(minAll)} g</strong> (${esc(lightestName)}) to <strong>${g2(maxAll)} g</strong> (${esc(heaviestName)}) — a ${g2(maxAll / minAll)}-fold spread. So "three cups of dry ingredients" can honestly mean anything from about ${Math.round(3 * minAll)} g to ${Math.round(3 * maxAll)} g, and no answer box can tell you which.</p>
+<p>Volume has a second problem that weight does not: <strong>it stops being additive the moment you mix</strong>. Sugar dissolves into the milk and takes up almost no space of its own; flour hydrates and packs down; the air you trapped scooping the flour escapes when you stir. A cup of flour plus a cup of milk makes noticeably less than two cups of batter. Weight is conserved — nothing leaves the bowl until the oven takes water out as steam — so grams total exactly, every time, and they are what you can scale, halve or double without error.</p>
+<p>Handy for sanity-checking a total: here is the spread of cup weights by category on this site. If your scale reads far outside these bands for a cup of something, the unit or the ingredient is probably wrong rather than the scale.</p>
+<div class="tw"><table><thead><tr><th>Category</th><th>1 cup ranges</th><th>Typical</th><th>Ends of the range</th></tr></thead><tbody>
+${bandRows}
+</tbody></table></div>
+
+<h2>Common combinations, added up</h2>
+<p>The pairs people search for most, with the arithmetic shown. Every figure comes from the verified per-ingredient weight, so these totals match the individual ingredient pages exactly:</p>
+<div class="tw"><table><thead><tr><th>Combination</th><th>Each part</th><th>Total</th><th>Total (oz)</th></tr></thead><tbody>
+${comboRows}
+</tbody></table></div>
+<p class="note">Cup measures here are the standard US cup (236.6 mL), levelled and unpacked except brown sugar, which is packed as recipes assume.</p>
+
+<h2>What a whole recipe weighs</h2>
+<p>Three ordinary batches, itemised. The <em>running total</em> column is the useful one: put the bowl on the scale, tare once, and add each ingredient until the display reads that number — no measuring cups, no taring between additions.</p>
+${RECIPES.map(recipeTable).join("\n")}
+<p>Two things worth noticing. First, <strong>the flour is rarely the biggest number</strong>: in the cookie batch above the ${amtLabel(2.25)} cups of flour (${gR(sumG([[2.25, "cups", "all-purpose-flour"]]))} g) are outweighed by the butter and sugars together, and the chocolate chips alone are ${gR(sumG([[2, "cups", "chocolate-chips"]]))} g. Second, <strong>totals divide into portions</strong>: ${Math.round(cookieTotal)} g of dough is ${Math.round(cookieTotal / RECIPES[0].per)} cookies at ${RECIPES[0].per} g, and ${Math.round(pancakeTotal)} g of batter is about ${Math.round(pancakeTotal / RECIPES[1].per)} four-inch pancakes at ${RECIPES[1].per} g a ladle. That is how a bakery gets the same size every time.</p>
+
+<h2>Eggs, sticks and the things a cup can't measure</h2>
+<p>A recipe total always stalls on the ingredients that aren't measured by volume. Eggs come in sizes, and the size is a real weight difference — a jumbo egg carries ${EGG_SIZES[4][1] - EGG_SIZES[0][1]} g more than a small one, so a three-egg cake can swing by ${3 * (EGG_SIZES[4][1] - EGG_SIZES[0][1])} g of liquid. US recipes assume <strong>large</strong> unless they say otherwise. All figures are USDA FoodData Central, out of the shell:</p>
+<table><thead><tr><th>Egg size (US)</th><th>1 egg</th><th>2 eggs</th><th>3 eggs</th><th>1 egg (oz)</th></tr></thead><tbody>
+${eggRows}
+</tbody></table>
+<p>Inside a large egg: <strong>${EGG_WHITE} g of white and ${EGG_YOLK} g of yolk</strong> (USDA) — which is why a recipe calling for two yolks needs only ${2 * EGG_YOLK} g, and why yolk-heavy recipes are so much richer than the egg count suggests. Beaten whole egg measures ${EGG_CUP} g to the cup, so <strong>half an egg is ${EGG_LARGE / 2} g</strong> of beaten egg (about 1 tbsp + 2 tsp) — the answer when halving a recipe with an odd egg count — and a cup of egg is just under five large ones.</p>
+<p>Butter is the other one. A US stick is ${amtLabel(0.5)} cup, so <strong>1 stick = ${g2(ingBySlug("butter").gramsPerCup / 2)} g</strong>, 2 sticks = ${g2(ingBySlug("butter").gramsPerCup)} g and the 1 lb box of four sticks is ${g2(2 * ingBySlug("butter").gramsPerCup)} g. Both are options in the calculator above: choose <em>each (egg/stick)</em> as the unit. For everything else — a pinch of salt, ${amtLabel(0.5)} tsp of vanilla, the baking soda — the honest answer is that they are worth a few grams and will not move your total; weigh them or spoon them, it makes no difference to the batch.</p>
+
+<h2>Weigh the whole list into one bowl</h2>
+<p>Once you have a running total, the fastest way to bake is to stop measuring altogether. Bowl on the scale, press tare once, then pour each ingredient in until the display reaches the next number on the list. One bowl, one utensil, no cups to wash, and no chance of losing count of how many cups of flour you have added — the commonest way a bake goes wrong.</p>
+<p>Two cautions. Overshooting is not reversible: you can spoon 10 g of extra flour back out, but you cannot retrieve 5 g of salt from a bowl of flour, so add the small, potent things (salt, baking soda, spices) separately or last, and pour them from a spoon rather than the box. And if the recipe wants the dry ingredients whisked on their own, or the butter and sugar creamed before anything else joins them, keep those stages in separate bowls — the running total still works, you just run it per bowl. Scaling the batch at the same time? Total it here first, then take the whole list through the <a href="/recipe-scaler/">recipe scaler</a>: grams scale cleanly where fractional cups do not.</p>
+
+<h2>Need a different conversion?</h2>
+<p>One ingredient at a time: the <a href="/cups-to-grams/">cups to grams converter</a> covers all ${DATA.ingredients.length} ingredients, the <a href="/grams-to-cups/">grams to cups converter</a> runs it backwards, and <a href="/tablespoons-to-grams/">tablespoons to grams</a> handles spoon amounts. Whole-chart views by family: <a href="/flour-conversion-chart/">flour</a>, <a href="/sugar-conversion-chart/">sugars and syrups</a>, <a href="/dairy-conversion-chart/">dairy and fats</a>, <a href="/grain-conversion-chart/">grains</a>. Working the other way round — a weight you need to turn back into cups, or a total you want to split across a bread formula? Try the <a href="/bakers-percentage-calculator/">baker's percentage calculator</a> (every ingredient as a percentage of the flour weight) or, for rice and pasta, the <a href="/dry-to-cooked/">dry to cooked converter</a>. And if you are cutting the recipe rather than totalling it, the <a href="/recipe-halving-chart/">recipe halving chart</a> shows half of every measure in something you can actually measure.</p>
+
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
@@ -2946,6 +3174,7 @@ function llmsTxt() {
     ["Cups in a Quart", "/cups-in-a-quart/", "How many cups in a quart, pint and gallon: 1 quart = 4 cups = 2 pints = 32 fl oz = 0.946 L; 1 gallon = 4 quarts = 16 cups = 128 fl oz; 1 pint = 2 cups; half gallon = 8 cups"],
     ["Recipe Scaler", "/recipe-scaler/", "Scale a recipe up or down by servings"],
     ["Recipe Halving Chart", "/recipe-halving-chart/", "Half and one-third of any kitchen measurement (half of 3/4 cup = 6 tbsp; half of 1/3 cup = 2 tbsp + 2 tsp)"],
+    ["Recipe Weight Calculator", "/recipe-weight-calculator/", "Combined weight of several ingredients at once (multi-ingredient totals in grams, with running totals for weighing a whole recipe into one bowl): 1 cup dry white rice (185 g) + 1/2 cup dry quinoa (85 g) = 270 g; 1 cup all-purpose flour (120 g) + 1 cup granulated sugar (200 g) = 320 g; US large egg = 50 g out of the shell (small 38, medium 44, extra large 56, jumbo 63; white 33 g + yolk 17 g; 1 cup beaten egg = 243 g), all USDA FoodData Central; 1 stick butter = 113.5 g; cup weights across the library span 50 g (panko breadcrumbs) to 340 g (honey), so cups cannot be added and volumes stop being additive once mixed while grams are conserved"],
     ["Printable Kitchen Conversion Chart", "/kitchen-conversion-chart/", "One-page printable chart: cups to tbsp/fl oz/mL (1 cup = 16 tbsp = 8 fl oz = 237 mL), everyday ingredient weights in grams per cup, oven temperatures °F/°C/gas mark, butter sticks and ounces to grams"],
     ["Oven Temperature Converter", "/oven-temperature-converter/", "Fahrenheit to Celsius to gas mark"],
     ["Air Fryer Conversion Calculator", "/air-fryer-conversion-calculator/", "Convert oven recipes to air fryer time and temperature"],
@@ -3407,7 +3636,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage(), apiDocsPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), recipeWeightPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage(), apiDocsPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));

@@ -795,6 +795,142 @@
     calc();
   }
 
+  // Multi-ingredient combined weight (used by /recipe-weight-calculator/).
+  // Sums an ingredient list into one weight, prints a running total so the whole
+  // list can be weighed into a single tared bowl, and totals the volume so you
+  // can pick a bowl that fits. Items carry gpc (grams per US cup) and, for eggs
+  // and butter, `each` (grams per large egg / per stick).
+  function initMulti(c) {
+    var wrap = $("mw-rows");
+    if (!wrap) return;
+    var map = {};
+    (c.items || []).forEach(function (i) { map[i.slug] = i; });
+    var U2C = { cups: 1, tbsp: 1 / 16, tsp: 1 / 48, floz: 1 / 8 };
+    var UW = { cups: "cups", tbsp: "tbsp", tsp: "tsp", floz: "fl oz", g: "g", oz: "oz" };
+    var VULGAR = { "½": 0.5, "⅓": 1 / 3, "⅔": 2 / 3, "¼": 0.25, "¾": 0.75, "⅛": 0.125, "⅜": 0.375, "⅝": 0.625, "⅞": 0.875, "⅙": 1 / 6, "⅚": 5 / 6 };
+    // accepts "2", "0.5", "3/4", "1 1/2" and unicode fractions ("1 1/2" as "1½")
+    function parseAmt(s) {
+      s = (s || "").trim();
+      if (!s) return NaN;
+      var vm = s.match(/^(\d+)?\s*([¼½¾⅓⅔⅛⅜⅝⅞⅙⅚])$/);
+      if (vm) return (vm[1] ? +vm[1] : 0) + VULGAR[vm[2]];
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[3] > 0) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    function fmtG(g) { return (g < 10 ? round(g, 1) : String(Math.round(g))) + " g"; }
+    // singular up to one ("1/2 cup", "1 cup"), plural past it ("1 1/2 cups")
+    function plural(word, n) { return word + (n <= 1 + 1e-9 ? "" : "s"); }
+    function pad(s, n) { while (s.length < n) s += " "; return s; }
+    // one row -> null (empty/invalid) or {g, cups, label} / {err}
+    function readRow(r) {
+      var amtEl = r.querySelector(".mw-amt"), uEl = r.querySelector(".mw-unit"), iEl = r.querySelector(".mw-ing");
+      if (!amtEl || !uEl || !iEl) return null;
+      var raw = (amtEl.value || "").trim();
+      if (!raw) return null;
+      var a = parseAmt(raw), it = map[iEl.value], u = uEl.value;
+      if (!it || isNaN(a) || a < 0) return { err: "?" };
+      var g, cups, label;
+      if (u === "each") {
+        if (!it.each) return { err: "eggs or butter only" };
+        g = a * it.each;
+        cups = g / it.gpc;
+        label = raw + " " + plural(it.eachLabel, a) + (it.eachWhole ? "" : " " + it.name.toLowerCase());
+      } else {
+        if (u === "g") { g = a; cups = a / it.gpc; }
+        else if (u === "oz") { g = a * OZ; cups = g / it.gpc; }
+        else { cups = a * U2C[u]; g = cups * it.gpc; }
+        var uw = u === "cups" ? plural("cup", a) : UW[u];
+        label = raw + " " + uw + " " + it.name.toLowerCase();
+      }
+      return { g: g, cups: cups, label: label };
+    }
+    // smallest standard bowl (in quarts) that holds the mix with room to stir
+    var BOWLS = [1, 1.5, 2, 3, 4, 5, 6, 8];
+    function bowlFor(cups) {
+      var needQt = cups * 1.5 / 4;
+      for (var i = 0; i < BOWLS.length; i++) if (BOWLS[i] >= needQt) return BOWLS[i];
+      return null;
+    }
+    function recompute() {
+      var rows = wrap.querySelectorAll(".mw-row");
+      var totalG = 0, totalC = 0, n = 0, lines = [], labels = [], grams = [];
+      for (var i = 0; i < rows.length; i++) {
+        var out = rows[i].querySelector(".mw-g");
+        var res = readRow(rows[i]);
+        if (!res) { if (out) out.textContent = "—"; continue; }
+        if (res.err) { if (out) out.textContent = res.err === "?" ? "?" : "—"; continue; }
+        if (out) out.textContent = fmtG(res.g);
+        totalG += res.g; totalC += res.cups; n++;
+        labels.push(res.label); grams.push(res.g);
+      }
+      var totalEl = $("mw-total"), subEl = $("mw-sub"), linesEl = $("mw-lines"), volEl = $("mw-vol");
+      if (!n) {
+        if (totalEl) totalEl.textContent = "—";
+        if (subEl) subEl.textContent = "Enter an amount on at least one line.";
+        if (linesEl) linesEl.textContent = "—";
+        if (volEl) volEl.textContent = "";
+        return;
+      }
+      if (totalEl) totalEl.textContent = fmtG(totalG) + (totalG >= 1000 ? " (" + round(totalG / 1000, 2) + " kg)" : "");
+      if (subEl) {
+        var lb = Math.floor(totalG / 453.59237), rem = (totalG - lb * 453.59237) / OZ;
+        subEl.textContent = round(totalG / OZ, 1) + " oz" + (lb ? " = " + lb + " lb " + round(rem, 1) + " oz" : "") +
+          " · " + n + " ingredient" + (n === 1 ? "" : "s");
+      }
+      if (linesEl) {
+        var w = 0, j;
+        for (j = 0; j < labels.length; j++) if (labels[j].length > w) w = labels[j].length;
+        if (w > 34) w = 34;
+        var run = 0, txt = [];
+        for (j = 0; j < labels.length; j++) {
+          run += grams[j];
+          txt.push(pad(labels[j], w) + "  " + pad(fmtG(grams[j]), 8) + " → " + Math.round(run) + " g");
+        }
+        linesEl.textContent = txt.join("\n");
+      }
+      if (volEl) {
+        var qt = bowlFor(totalC);
+        volEl.textContent = "Total volume ≈ " + round(totalC, 1) + " cups" +
+          (qt ? " — fits a " + (qt % 1 ? qt : qt) + "-quart (" + round(qt * 4, 0) + "-cup) bowl with room to stir."
+              : " — more than 8 quarts; use a stockpot or mix in batches.") +
+          " Volumes stop adding exactly once mixed, so treat this as a bowl-size guide, not a measurement.";
+      }
+    }
+    function hook(r) {
+      var els = r.querySelectorAll("input,select");
+      for (var i = 0; i < els.length; i++) {
+        els[i].addEventListener("input", recompute);
+        els[i].addEventListener("change", recompute);
+      }
+      var del = r.querySelector(".mw-del");
+      if (del) del.addEventListener("click", function () {
+        if (wrap.querySelectorAll(".mw-row").length > 1) { r.parentNode.removeChild(r); recompute(); }
+        else { var a = r.querySelector(".mw-amt"); if (a) { a.value = ""; recompute(); } }
+      });
+    }
+    var initial = wrap.querySelectorAll(".mw-row");
+    for (var k = 0; k < initial.length; k++) hook(initial[k]);
+    var addBtn = $("mw-add");
+    if (addBtn) addBtn.addEventListener("click", function () {
+      var rows = wrap.querySelectorAll(".mw-row");
+      if (rows.length >= 20) return;
+      var clone = rows[rows.length - 1].cloneNode(true);
+      var amt = clone.querySelector(".mw-amt");
+      if (amt) amt.value = "";
+      var g = clone.querySelector(".mw-g");
+      if (g) g.textContent = "—";
+      wrap.appendChild(clone);
+      hook(clone);
+      if (amt) amt.focus();
+      recompute();
+    });
+    recompute();
+  }
+
   function initYield(c) {
     var food = $("yl-food"), dir = $("yl-dir"), amt = $("yl-amt"), unit = $("yl-unit"),
         out = $("yl-out"), sub = $("yl-sub"), note = $("yl-note");
@@ -884,4 +1020,5 @@
   else if (t === "thickener") initThickener();
   else if (t === "leavener") initLeavener();
   else if (t === "yield") initYield(c);
+  else if (t === "multi") initMulti(c);
 })();
