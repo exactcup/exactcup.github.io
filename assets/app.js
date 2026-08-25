@@ -997,6 +997,94 @@
     calc();
   }
 
+  // Swap calculator: the recipe calls for one ingredient, you are using another.
+  // Reports the equal-weight answer (the one nobody can do in their head) next to
+  // the cup-for-cup answer, and says which of the two the pair actually calls for.
+  function initSwap(c) {
+    var amt = $("sw-amt"), unit = $("sw-unit"), from = $("sw-from"), to = $("sw-to");
+    var out = $("sw-out"), sub = $("sw-sub"), note = $("sw-note");
+    if (!amt || !from || !to || !out) return;
+    var map = {};
+    (c.items || []).forEach(function (i) { map[i.slug] = i; });
+    var U2C = { cups: 1, tbsp: 1 / 16, tsp: 1 / 48, floz: 1 / 8 };
+    var UW = { cups: "cups", tbsp: "tbsp", tsp: "tsp", floz: "fl oz", g: "g", oz: "oz" };
+    var VULGAR = { "½": 0.5, "⅓": 1 / 3, "⅔": 2 / 3, "¼": 0.25, "¾": 0.75, "⅛": 0.125, "⅜": 0.375, "⅝": 0.625, "⅞": 0.875, "⅙": 1 / 6, "⅚": 5 / 6 };
+    function parseAmt(s) {
+      s = (s || "").trim();
+      if (!s) return NaN;
+      var vm = s.match(/^(\d+)?\s*([¼½¾⅓⅔⅛⅜⅝⅞⅙⅚])$/);
+      if (vm) return (vm[1] ? +vm[1] : 0) + VULGAR[vm[2]];
+      var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[3] > 0) return +m[1] + m[2] / m[3];
+      m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (m && +m[2] > 0) return m[1] / m[2];
+      var f = parseFloat(s);
+      return /^\d*\.?\d+$/.test(s) && isFinite(f) ? f : NaN;
+    }
+    // cups -> something you can measure: "1 1/2 cups + 1 tbsp + 1 tsp". Snaps to a
+    // familiar cup fraction within ~2%, and rounds to the nearest teaspoon, exactly
+    // as the static tables on the page do, so the two can never disagree.
+    var NICE = [];
+    for (var w = 0; w <= 8; w++) for (var k = 0; k < 6; k++) NICE.push(w + [0, 0.25, 1 / 3, 0.5, 2 / 3, 0.75][k]);
+    function measure(cups) {
+      for (var q = 0; q < NICE.length; q++) if (NICE[q] > 0 && Math.abs(cups - NICE[q]) / NICE[q] <= 0.025) { cups = NICE[q]; break; }
+      var t = Math.round(cups * 48);
+      if (t <= 0) return "a trace";
+      var whole = Math.floor(t / 48), rem = t - whole * 48, frac = "", parts = [];
+      var EXACT = [[36, "¾"], [32, "⅔"], [24, "½"], [16, "⅓"], [12, "¼"]];
+      for (var i = 0; i < EXACT.length; i++) if (rem === EXACT[i][0]) { frac = EXACT[i][1]; rem = 0; break; }
+      if (!frac) for (var j = 0; j < 3; j++) { var v = [36, 24, 12][j], s = ["¾", "½", "¼"][j]; if (rem >= v) { frac = s; rem -= v; break; } }
+      if (whole || frac) parts.push((whole ? whole + (frac ? " " + frac : "") : frac) + " cup" + (whole > 1 || (whole === 1 && frac) ? "s" : ""));
+      var tbsp = Math.floor(rem / 3); rem -= tbsp * 3;
+      if (tbsp) parts.push(tbsp + " tbsp");
+      if (rem) parts.push(rem + " tsp");
+      return parts.join(" + ");
+    }
+    function fmtG(g) { return (g < 10 ? round(g, 1) : String(Math.round(g))) + " g"; }
+    function plural(word, n) { return word + (n <= 1 + 1e-9 ? "" : "s"); }
+    // which rule the pair calls for, and how to say it
+    var RULE = {
+      "dry+dry": "Two dry, structural ingredients: <strong>match the weight</strong> — the figure above.",
+      "bulk+bulk": "Two bulk mix-ins the batter simply carries: <strong>swap cup for cup</strong>, not by weight. The dough has room for a certain volume, not a certain mass.",
+      "liquid+liquid": "Two liquids: they weigh nearly the same per cup, so <strong>cup for cup and weight for weight give almost the same answer</strong>. Use whichever is easier.",
+      "fat+fat": "Two fats: match the weight, but check the water. Solid butter is about 16% water and 81% fat, oil is 100% fat — for butter to oil the tested rule is <strong>3/4 cup of oil per cup of butter</strong>, not the equal-weight figure.",
+    };
+    function ruleFor(a, b) {
+      var k = a.role === b.role ? a.role + "+" + a.role : null;
+      if (k && RULE[k]) return RULE[k];
+      if ((a.role === "dry" && b.role === "bulk") || (a.role === "bulk" && b.role === "dry")) return "One is structural and the other is a mix-in, so neither rule is safe on its own — the figures above are a measurement conversion, not a recipe recommendation.";
+      return "These two do different jobs in a recipe. The figures above convert the measurement honestly, but check that the swap itself works before you rely on it.";
+    }
+    function calc() {
+      var a = parseAmt(amt.value), u = unit ? unit.value : "cups";
+      var f = map[from.value], t = map[to.value];
+      if (!f || !t) return;
+      if (isNaN(a) || a < 0) {
+        out.textContent = "—";
+        if (sub) sub.textContent = "Enter an amount — \"2\", \"1 1/2\" or \"0.75\".";
+        if (note) note.textContent = "";
+        return;
+      }
+      var g, cups;
+      if (u === "g") { g = a; cups = a / f.gpc; }
+      else if (u === "oz") { g = a * OZ; cups = g / f.gpc; }
+      else { cups = a * U2C[u]; g = cups * f.gpc; }
+      var byWeight = g / t.gpc;              // cups of the replacement at equal weight
+      var byVolume = cups;                   // cups of the replacement, cup for cup
+      out.textContent = measure(byWeight) + " of " + t.name.toLowerCase();
+      if (sub) {
+        var uw = u === "cups" ? plural("cup", a) : UW[u];
+        var inTxt = (amt.value || "").trim() + " " + uw + " of " + f.name.toLowerCase();
+        sub.innerHTML = "That is <strong>" + fmtG(g) + "</strong> — the same weight as " + inTxt +
+          ". Cup for cup instead, " + measure(byVolume) + " of " + t.name.toLowerCase() +
+          " would weigh " + fmtG(byVolume * t.gpc) + ".";
+      }
+      if (note) note.innerHTML = ruleFor(f, t);
+    }
+    [amt, unit, from, to].forEach(function (el) { if (el) el.addEventListener(el.tagName === "SELECT" ? "change" : "input", calc); });
+    calc();
+  }
+
   var c = cfg();
   var t = c.type;
   if (t === "ingredient") initIngredient(c);
@@ -1021,4 +1109,5 @@
   else if (t === "leavener") initLeavener();
   else if (t === "yield") initYield(c);
   else if (t === "multi") initMulti(c);
+  else if (t === "swap") initSwap(c);
 })();

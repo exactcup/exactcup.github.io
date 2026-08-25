@@ -97,6 +97,7 @@ const ALL_TOOLS = [
   ["/yeast-converter/", "Yeast Converter", "Active dry, instant & fresh yeast — swap by weight."],
   ["/sourdough-hydration-calculator/", "Sourdough Hydration", "True dough hydration with the starter counted right."],
   ["/butter-converter/", "Butter Converter", "Sticks, cups, tablespoons, grams and ounces."],
+  ["/ingredient-substitution-chart/", "Ingredient Substitution Chart", "Swapping an ingredient? How much of it to actually measure."],
   ["/butter-to-oil/", "Butter to Oil", "Swap butter for oil: 1 cup butter = 3/4 cup oil."],
   ["/sugar-to-honey/", "Sugar to Honey", "Swap sugar for honey: 1 cup sugar = ½–¾ cup honey."],
   ["/cake-flour-substitute/", "Cake Flour Substitute", "Make cake flour: swap 2 tbsp cornstarch into each cup of flour."],
@@ -764,7 +765,7 @@ function masterPage() {
 </div>
 <h2>Browse all ingredients</h2>
 ${lists}
-<p style="margin-top:10px">Working backwards from a weight? Use the <a href="/grams-to-cups/">grams to cups converter</a>. Need several ingredients added into one number — the total weight of a whole recipe, or a running total to weigh into one bowl? That is the <a href="/recipe-weight-calculator/">recipe weight calculator</a>.</p>
+<p style="margin-top:10px">Working backwards from a weight? Use the <a href="/grams-to-cups/">grams to cups converter</a>. Need several ingredients added into one number — the total weight of a whole recipe, or a running total to weigh into one bowl? That is the <a href="/recipe-weight-calculator/">recipe weight calculator</a>. Out of an ingredient and using something else instead? The <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> turns the recipe's amount into how much of the replacement to measure.</p>
 <p class="note">Why ingredient matters: 1 cup of all-purpose flour ≈ 120 g, but 1 cup of granulated sugar ≈ 200 g and 1 cup of honey ≈ 340 g. Always convert by ingredient, not by a single ratio.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd: {
     "@context": "https://schema.org", "@type": "WebApplication", name: "Cups to Grams Converter",
@@ -1334,7 +1335,7 @@ ${revRows}
 </tbody></table>
 <p class="note">Butter brings ~16% water with it, so an oil recipe made with butter bakes up slightly firmer and drier — many bakers swap melted butter 1:1 for oil and accept that trade for the flavor.</p>
 <h2>Need a different conversion?</h2>
-<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons. Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> works the same way — a fixed ratio plus a few small recipe adjustments. The other swap charts on the site: the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch into every cup of all-purpose flour), the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (cornstarch thickens twice as hard, so use half as much) and the <a href="/baking-powder-substitute/">baking powder substitute</a> (¼ tsp baking soda + ½ tsp cream of tartar per teaspoon of powder).</p>
+<p>Measuring the butter itself — sticks, cups, tablespoons, grams? Use the <a href="/butter-converter/">butter converter</a>. Weighing it? <a href="/cups-to-grams/butter/">1 cup of butter is 227 g</a>, and a cup of <a href="/cups-to-grams/olive-oil/">olive oil is 216 g</a> (<a href="/cups-to-grams/vegetable-oil/">vegetable oil: 218 g</a>). Halving the recipe while you're at it? The <a href="/recipe-halving-chart/">recipe halving chart</a> keeps every measure on a real spoon, and <a href="/tablespoons-in-a-cup/">tablespoons in a cup</a> spells out every cup fraction in spoons. Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> works the same way — a fixed ratio plus a few small recipe adjustments. The other swap charts on the site: the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch into every cup of all-purpose flour), the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (cornstarch thickens twice as hard, so use half as much) and the <a href="/baking-powder-substitute/">baking powder substitute</a> (¼ tsp baking soda + ½ tsp cream of tartar per teaspoon of powder). For any swap without a page of its own, the <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> works out how much of the replacement to measure from the two cup weights.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "butteroil" } }) };
@@ -1463,7 +1464,7 @@ ${gRows}
 ${revRows}
 </tbody></table>
 <h2>Need a different conversion?</h2>
-<p>Just measuring, not substituting? <a href="/cups-to-grams/honey/">1 cup of honey is 340 g</a> and <a href="/cups-to-grams/granulated-sugar/">1 cup of granulated sugar is 200 g</a> — the <a href="/sugar-conversion-chart/">sugar &amp; sweetener chart</a> covers brown sugar, <a href="/cups-to-grams/maple-syrup/">maple syrup (322 g)</a>, molasses and the rest. Swapping fats too? The <a href="/butter-to-oil/">butter to oil conversion</a> works the same way: a fixed ratio plus a couple of honest adjustments — as do the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch per cup of all-purpose flour) and the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (half as much cornstarch as flour). And the ½ tsp of baking soda this page adds per cup of honey? The <a href="/baking-powder-substitute/">baking powder substitute</a> page covers that whole soda-vs-powder chemistry, both directions. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<p>Just measuring, not substituting? <a href="/cups-to-grams/honey/">1 cup of honey is 340 g</a> and <a href="/cups-to-grams/granulated-sugar/">1 cup of granulated sugar is 200 g</a> — the <a href="/sugar-conversion-chart/">sugar &amp; sweetener chart</a> covers brown sugar, <a href="/cups-to-grams/maple-syrup/">maple syrup (322 g)</a>, molasses and the rest. Swapping fats too? The <a href="/butter-to-oil/">butter to oil conversion</a> works the same way: a fixed ratio plus a couple of honest adjustments — as do the <a href="/cake-flour-substitute/">cake flour substitute</a> (2 tbsp cornstarch per cup of all-purpose flour) and the <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> (half as much cornstarch as flour). And the ½ tsp of baking soda this page adds per cup of honey? The <a href="/baking-powder-substitute/">baking powder substitute</a> page covers that whole soda-vs-powder chemistry, both directions. Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>. Swapping something with no page of its own? The <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> turns any pair of ingredients into the amount you should measure.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "sugarhoney" } }) };
@@ -1594,7 +1595,7 @@ ${revRows}
 <p><strong>Use it confidently:</strong> butter and oil cakes, cupcakes, snack cakes, muffins, pancakes and biscuits — anywhere cake flour is there for tenderness.</p>
 <p><strong>Think twice:</strong> angel food, chiffon and pure white cakes, which are usually developed around real <em>bleached</em> cake flour (America's Test Kitchen notes it produces a loftier cake than unbleached flour). The blend still bakes up fine there — just a touch shorter and coarser. And <strong>don't reach for self-rising flour</strong>: it's flour plus baking powder and salt, which the recipe didn't ask for.</p>
 <h2>Need a different conversion?</h2>
-<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Using the cornstarch to thicken a sauce instead? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> is the mirror-image page: there, cornstarch replaces flour at half the amount. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments — and if the self-rising-flour warning above caught you, the <a href="/baking-powder-substitute/">baking powder substitute</a> untangles powder vs soda (about 1½ tsp of powder per cup is what self-rising flour carries). Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>.</p>
+<p>Just weighing, not substituting? <a href="/cups-to-grams/cake-flour/">1 cup of cake flour is 120 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> (<a href="/cups-to-grams/cornstarch/">cornstarch: 112 g</a>) — the <a href="/flour-conversion-chart/">flour conversion chart</a> covers every flour on the site. Using the cornstarch to thicken a sauce instead? The <a href="/cornstarch-to-flour/">cornstarch to flour thickener conversion</a> is the mirror-image page: there, cornstarch replaces flour at half the amount. Swapping other ingredients? The <a href="/butter-to-oil/">butter to oil conversion</a> and the <a href="/sugar-to-honey/">sugar to honey conversion</a> work the same way: a fixed ratio plus honest adjustments — and if the self-rising-flour warning above caught you, the <a href="/baking-powder-substitute/">baking powder substitute</a> untangles powder vs soda (about 1½ tsp of powder per cup is what self-rising flour carries). Halving the recipe while you're at it? See the <a href="/recipe-halving-chart/">recipe halving chart</a>. Any other swap: the <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> computes how much of the replacement matches the weight the recipe asked for.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "cakeflour" } }) };
@@ -1713,7 +1714,7 @@ ${revRows}
 <tr><td>Quick (granular) tapioca</td><td>2 tbsp</td><td>Utah State. Not the same thing as tapioca starch — the granules need a 15–30 min rest</td></tr>
 </tbody></table>
 <h2>Need a different conversion?</h2>
-<p>Just weighing, not swapping? <a href="/cups-to-grams/cornstarch/">1 cup of cornstarch is 112 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> — the <a href="/flour-conversion-chart/">flour &amp; starch chart</a> covers arrowroot, tapioca and every flour on the site. Fun mirror image: the <a href="/cake-flour-substitute/">cake flour substitute</a> runs the same two ingredients the other way — cornstarch stirred <em>into</em> flour to weaken it for tender cakes. More swaps: <a href="/butter-to-oil/">butter to oil</a>, <a href="/sugar-to-honey/">sugar to honey</a> and the <a href="/baking-powder-substitute/">baking powder substitute</a>. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp).</p>
+<p>Just weighing, not swapping? <a href="/cups-to-grams/cornstarch/">1 cup of cornstarch is 112 g</a> and <a href="/cups-to-grams/all-purpose-flour/">1 cup of all-purpose flour is 120 g</a> — the <a href="/flour-conversion-chart/">flour &amp; starch chart</a> covers arrowroot, tapioca and every flour on the site. Fun mirror image: the <a href="/cake-flour-substitute/">cake flour substitute</a> runs the same two ingredients the other way — cornstarch stirred <em>into</em> flour to weaken it for tender cakes. More swaps: <a href="/butter-to-oil/">butter to oil</a>, <a href="/sugar-to-honey/">sugar to honey</a> and the <a href="/baking-powder-substitute/">baking powder substitute</a>. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp). For swaps with no page of their own, the <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> gives the amount from the two cup weights.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "thickener" } }) };
@@ -1812,7 +1813,7 @@ ${sRows}
 <h2>Is it still good?</h2>
 <p>Leaveners fade rather than spoil, and each has its own test. <strong>Baking soda:</strong> stir ½ tsp into a few tablespoons of <em>vinegar</em> — it should fizz hard instantly. <strong>Baking powder:</strong> stir ½ tsp into a few tablespoons of <em>hot water</em> — water, not vinegar, because the powder carries its own acid and vinegar would make even dead powder fizz. Arm &amp; Hammer's stated shelf life for soda is three years unopened; once open, the working consensus for either is 6–12 months. If a test barely bubbles, the substitution charts above won't save the bake — fresh leavener will.</p>
 <h2>Need a different conversion?</h2>
-<p>Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> leans on this exact chemistry — it adds ½ tsp of baking soda per cup of honey to neutralize the honey's acidity. The <a href="/cake-flour-substitute/">cake flour substitute</a> is the reason self-rising flour isn't one (it's flour with about 1½ tsp of baking powder per cup already inside), and the <a href="/butter-to-oil/">butter to oil</a> and <a href="/cornstarch-to-flour/">cornstarch to flour</a> pages run the same fixed-ratio-plus-caveats format. Swapping the <em>other</em> leavener? The <a href="/yeast-converter/">yeast converter</a> moves between active dry, instant and fresh. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp).</p>
+<p>Swapping the sweetener too? The <a href="/sugar-to-honey/">sugar to honey conversion</a> leans on this exact chemistry — it adds ½ tsp of baking soda per cup of honey to neutralize the honey's acidity. The <a href="/cake-flour-substitute/">cake flour substitute</a> is the reason self-rising flour isn't one (it's flour with about 1½ tsp of baking powder per cup already inside), and the <a href="/butter-to-oil/">butter to oil</a> and <a href="/cornstarch-to-flour/">cornstarch to flour</a> pages run the same fixed-ratio-plus-caveats format. Swapping the <em>other</em> leavener? The <a href="/yeast-converter/">yeast converter</a> moves between active dry, instant and fresh. And <a href="/teaspoons-in-a-tablespoon/">teaspoons in a tablespoon</a> spells out the spoon math used here (1 tbsp = 3 tsp). Swapping an ingredient that has no page here at all? The <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> works the amount out from the two cup weights.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "leavener" } }) };
@@ -2166,6 +2167,208 @@ ${eggRows}
 
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}`;
+  return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
+}
+
+// ---------- ingredient substitution hub ----------
+// Which rule a swap follows. "dry" = structural, match the weight; "bulk" = the
+// batter only carries it, match the volume; "liquid"/"fat" = match the weight,
+// but watch the water. Category gives the default; the map below is the list of
+// ingredients whose behaviour differs from their category.
+const SWAP_ROLE_BY_CAT = { flour: "dry", sugar: "dry", dairy: "liquid", baking: "bulk", grain: "dry" };
+const SWAP_ROLE = {
+  honey: "liquid", "maple-syrup": "liquid", "corn-syrup": "liquid", molasses: "liquid",
+  "golden-syrup": "liquid", "agave-nectar": "liquid",
+  "pitted-dates-chopped": "bulk", "dried-cranberries": "bulk",
+  butter: "fat", "vegetable-oil": "fat", "olive-oil": "fat", "coconut-oil": "fat",
+  "vegetable-shortening": "fat", "peanut-butter": "fat", tahini: "fat", "almond-butter": "fat",
+  "grated-parmesan": "bulk", "shredded-cheddar": "bulk", "shredded-mozzarella": "bulk",
+  water: "liquid", breadcrumbs: "bulk", "panko-breadcrumbs": "bulk", "graham-cracker-crumbs": "bulk",
+};
+function swapRole(ing) { return SWAP_ROLE[ing.slug] || SWAP_ROLE_BY_CAT[ing.category] || "dry"; }
+
+function substitutionHubPage() {
+  const canonical = "/ingredient-substitution-chart/";
+  const rnd = (n, d) => Math.round(n * 10 ** d) / 10 ** d;
+  const fmtNum = (x) => {
+    const FR = [[0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"]];
+    const whole = Math.floor(x + 1e-9), rest = x - whole;
+    let frac = "";
+    if (rest > 0.03) {
+      for (const [v, s] of FR) if (Math.abs(rest - v) < 0.02) { frac = s; break; }
+      if (!frac) return String(rnd(x, 2));
+    }
+    return whole ? whole + frac : (frac || "0");
+  };
+  // A cup figure turned into something a cook can actually measure out, rounded
+  // to the nearest teaspoon: 1.594 cups -> "1 1/2 cups + 1 tbsp + 1 tsp".
+  const measure = (cups) => {
+    // Snap to a familiar cup measure when the exact figure is within ~2% of one.
+    // Nobody can measure the difference, and "1 cup" beats "3/4 cup + 3 tbsp + 2 tsp".
+    for (let w = 0; w <= 8; w++) for (const f of [0, 0.25, 1 / 3, 0.5, 2 / 3, 0.75]) {
+      const n = w + f;
+      if (n > 0 && Math.abs(cups - n) / n <= 0.025) { cups = n; w = 99; break; }
+    }
+    const t = Math.round(cups * 48);
+    if (t <= 0) return "a trace";
+    const whole = Math.floor(t / 48);
+    let rem = t - whole * 48, frac = "";
+    const parts = [];
+    for (const [v, s] of [[36, "¾"], [32, "⅔"], [24, "½"], [16, "⅓"], [12, "¼"]]) if (rem === v) { frac = s; rem = 0; break; }
+    if (!frac) for (const [v, s] of [[36, "¾"], [24, "½"], [12, "¼"]]) if (rem >= v) { frac = s; rem -= v; break; }
+    if (whole || frac) parts.push((whole ? whole + (frac ? " " + frac : "") : frac) + " cup" + (whole > 1 || (whole === 1 && frac) ? "s" : ""));
+    const tbsp = Math.floor(rem / 3); rem -= tbsp * 3;
+    if (tbsp) parts.push(tbsp + " tbsp");
+    if (rem) parts.push(rem + " tsp");
+    return parts.join(" + ");
+  };
+  const cupWord = (c) => `${fmtNum(c)} cup${c > 1 + 1e-9 ? "s" : ""}`;
+  const ing = (slug) => ingBySlug(slug);
+  // How much of `slug` weighs the same as `cups` cups of `anchorSlug`.
+  const equalWeight = (anchorSlug, slug, cups) => cups * ing(anchorSlug).gramsPerCup / ing(slug).gramsPerCup;
+
+  // One family table: every member measured against the family's anchor by weight.
+  function familyTable(anchorSlug, slugs, amounts) {
+    const a = ing(anchorSlug);
+    const head = amounts.map((c) => `<th>Replaces ${cupWord(c)} (${g2(c * a.gramsPerCup)} g)</th>`).join("");
+    const rows = [anchorSlug, ...slugs.filter((s) => s !== anchorSlug)].map((s) => {
+      const it = ing(s);
+      const isAnchor = s === anchorSlug;
+      const cells = amounts.map((c) => `<td class="num">${measure(equalWeight(anchorSlug, s, c))}</td>`).join("");
+      return `<tr><td><a href="/cups-to-grams/${it.slug}/">${esc(it.name)}</a>${isAnchor ? " <span class=\"note\" style=\"border:0;padding:0;margin:0\">(the reference)</span>" : ""}</td><td class="num">${g2(it.gramsPerCup)} g</td>${cells}</tr>`;
+    }).join("\n");
+    return `<div class="tw"><table><thead><tr><th>Ingredient</th><th>1 cup weighs</th>${head}</tr></thead><tbody>\n${rows}\n</tbody></table></div>`;
+  }
+
+  const FLOURS = DATA.ingredients.filter((i) => i.category === "flour").map((i) => i.slug);
+  const SWEETENERS = DATA.ingredients.filter((i) => i.category === "sugar" && swapRole(i) !== "bulk").map((i) => i.slug);
+  const FATS = ["butter", "vegetable-oil", "olive-oil", "coconut-oil", "vegetable-shortening"];
+  const DAIRY = ["milk", "buttermilk", "evaporated-milk", "heavy-cream", "sour-cream", "yogurt", "cream-cheese", "mascarpone", "ricotta-cheese", "cottage-cheese"];
+  const GRAINS = ["white-rice", "quinoa", "couscous-dry", "bulgur-dry", "pearl-barley", "rolled-oats", "steel-cut-oats", "cornmeal"];
+  const BULK = ["chocolate-chips", "white-chocolate-chips", "chopped-nuts", "walnuts-chopped", "pecan-halves", "whole-almonds", "hazelnuts", "cashews", "raisins", "dried-cranberries", "pitted-dates-chopped", "shredded-coconut", "breadcrumbs", "panko-breadcrumbs", "graham-cracker-crumbs"];
+
+  const AP = ing("all-purpose-flour"), WW = ing("whole-wheat-flour"), SUG = ing("granulated-sugar");
+  const BUT = ing("butter"), OIL = ing("vegetable-oil"), MILK = ing("milk"), ALM = ing("almond-flour");
+  const BC = ing("breadcrumbs"), PANKO = ing("panko-breadcrumbs"), HON = ing("honey");
+  const wwFor1 = equalWeight("all-purpose-flour", "whole-wheat-flour", 1);
+  const wwFor15 = equalWeight("all-purpose-flour", "whole-wheat-flour", 1.5);
+  const almFor1 = equalWeight("all-purpose-flour", "almond-flour", 1);
+  const dairyW = DAIRY.map((s) => ing(s).gramsPerCup);
+  const dairyMin = Math.min(...dairyW), dairyMax = Math.max(...dairyW);
+  const bulkW = BULK.map((s) => ing(s).gramsPerCup);
+  const bulkMin = Math.min(...bulkW), bulkMax = Math.max(...bulkW);
+
+  // The substitutions this site has already worked out in full, pulled straight
+  // from ALL_TOOLS so the hub can never quote a ratio the page itself has dropped.
+  const WORKED = ["/butter-to-oil/", "/sugar-to-honey/", "/cake-flour-substitute/", "/cornstarch-to-flour/", "/baking-powder-substitute/", "/yeast-converter/"];
+  const workedRows = WORKED.map((href) => {
+    const t = ALL_TOOLS.find((x) => x[0] === href);
+    return `<tr><td><a href="${href}">${esc(t[1])}</a></td><td>${esc(t[2])}</td></tr>`;
+  }).join("\n");
+
+  const title = "Ingredient Substitution Chart — How Much to Measure | ExactCup";
+  const description = `Swapping an ingredient? This chart says how much of the replacement to measure. 1 cup all-purpose flour = ${measure(wwFor1)} of whole wheat by weight. Free swap calculator plus flour, sugar, fat, dairy and grain tables.`;
+
+  const faq = [
+    ["How much whole wheat flour replaces 1 1/2 cups of all-purpose flour?", `By weight, ${measure(wwFor15)}. One and a half cups of all-purpose flour is ${g2(1.5 * AP.gramsPerCup)} g, and whole wheat flour weighs ${g2(WW.gramsPerCup)} g per cup rather than ${g2(AP.gramsPerCup)} g, so you need slightly more of it to land on the same weight — the bran and germ flakes hold the cup open, making whole wheat the lighter flour per cup. For one cup of all-purpose the answer is ${measure(wwFor1)} of whole wheat. Most bakers do not swap the whole amount at once: whole wheat absorbs more water and gives a denser crumb, so a common starting point is to replace a quarter to a half of the flour and add a little extra liquid.`],
+    ["Do I substitute by weight or by volume?", "It depends on what the ingredient does in the recipe. Structural dry goods — flours, starches, sugars, cocoa — should be matched by weight, because the recipe's chemistry depends on how much substance is present, not how much space it takes up. Bulk mix-ins that the batter simply carries — chocolate chips, nuts, dried fruit, crumbs — should be matched cup for cup, because the dough has room for a certain volume, not a certain mass. Liquids are the easy family: they all weigh close to the same per cup, so both rules give nearly the same answer."],
+    ["Is 1 cup of one flour the same as 1 cup of another?", `Never quite. Across the ${FLOURS.length} flours and starches on this site a cup runs from ${g2(Math.min(...FLOURS.map((s) => ing(s).gramsPerCup)))} g to ${g2(Math.max(...FLOURS.map((s) => ing(s).gramsPerCup)))} g — so measuring a replacement cup for cup can put you ${Math.round(100 * (Math.max(...FLOURS.map((s) => ing(s).gramsPerCup)) / AP.gramsPerCup - 1))}% over or well under the flour the recipe wanted. Bread flour and all-purpose are the one easy pair: both weigh ${g2(AP.gramsPerCup)} g per cup, so they swap gram for gram and cup for cup at once. Everything else needs the arithmetic.`],
+    ["Can I swap almond flour for all-purpose flour cup for cup?", `The measurement answer is that ${measure(almFor1)} of almond flour weighs the same as a cup of all-purpose (${g2(AP.gramsPerCup)} g against ${g2(ALM.gramsPerCup)} g per cup) — but matching the weight will not make the swap work. Almond flour has no gluten and no starch, so it cannot build structure: it browns faster, holds far more fat and produces a batter that never sets the same way. Treat it as a different ingredient rather than a substitution, and use a recipe written for it. This is the general limit of any weight conversion — it gets the amount right and says nothing about whether the swap works.`],
+    ["How much oil replaces a cup of butter?", `Not the equal-weight figure. A cup of butter is ${g2(BUT.gramsPerCup)} g and a cup of oil is ${g2(OIL.gramsPerCup)} g, so equal weight would suggest about ${measure(equalWeight("butter", "vegetable-oil", 1))} — but butter is only about 81% fat and 16% water while oil is 100% fat, so matching the weight overshoots the fat badly. The tested rule is ${fmtNum(0.75)} cup of oil per cup of butter (1 stick becomes 6 tbsp), which our butter to oil page works through in cups, grams and mL along with the recipes it does not suit.`],
+    ["Can I swap panko for regular breadcrumbs?", `Cup for cup, yes — that is exactly the swap-by-volume case. But do not match them by weight: panko is ${g2(PANKO.gramsPerCup)} g per cup against ${g2(BC.gramsPerCup)} g for ordinary dry breadcrumbs, so a cup of panko is barely half the mass. Weighing out ${g2(BC.gramsPerCup)} g of panko would give you ${measure(equalWeight("breadcrumbs", "panko-breadcrumbs", 1))} — more than double the volume the recipe expected, and far too much for a coating. Panko's whole character is that it is light and open, which is also why it stays crisper.`],
+    ["Does swapping sugars work by weight?", `For the dry ones, yes. Granulated, caster, brown and coconut sugar are all sucrose in different crystal sizes, so matching the weight matches the sweetness closely — granulated at ${g2(SUG.gramsPerCup)} g per cup against packed brown at ${g2(ing("brown-sugar").gramsPerCup)} g means a cup of granulated is ${measure(equalWeight("granulated-sugar", "brown-sugar", 1))} of packed brown. Powdered sugar is the exception among the dry ones: it is ground sugar plus cornstarch, so it dissolves and behaves differently even at the right weight. Liquid sweeteners — honey, maple, agave, molasses — carry water and are handled by their own rules, not by weight.`],
+    ["How much honey replaces a cup of sugar?", `${fmtNum(0.75)} cup, by volume — not the equal-weight amount. A cup of honey is ${g2(HON.gramsPerCup)} g against ${g2(SUG.gramsPerCup)} g for granulated sugar, so equal weight would be only ${measure(equalWeight("granulated-sugar", "honey", 1))} of honey. The tested King Arthur rule works in cups instead, and the swap needs three other adjustments — cut the other liquid, add a little baking soda, and drop the oven temperature — which our sugar to honey page covers in full.`],
+    ["Why do the liquid dairy swaps not need any arithmetic?", `Because they all weigh nearly the same. Across the ${DAIRY.length} pourable and spoonable dairy items on this site a cup runs from ${g2(dairyMin)} g to ${g2(dairyMax)} g — a spread of only about ${Math.round(100 * (dairyMax / dairyMin - 1))}%, which is less than the error in how you fill the cup. So milk, buttermilk, cream, yogurt and sour cream can be measured cup for cup or gram for gram interchangeably. Whether the swap suits the recipe is a separate question: buttermilk and yogurt are acidic and will react with baking soda, where plain milk will not.`],
+    ["Can I swap one grain for another cup for cup?", `You can measure it that way, but check two things first. The dry weights differ — a cup of raw long-grain white rice is ${g2(ing("white-rice").gramsPerCup)} g against ${g2(ing("quinoa").gramsPerCup)} g for quinoa — so a cup of rice is ${measure(equalWeight("white-rice", "quinoa", 1))} of quinoa by weight. More importantly the cooking water and time are not transferable, and the cooked yields differ, so a straight swap in a one-pot dish will not come out right. Our dry to cooked converter has the yields; the grain conversion chart has the dry weights side by side.`],
+    ["Is there one substitution rule that always works?", "Yes, and it is not a ratio: weigh the original, then weigh the replacement to the number the recipe actually needed. Every table on this page is that one operation done for you. It is also why professional recipes are written in grams — a gram of an ingredient is a fixed thing, whereas a cup is a container that different ingredients fill to wildly different weights."],
+    ["Why do most substitution charts not give amounts?", "Because they answer a different question. A typical chart is a list of what can stand in for what — buttermilk for milk, cocoa for chocolate — and it assumes you will measure the replacement in the same units the recipe used. That assumption is safe for liquids and mix-ins and quietly wrong for everything dry, which is where a swap most often goes astray. This page exists to fill in the second half: the amount."],
+  ];
+
+  const ITEMS = DATA.ingredients.map((i) => ({ slug: i.slug, name: i.name, gpc: i.gramsPerCup, role: swapRole(i) }));
+  const optGroups = (sel) => Object.keys(DATA.categories).map((k) =>
+    `<optgroup label="${esc(catName(k))}">${DATA.ingredients.filter((i) => i.category === k).map((i) => `<option value="${i.slug}"${i.slug === sel ? " selected" : ""}>${esc(i.name)}</option>`).join("")}</optgroup>`
+  ).join("");
+  const UNIT_OPTS = [["cups", "cups"], ["tbsp", "tbsp"], ["tsp", "tsp"], ["g", "grams"], ["oz", "ounces"]];
+
+  const jsonLd = [
+    appLd("Ingredient Substitution Calculator", description, canonical),
+    faqLd(faq),
+    breadcrumbLd([["Ingredient Substitution Chart", canonical]]),
+  ];
+  const cfg = { type: "swap", items: ITEMS };
+
+  const body = `
+<h1>Ingredient Substitution Chart: How Much to Measure When You Swap</h1>
+<p class="lead">Every substitution chart tells you <em>what</em> you can swap. Almost none tell you <strong>how much of it to measure</strong> — and that is where the swap usually goes wrong, because a cup of the replacement almost never weighs what a cup of the original did. Enter the amount the recipe asks for and what you are actually using; this page gives you both answers, and says which of the two the pair calls for.</p>
+<div class="calc">
+  <div class="row">
+    <div class="field" style="flex:0 0 96px;max-width:96px"><label for="sw-amt">Recipe wants</label><input id="sw-amt" type="text" inputmode="decimal" value="1 1/2" placeholder="1 1/2"></div>
+    <div class="field" style="flex:0 0 108px;max-width:108px"><label for="sw-unit">Unit</label><select id="sw-unit">${UNIT_OPTS.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select></div>
+    <div class="field" style="min-width:160px"><label for="sw-from">of this</label><select id="sw-from">${optGroups("all-purpose-flour")}</select></div>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <div class="field"><label for="sw-to">But you are using</label><select id="sw-to">${optGroups("whole-wheat-flour")}</select></div>
+  </div>
+  <div class="result"><div class="big" id="sw-out">—</div><div class="sub" id="sw-sub"></div></div>
+  <p class="note" id="sw-note" style="margin-bottom:0"></p>
+</div>
+<p class="note">Every figure on this page is computed from the same verified cup weights used across the site (${DATA.ingredients.length} ingredients, checked against the King Arthur Baking weight chart and USDA FoodData Central), so nothing here can drift from the individual ingredient pages. A conversion tells you the amount; it cannot tell you that the swap suits the recipe — see <a href="#limits">what a weight conversion can't tell you</a>.</p>
+
+<h2>A substitution is two questions, not one</h2>
+<p>Can I use this instead? And how much of it do I measure? The first question is the one every chart answers. The second is arithmetic, and it has exactly three cases:</p>
+<ul>
+<li><strong>Structural dry goods — swap by weight.</strong> Flour, starch, sugar, cocoa. The recipe depends on how much substance is in the bowl, not how much space it fills. Match the grams and convert back into cups of whatever you are using.</li>
+<li><strong>Bulk mix-ins — swap cup for cup.</strong> Chocolate chips, nuts, dried fruit, crumbs, shredded cheese. The batter carries these as bulk rather than mass; a cookie has room for a certain <em>volume</em> of chips. Matching weight here is actively wrong — across the mix-ins and crumbs on this site a cup runs from ${g2(bulkMin)} g to ${g2(bulkMax)} g, so an equal-weight swap can more than double the volume.</li>
+<li><strong>Liquids — either, they agree.</strong> Milk, cream, yogurt, buttermilk, juice, water: all within a few percent of each other per cup, so the two rules land in the same place.</li>
+</ul>
+<p>The awkward cases are the ones that look like one family but behave like another. Butter is not oil with a different name (it carries water). Honey is not sugar in liquid form (same). Powdered sugar is not granulated sugar ground finer (it has cornstarch in it). Those get their own worked-out pages, listed further down — the tables here handle the ordinary swaps, where the only thing standing between you and the right amount is the density.</p>
+
+<h2>Flour for flour</h2>
+<p>The most-swapped family, and the one where cup-for-cup does the most damage. Whole wheat is the surprise: it weighs <em>less</em> per cup than white flour (${g2(WW.gramsPerCup)} g against ${g2(AP.gramsPerCup)} g), because the bran and germ flakes hold the cup open, so you need <strong>more</strong> than a cup of it to match a cup of all-purpose. To replace ${cupWord(1.5)} of all-purpose flour, measure <strong>${measure(wwFor15)}</strong> of whole wheat.</p>
+${familyTable("all-purpose-flour", FLOURS, [0.5, 1, 1.5])}
+<p class="note">Amounts are rounded to something you can actually measure: to the nearest teaspoon, and to a familiar cup fraction whenever the exact figure sits within about 2% of one — a gap no measuring cup can resolve. Weighing? Ignore the cups and use the gram figure in the column heading.</p>
+<p>Bread flour is the one free swap in the table: it weighs exactly what all-purpose weighs, so it goes in gram for gram <em>and</em> cup for cup. The difference between them is protein, not density — more gluten, chewier crumb — which the <a href="/flour-conversion-chart/">flour conversion chart</a> compares flour by flour. At the other end, semolina is the heaviest flour on the site at ${g2(ing("semolina").gramsPerCup)} g per cup: a cup of it carries ${Math.round(ing("semolina").gramsPerCup - AP.gramsPerCup)} g more than a cup of all-purpose — the equivalent of tipping in an extra ${measure((ing("semolina").gramsPerCup - AP.gramsPerCup) / AP.gramsPerCup)} of flour.</p>
+
+<h2>Sugar for sugar</h2>
+<p>The dry sugars are the friendliest swap on this page: granulated, caster, brown and coconut sugar are the same sweetener in different crystal sizes, so matching weight matches sweetness. The syrups in the lower half of the table are a different animal — they carry water, they are acidic, and swapping them into a dry-sugar recipe changes the liquid balance, so use the equal-weight figures for weighing rather than as a substitution rule.</p>
+${familyTable("granulated-sugar", SWEETENERS, [0.5, 1])}
+<p>Two traps. <strong>Brown sugar is only heavier because it is packed</strong> — recipes assume you press it into the cup, which is why it reads ${g2(ing("brown-sugar").gramsPerCup)} g against granulated's ${g2(SUG.gramsPerCup)} g despite being nearly the same stuff; spooned in loosely it weighs far less. And <strong>powdered sugar is not granulated sugar ground finer</strong>: it contains a few percent of cornstarch as an anti-caking agent, so even at the correct weight it thickens and dissolves differently. Full breakdown on the <a href="/sugar-conversion-chart/">sugar conversion chart</a>; for honey and maple specifically, see <a href="/sugar-to-honey/">sugar to honey</a>.</p>
+
+<h2>Butter, oil and the other fats</h2>
+<p>This is the family where equal weight is the <em>wrong</em> answer, and it is worth knowing why. Solid butter is roughly 81% fat and 16% water; oil is 100% fat. Match them by weight and you have quietly added about a fifth more fat than the recipe wanted, along with none of the water. The tested rule is volumetric: <strong>${fmtNum(0.75)} cup of oil per cup of butter</strong>.</p>
+${familyTable("butter", FATS, [0.5, 1])}
+<p class="note">Read this table as weighing help, not as swap ratios. For butter to oil use the ${fmtNum(0.75)}-by-volume rule and the guidance on the <a href="/butter-to-oil/">butter to oil page</a> — it also lists the bakes where the swap simply does not work (creamed cakes, cookies, pie crust, laminated pastry). The lightest entry, vegetable shortening at ${g2(ing("vegetable-shortening").gramsPerCup)} g per cup, is light because it is whipped full of air, not because it is less fatty.</p>
+
+<h2>Liquid dairy: the family where it doesn't matter</h2>
+<p>Good news for once. Every pourable and spoonable dairy item on this site lands between ${g2(dairyMin)} g and ${g2(dairyMax)} g per cup — a spread of about ${Math.round(100 * (dairyMax / dairyMin - 1))}%, smaller than the error in how you fill the cup. So within this family you can measure cup for cup or gram for gram and get the same result either way.</p>
+${familyTable("milk", DAIRY, [0.5, 1])}
+<p>What does change is chemistry, not amount. Buttermilk, yogurt and sour cream are acidic: they react with baking soda where plain milk will not, which is why a recipe built on buttermilk usually contains soda and its milk-based cousin contains baking powder. Swapping the liquid without swapping the leavening is the commonest way a substituted cake comes out flat or soapy — the <a href="/baking-powder-substitute/">baking powder substitute page</a> works through the pairing. Fat content is the other axis: cream will not whip below about 30% fat, so half-and-half cannot replace heavy cream in whipped applications however carefully you measure it.</p>
+
+<h2>Mix-ins and crumbs: swap by volume, not by weight</h2>
+<p>Here the rule inverts. A cookie dough has room for a certain <em>volume</em> of chips or nuts; it does not care what they weigh. Across the mix-ins on this site a cup spans ${g2(bulkMin)} g to ${g2(bulkMax)} g — a ${g2(bulkMax / bulkMin)}-fold range — so matching weight instead of volume can overwhelm a batter or leave it half empty. The clearest example is in the coating cupboard: <strong>panko is ${g2(PANKO.gramsPerCup)} g per cup against ${g2(BC.gramsPerCup)} g for ordinary dry breadcrumbs</strong>, so weighing out a breadcrumb-equivalent ${g2(BC.gramsPerCup)} g of panko hands you ${measure(equalWeight("breadcrumbs", "panko-breadcrumbs", 1))} — more than double the volume you meant to use.</p>
+<p>The full cup-for-cup mix-in table lives on the <a href="/cups-to-grams/chocolate-chips/">chocolate chips page</a>, where 18 mix-ins are lined up against a cup of chips. For nuts specifically, the prep state matters more than the species — <a href="/cups-to-grams/chopped-nuts/">chopped nuts</a> has whole, halves, chopped, slivered, sliced and ground side by side.</p>
+
+<h2>Grains: measure by weight, cook by the packet</h2>
+<p>Grains swap by weight like other dry goods, with one caveat that outranks the arithmetic: the water ratio and the cooking time are not transferable, and neither are the cooked yields. Use the weights below to get the right amount of grain into the pot, then cook it the way that grain wants to be cooked.</p>
+${familyTable("white-rice", GRAINS, [0.5, 1])}
+<p>Cooked yields are the other half of the question — a cup of dry rice and a cup of dry quinoa do not become the same amount of dinner. The <a href="/dry-to-cooked/">dry to cooked converter</a> has the yield factors for each, and the <a href="/grain-conversion-chart/">grain conversion chart</a> puts the dry weights in one place. Totalling more than one grain at once, as in a mixed pilaf? The <a href="/recipe-weight-calculator/">recipe weight calculator</a> adds them up.</p>
+
+<h2>Substitutions worked out in full</h2>
+<p>Some swaps need more than a density conversion — a tested ratio, plus adjustments to the liquid, the leavening or the oven. These have pages of their own:</p>
+<table><thead><tr><th>Substitution</th><th>The rule</th></tr></thead><tbody>
+${workedRows}
+</tbody></table>
+
+<h2 id="limits">What a weight conversion can't tell you</h2>
+<p>Everything above answers "how much", and it answers it exactly. It says nothing at all about whether the swap will work — and it is worth being blunt about the gap, because getting the amount right can make a bad substitution feel authorised.</p>
+<p>Weight cannot see <strong>gluten</strong>: ${measure(almFor1)} of almond flour weighs the same as a cup of all-purpose and will not build the same structure, because it has no gluten and no starch. It cannot see <strong>leavening</strong>: self-rising flour already contains baking powder and salt, so swapping it in by weight adds both without telling you. It cannot see <strong>water</strong>: that is the whole butter-and-oil problem, and the honey one. It cannot see <strong>acidity</strong>, which is why buttermilk and milk are not interchangeable in a soda-raised batter. And it cannot see <strong>particle size</strong> — semolina and cornmeal weigh a lot per cup precisely because they are coarse, and coarse flour makes a different crumb at any weight.</p>
+<p>The practical version: use these tables when you have already decided the swap is fine and just need the amount, or when you are weighing rather than measuring and want the numbers to line up. When you are not sure the swap is fine, start with one of the worked-out pages above.</p>
+
+<h2>Frequently asked questions</h2>
+${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
+
+<h2>Need a different conversion?</h2>
+<p>One ingredient at a time: <a href="/cups-to-grams/">cups to grams</a> for all ${DATA.ingredients.length} ingredients, <a href="/grams-to-cups/">grams to cups</a> in reverse, and <a href="/tablespoons-to-grams/">tablespoons to grams</a> for spoon amounts. Whole families side by side: <a href="/flour-conversion-chart/">flours</a>, <a href="/sugar-conversion-chart/">sugars and syrups</a>, <a href="/dairy-conversion-chart/">dairy and fats</a>, <a href="/baking-conversion-chart/">baking ingredients</a>, <a href="/grain-conversion-chart/">grains</a>. Changing the size of the recipe as well as its ingredients? Use the <a href="/recipe-scaler/">recipe scaler</a> or the <a href="/recipe-halving-chart/">recipe halving chart</a>, and the <a href="/recipe-weight-calculator/">recipe weight calculator</a> to total the whole list once you have settled it.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg }) };
 }
 
@@ -3188,6 +3391,7 @@ function llmsTxt() {
     ["Yeast Converter", "/yeast-converter/", "Convert between active dry, instant and fresh yeast by weight (ratio 1 : 1.25 : 3); 1 packet = 7 g = 2¼ tsp"],
     ["Sourdough Hydration Calculator", "/sourdough-hydration-calculator/", "True dough hydration including the flour and water in the starter (any starter hydration), salt %, prefermented flour and target-hydration water"],
     ["Butter Converter", "/butter-converter/", "Sticks, cups, tablespoons, grams and ounces"],
+    ["Ingredient Substitution Chart", "/ingredient-substitution-chart/", "How much of the replacement to measure when substituting an ingredient, computed from verified cup weights: structural dry goods (flour, starch, sugar, cocoa) swap by WEIGHT, bulk mix-ins (chips, nuts, dried fruit, crumbs, shredded cheese) swap by VOLUME cup for cup, liquids give the same answer either way; 1 cup all-purpose flour (120 g) = 1 cup + 1 tbsp whole wheat flour (113 g/cup), 1 1/2 cups AP = 1 1/2 cups + 1 tbsp + 1 tsp whole wheat; bread flour = all-purpose gram for gram AND cup for cup (both 120 g/cup); panko 50 g/cup vs dry breadcrumbs 108 g/cup so swap them cup for cup, never by weight; liquid dairy all 226-245 g/cup so cup-for-cup = gram-for-gram; butter to oil is 3/4 by volume NOT equal weight (butter ~81% fat + 16% water); swap calculator for any pair of 80+ ingredients"],
     ["Butter to Oil Conversion", "/butter-to-oil/", "Substitute oil for butter at the standard 3:4 volume ratio: 1 cup butter = 3/4 cup oil; 1 stick = 6 tbsp oil; by weight 100 g butter ≈ 71 g oil (butter is ~81% fat + 16% water, USDA); melted-butter recipes are often swapped 1:1; not suited to cookies, creamed cakes, pie crust or laminated pastry"],
     ["Sugar to Honey Conversion", "/sugar-to-honey/", "Substitute honey for granulated sugar: 1 cup sugar = 3/4 cup honey (King Arthur rule; the National Honey Board and Clemson Extension suggest up to 1/2), then per cup of honey used cut other liquid by 1/4 cup, add 1/2 tsp baking soda (honey pH ~3.9) and bake 25 F lower (avoid recipes over 350 F); by weight 100 g sugar ≈ 128 g honey (honey is 340 g/cup vs sugar 200 g/cup); reverse: 1 cup honey = 1 1/4 cups sugar + 1/4 cup liquid"],
     ["Cake Flour Substitute", "/cake-flour-substitute/", "Make cake flour from all-purpose flour: per 1 cup cake flour use 14 tbsp AP flour (3/4 cup + 2 tbsp = 7/8 cup = 1 cup minus 2 tbsp, 105 g) + 2 tbsp cornstarch (14 g), whisked — the King Arthur / America's Test Kitchen / Bob's Red Mill rule; by weight 100 g cake flour = 88 g AP flour + 12 g cornstarch; no-cornstarch variant (Virginia Extension): 1 cup minus 2 tbsp AP flour; reverse (cake flour in an AP recipe): 1 cup + 2 tbsp cake flour per cup AP (Swans Down / Utah State); protein: bleached cake flour ~6-9% vs AP ~10-12%; self-rising flour is NOT a cake flour substitute (contains baking powder + salt)"],
@@ -3636,7 +3840,7 @@ function rmrf(p) { if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: 
 function build() {
   rmrf(OUT);
   fs.mkdirSync(OUT, { recursive: true });
-  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), recipeWeightPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage(), apiDocsPage()];
+  const pages = [homePage(), masterPage(), gramsToCupsPage(), tablespoonsToGramsPage(), tbspInCupPage(), tspInTbspPage(), ouncesInCupPage(), cupsInQuartPage(), halvingChartPage(), recipeWeightPage(), kitchenChartPage(), scalerPage(), ovenPage(), butterPage(), butterToOilPage(), sugarToHoneyPage(), cakeFlourSubstitutePage(), cornstarchFlourPage(), bakingPowderSubstitutePage(), substitutionHubPage(), dryToCookedPage(), airFryerPage(), panSizePage(), volumePage(), cupsToMlPage(), portionPage(), pizzaDoughPage(), bakersPercentagePage(), yeastPage(), sourdoughPage(), embedInfoPage(), datasetPage(), apiDocsPage()];
   Object.keys(DATA.categories).forEach((k) => { const p = categoryPage(k); if (p) pages.push(p); });
   DATA.ingredients.forEach((i) => pages.push(ingredientPage(i)));
   pages.forEach((p) => writePage(p.canonical, p.html));
