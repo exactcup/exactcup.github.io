@@ -2958,6 +2958,24 @@ ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></de
 
 // Per-category FAQ for the conversion-chart hubs. Values are drawn from the verified
 // gram-per-cup weights in ingredients.json (the same numbers rendered in each chart).
+// Sugar-free & diet pancake syrups — USDA FoodData Central Branded label servings
+// (pulled 2026-08-27). Each entry is the product's own Nutrition Facts serving in
+// grams and millilitres; density and the per-US-cup weight are computed from it,
+// so no per-cup figure is hand-typed. Cary's declares its serving by volume only
+// (1/4 cup / 60 mL); its gram weight was derived from USDA's per-100 g vs
+// per-serving nutrients — the calorie and the carbohydrate derivations agree at
+// exactly 60.0 g, i.e. water density. kind: "sf" water-based sugar-free,
+// "lite" reduced-calorie, "fiber" keto fiber syrup, "regular" full-sugar.
+const SF_SYRUPS = [
+  { name: "Cary's Sugar Free Syrup", serving: "¼ cup (60 mL)", g: 60, ml: 60, fdc: 1875345, kind: "sf" },
+  { name: "Log Cabin Sugar Free", serving: "2 tbsp (30 mL)", g: 31.53, ml: 30, fdc: 2769796, kind: "sf" },
+  { name: "Log Cabin Lite", serving: "2 tbsp (30 mL)", g: 34.71, ml: 30, fdc: 2754550, kind: "lite" },
+  { name: "ChocZero Maple Flavored (monk fruit, fiber-based)", serving: "1 tbsp (15 mL)", g: 20, ml: 15, fdc: 2391229, kind: "fiber" },
+  { name: "Log Cabin Original (regular pancake syrup)", serving: "2 tbsp (30 mL)", g: 39.6, ml: 30, fdc: 2773694, kind: "regular" },
+  { name: "Aunt Jemima / Pearl Milling Original (regular)", serving: "¼ cup (60 mL)", g: 80.1, ml: 60, fdc: 1458340, kind: "regular" },
+];
+const sfCup = (s) => Math.round((s.g / s.ml) * 236.588);
+
 const CATEGORY_FAQ = {
   flour: [
     ["How many grams is 1 cup of flour?", "One cup of all-purpose flour weighs about 120 g. Bread flour and cake flour are also 120 g per cup, while whole wheat and self-rising flour are 113 g. Starches differ more: cornstarch is 112 g and coconut flour 128 g."],
@@ -3029,7 +3047,7 @@ function categoryPage(key) {
   // dairy gets a hand-written description surfacing the cheese cup-equivalents table
   // (targets the observed query class "cheese cup equivalents chart").
   const description = key === "sugar"
-    ? `Free sugar conversion chart: grams per cup for granulated, brown, caster and powdered sugar, honey, maple syrup and molasses — plus every cup fraction (3/4 cup of sugar is 150 g), tablespoons, and how many grams of sugar a cup actually contains.`
+    ? `Free sugar conversion chart: grams per cup for granulated, brown, caster and powdered sugar, honey, maple syrup and molasses — plus every cup fraction (3/4 cup of sugar is 150 g), what sugar-free and diet syrups weigh (1 cup of Cary's is 237 g), and how many grams of sugar a cup actually contains.`
     : key === "dairy"
     ? `Free dairy conversion chart: grams per cup for butter, milk, cream, yogurt and every cheese — plus a cheese cup equivalents table (4 oz block = 1 cup shredded = 113 g; grated parmesan, crumbled feta, cream cheese and more).`
     : key === "baking"
@@ -3051,6 +3069,17 @@ function categoryPage(key) {
   // Question shapes come from observed search demand on this page: "half cup rice
   // in grams", "100g rice conversion chart", and the verification shape
   // ("is there 48 grams of whole grains in a 1/2 cup of quinoa").
+  // Sugar FAQ extras are computed from the SF_SYRUPS label data so the answers can
+  // never disagree with the sugar-free syrup table. The Cary's question is an
+  // observed, click-carrying search query answered verbatim.
+  if (key === "sugar") {
+    const sf = (i) => sfCup(SF_SYRUPS[i]);
+    faq.push(
+      ["How many grams is 1/3 cup of Cary's sugar-free syrup?", `About ${Math.round(sf(0) / 3)} g — call it 80 g if you use the label's rounded 240 mL cup. Cary's sugar-free syrup weighs essentially what water weighs: its Nutrition Facts serving is 1/4 cup (60 mL) at 60 g, a density of exactly 1.00 g/mL, so a full US cup is about ${sf(0)} g. Regular maple syrup is a third heavier — 1/3 cup of it is about ${Math.round(w("maple-syrup") / 3)} g.`],
+      ["Does sugar-free syrup weigh less than regular syrup?", `It depends which kind of sugar-free. Water-based sugar-free syrups (Cary's, Log Cabin Sugar Free) run about ${sf(0)}–${sf(1)} g per cup — roughly a quarter to a third lighter than regular pancake syrup at ${sf(4)}–${sf(5)} g or pure maple at ${g2(w("maple-syrup"))} g — because the dissolved sugar is what makes real syrup heavy. But keto fiber syrups sweetened with monk fruit (ChocZero) weigh about ${sf(3)} g per cup, the same as the real thing: dissolved soluble fiber is as dense as dissolved sugar. Lite syrup sits between at about ${sf(2)} g.`],
+      ["How much does a cup of sugar-free pancake syrup weigh?", `About ${sf(0)}–${sf(1)} g for the common water-based kind — Cary's measures ${sf(0)} g per US cup (60 g per 1/4-cup label serving) and Log Cabin Sugar Free about ${sf(1)} g. That is essentially the weight of a cup of water, and it is correct: with the sugar removed, the syrup is water plus gums, and gums thicken without adding weight. Only fiber-based keto syrups break the rule, at around ${sf(3)} g per cup.`],
+    );
+  }
   if (key === "grain") {
     const gr = (slug) => g2(w(slug));
     faq.push(
@@ -3114,7 +3143,19 @@ function categoryPage(key) {
 <p>Granulated and caster sugar are forgiving: the crystals barely compress, so scoop, fill and sweep the top level and you land within a percent or two (King Arthur lists 198&nbsp;g a cup, USDA measures 200 — that is the whole disagreement). Two sugars on this chart are not forgiving at all.</p>
 <p><strong>Brown sugar is measured packed.</strong> Press it into the cup with the back of a spoon until it holds the cup\u2019s shape when you turn it out — nearly every recipe written in cups assumes exactly that. The gap is the largest on this page: USDA measures a packed cup at 220&nbsp;g and an <em>unpacked</em> cup at just 145&nbsp;g. A loosely filled cup is about a third short, which is enough to change a cookie dough\u2019s texture outright. This chart uses King Arthur\u2019s packed figure, ${g2(w("brown-sugar"))}&nbsp;g; treat 213–220&nbsp;g as the honest range for a packed cup, and note that light and dark brown sugar weigh the same — only the molasses content differs.</p>
 <p><strong>Powdered sugar changes with sifting</strong> — not because sifting changes the sugar, but because it changes how much of it fits in the cup. USDA measures a sifted cup at 100&nbsp;g against 120&nbsp;g unsifted; King Arthur lists 113&nbsp;g unsifted, the figure used here. Which is why recipe wording matters: “1 cup <em>sifted</em> confectioners\u2019 sugar” means sift first, then measure (about 100&nbsp;g), while “1 cup confectioners\u2019 sugar, sifted” means measure first and sift afterwards (113–120&nbsp;g). That is a 15–20% difference in a frosting from a comma. Weighing settles it.</p>
-<p>Coconut sugar and any sugar that has hardened in the bag are the third case: break the lumps up before measuring &mdash; a clump props the cup open and leaves less sugar in it than the chart assumes. For everything else on this chart, the honest summary is that <a href="/cups-to-grams/granulated-sugar/">granulated sugar</a> is safe to measure by the cup, <a href="/cups-to-grams/brown-sugar/">brown</a> and <a href="/cups-to-grams/powdered-sugar/">powdered sugar</a> are worth weighing, and syrups are worth weighing simply because so much of them stays behind in the cup. Scaling a recipe up or down at the same time? The <a href="/recipe-scaler/">recipe scaler</a> does the arithmetic on every ingredient at once.</p>` : ""}${key === "flour" ? `
+<p>Coconut sugar and any sugar that has hardened in the bag are the third case: break the lumps up before measuring &mdash; a clump props the cup open and leaves less sugar in it than the chart assumes. For everything else on this chart, the honest summary is that <a href="/cups-to-grams/granulated-sugar/">granulated sugar</a> is safe to measure by the cup, <a href="/cups-to-grams/brown-sugar/">brown</a> and <a href="/cups-to-grams/powdered-sugar/">powdered sugar</a> are worth weighing, and syrups are worth weighing simply because so much of them stays behind in the cup. Scaling a recipe up or down at the same time? The <a href="/recipe-scaler/">recipe scaler</a> does the arithmetic on every ingredient at once.</p>
+<h2 id="sugar-free-syrups">Sugar-free and diet syrups: what a cup really weighs</h2>
+<p>Start with the amount people actually look up: <strong>&frac13; cup of Cary's sugar-free syrup is about ${Math.round(236.588 / 3)}&nbsp;g</strong> — call it 80&nbsp;g if you use the label's rounded 240&nbsp;mL cup. That number looks wrong next to everything else on this page, and that is the point: <strong>sugar-free syrup weighs what water weighs</strong> (1.00&nbsp;g/mL), because the dissolved sugar is what makes real syrup heavy. Regular pancake syrup and pure <a href="/cups-to-grams/maple-syrup/">maple syrup</a> are roughly two-thirds sugar by weight, which pushes their density to about 1.32&ndash;1.36&nbsp;g/mL — so a cup of the real thing is ${g2(w("maple-syrup"))}&nbsp;g while a cup of Cary's is about ${sfCup(SF_SYRUPS[0])}&nbsp;g, a third lighter for the same cup.</p>
+<div class="tw"><table><thead><tr><th>Syrup (label serving)</th><th>1 cup</th><th>&frac12; cup</th><th>&frac13; cup</th><th>&frac14; cup</th></tr></thead><tbody>${
+  SF_SYRUPS.map((s) => {
+    const pc = sfCup(s);
+    return `<tr><td>${esc(s.name)} — ${s.serving} = ${g2(s.g)} g</td><td class="num">${pc} g</td><td class="num">${Math.round(pc / 2)} g</td><td class="num">${Math.round(pc / 3)} g</td><td class="num">${Math.round(pc / 4)} g</td></tr>`;
+  }).join("")
+}<tr><td><a href="/cups-to-grams/maple-syrup/">Pure maple syrup</a> (this site's chart value)</td><td class="num">${g2(w("maple-syrup"))} g</td><td class="num">${Math.round(w("maple-syrup") / 2)} g</td><td class="num">${Math.round(w("maple-syrup") / 3)} g</td><td class="num">${Math.round(w("maple-syrup") / 4)} g</td></tr></tbody></table></div>
+<p class="note">Sources: each product's own Nutrition Facts serving as published in USDA FoodData Central's Branded Foods data — Cary's #1875345, Log Cabin Sugar Free #2769796, Log Cabin Lite #2754550, ChocZero #2391229, Log Cabin Original #2773694, Aunt Jemima Original #1458340. The per-cup columns are computed from each label's grams-per-millilitre (density &times; 236.6&nbsp;mL), never typed by hand. Cary's label declares its serving by volume only, so its 60&nbsp;g was derived from USDA's per-100&nbsp;g vs per-serving nutrition figures — the calorie and carbohydrate derivations agree at exactly 60.0&nbsp;g. Two honest caveats: US labels round a cup to 240&nbsp;mL against the customary 236.6&nbsp;mL (a 1.5% difference, smaller than pouring error), and brands reformulate — if the serving line on your bottle disagrees with this table, trust your bottle.</p>
+<p><strong>Thick is not heavy.</strong> Sugar-free syrup pours as slowly as the real thing because it is thickened with gums (cellulose, xanthan) — but gums add viscosity at a fraction of a percent by weight, so the density stays at water's 1.00. If you have ever weighed a cup of sugar-free syrup, seen ~237&nbsp;g and assumed the scale or the chart was wrong, this is the explanation: nothing is wrong, there is simply no sugar in the cup.</p>
+<p><strong>The exception is keto &ldquo;fiber&rdquo; syrups, and it runs the other way.</strong> Monk-fruit maple syrups like ChocZero replace the sugar with soluble fiber (chicory root or corn), and dissolved fiber is just as dense as dissolved sugar: ChocZero's own label weighs 20&nbsp;g per tablespoon — about ${sfCup(SF_SYRUPS[3])}&nbsp;g a cup, the same as regular syrup. So &ldquo;sugar-free&rdquo; alone tells you nothing about weight until you know which formula you are holding: <strong>water-based sugar-free syrups run ${sfCup(SF_SYRUPS[0])}&ndash;${sfCup(SF_SYRUPS[1])}&nbsp;g a cup, lite syrup sits between at ${sfCup(SF_SYRUPS[2])}&nbsp;g, and fiber-based keto syrups are back up at ${sfCup(SF_SYRUPS[3])}&nbsp;g</strong> — with the full-sugar originals at ${sfCup(SF_SYRUPS[4])}&ndash;${g2(w("maple-syrup"))}&nbsp;g.</p>
+<p>Swapping sugar-free syrup <em>onto</em> pancakes or into oatmeal is a straight volume-for-volume trade. Swapping it into a <em>baked</em> recipe is not: the recipe's syrup was carrying sugar (browning, moisture retention, structure) and weight, and a water-based substitute delivers neither — expect paler, wetter results, and treat any weight conversion as measuring help rather than permission. The <a href="/sugar-to-honey/">sugar to honey conversion</a> shows what a full-sugar liquid swap involves, the <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> handles any pair on this site, and the <a href="/grams-to-cups/">grams to cups converter</a> runs any of these weights backwards.</p>` : ""}${key === "flour" ? `
 <h2 id="flour-vs-flour">Which flour weighs more? Every flour against all-purpose</h2>
 <p>Comparing two flours before you swap them? Start with the pair people ask about most: <strong>half a cup of bread flour is ${g2(w("bread-flour") / 2)}&nbsp;g and half a cup of whole wheat flour is ${g2(w("whole-wheat-flour") / 2)}&nbsp;g</strong> &mdash; whole wheat is about ${g2((w("bread-flour") - w("whole-wheat-flour")) / 2)}&nbsp;g lighter, or ${g2(w("bread-flour") - w("whole-wheat-flour"))}&nbsp;g over a full cup (${g2(w("bread-flour"))}&nbsp;g against ${g2(w("whole-wheat-flour"))}&nbsp;g). That catches most bakers out, because whole wheat <em>feels</em> like the heartier flour. The bran and germ flakes left in it are coarse and irregular, so they hold the cup open instead of settling tight the way fine white flour does.</p>
 <p>The table below lines every flour and starch on this page up against all-purpose, so you can compare any pair at a glance &mdash; full cup, half cup, and the gap per cup.</p>
