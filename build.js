@@ -446,6 +446,50 @@ function riceTypesTable() {
   return `<table><thead><tr><th>Rice (uncooked)</th><th>1 US cup</th><th>1/2 cup</th><th>100 g =</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Yogurt-family cup weights, verified 2026-08-28. Regular plain yogurt: USDA
+// SR Legacy #171284 (whole milk), #170886 (low fat) and #170887 (skim) all
+// publish the same measured 1 cup (8 fl oz) = 245 g. Greek: every major brand
+// label (Fage Total, Chobani plain, Siggi's) prints 3/4 cup = 170 g, i.e.
+// 226.7 g/cup — King Arthur's 227 g convention — while USDA FNDDS food code
+// 11411400 measures a 245 g cup; both published below, not averaged. Skyr:
+// Siggi's and Icelandic Provisions tub labels, 3/4 cup = 170 g. Kefir: SR
+// #170904 (Lifeway lowfat), 1 cup = 243 g. Frozen yogurt: USDA ~174 g/cup
+// hard-packed (FNDDS 11460000 gives 175 g); soft-serve SR 72 g per 1/2 cup.
+const YOGURT_TYPES = [
+  ["Plain yogurt — whole, low-fat or nonfat (this page)", 245, false, null],
+  ["Greek yogurt — brand labels (Fage, Chobani)", 227, false, null],
+  ["Greek yogurt — USDA measured", 245, false, null],
+  ["Skyr / Icelandic yogurt (label figure)", 227, false, null],
+  ["Kefir (pourable)", 243, false, null],
+  ["Frozen yogurt, hard-packed", 174, true, null],
+  ["Frozen yogurt, soft-serve", 144, true, null],
+];
+function yogurtTypesTable() {
+  const rows = YOGURT_TYPES.map(([label, g, approx]) => {
+    const t = approx ? "~" : "";
+    return `<tr><td>${label}</td><td class="num">${t}${g2(g)} g</td><td class="num">${t}${g2(g / 2)} g</td><td class="num">${t}${g2(g / 4)} g</td><td class="num">${cups2(100 / g)} cups</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Yogurt</th><th>1 US cup</th><th>1/2 cup</th><th>1/4 cup</th><th>100 g =</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+// US yogurt container fill weights as printed on labels: 4/6/8 oz singles are
+// USDA SR #171284's container portions (113/170/227 g); the 5.3 oz Greek
+// single is 150 g (Siggi's label, FNDDS portion); the 7 oz Fage single is
+// 200 g; the 32 oz tub is 907 g (Chobani spec sheet).
+const YOGURT_CONTAINERS = [
+  ["4 oz kids' cup", 113],
+  ["5.3 oz Greek single-serve", 150],
+  ["6 oz single-serve", 170],
+  ["7 oz single (Fage)", 200],
+  ["8 oz cup", 227],
+  ["32 oz (2 lb) tub", 907],
+];
+function yogurtContainersTable(gpc) {
+  const rows = YOGURT_CONTAINERS.map(([label, g]) =>
+    `<tr><td>${label}</td><td class="num">${g2(g)} g</td><td class="num">${cups2(g / gpc)} cups</td></tr>`
+  ).join("");
+  return `<table><thead><tr><th>Container</th><th>Label weight</th><th>&asymp; US cups</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 // Genuinely-relevant tool links per ingredient category. Also flows crawl
 // equity from the most-crawled cluster (ingredient pages) to the tool pages,
 // which are otherwise only linked from the homepage. Every tool page appears in
@@ -489,6 +533,8 @@ function ingredientPage(ing) {
     ? `How many grams is 1 cup of chopped nuts? About ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Full chart plus USDA cup weights for chopped walnuts, pecans, hazelnuts, slivered almonds and ground nuts.`
     : ing.slug === "rolled-oats"
     ? `How many grams is a cup of oats? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g — rolled or quick. A 250 mL metric (NZ/AU) cup = ${Math.round(gpc / 236.588 * 250)} g. Full chart plus jumbo, porridge and steel-cut oat weights.`
+    : ing.slug === "yogurt"
+    ? `How many grams is 1 cup of yogurt? About ${g2(gpc)} g plain (USDA) — Greek yogurt labels work out to 227 g. Full chart plus Greek, skyr, kefir and frozen yogurt weights and every container size in grams.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
   const canonical = `/cups-to-grams/${ing.slug}/`;
   const low = ing.name.toLowerCase();
@@ -608,6 +654,16 @@ function ingredientPage(ing) {
       [`How many grams is 1 cup of instant rice?`, `About 95 grams (USDA) — barely half the ${g2(gpc)} g of regular uncooked rice. Instant or "minute" rice is pre-cooked and dehydrated, so its grains are puffed and full of air. Never swap it by weight with regular rice: a cup of instant rice is about the same amount of food as half a cup of regular rice, and it needs far less water and time.`],
     );
   }
+  if (ing.slug === "yogurt") {
+    faq.push(
+      [`How many grams is 1 cup of Greek yogurt?`, `Between about 227 and 245 grams, depending on who measured. Every major brand label — Fage, Chobani and Siggi's alike — prints a serving of 3/4 cup = 170 g, which works out to 227 g per cup (the same figure King Arthur's ingredient chart uses), while USDA's measured portion for plain whole-milk Greek yogurt is 245 g, identical to regular yogurt. The 7% spread is smaller than the difference the spoon makes, so use this page's ${g2(gpc)} g chart for either style, and weigh when the ratio matters.`],
+      [`Does Greek yogurt weigh more than regular yogurt per cup?`, `No — thick is not heavy. Straining removes watery whey, and what remains is barely denser than what went in: USDA measures both Greek and regular yogurt at the same 245 g per cup, and brand labels actually put Greek slightly lighter (227 g per cup), because the stiff paste bridges and traps air pockets when spooned into a cup where pourable yogurt settles flat. What straining really changes is concentration — roughly double the protein per gram — not the weight of a cup.`],
+      [`Is an 8 oz container of yogurt the same as 1 cup?`, `Nearly, but not exactly. An 8 oz container holds 227 g of yogurt, while a measured US cup weighs about ${g2(gpc)} g (USDA) — so one container comes up about a heaped tablespoon short of a true cup. For muffins, smoothies and marinades, tip the container in and call it a cup; for a cheesecake or a set yogurt dessert where the dairy ratio matters, add a spoonful or weigh ${g2(gpc)} g.`],
+      [`How many single-serve yogurt containers make 1 cup?`, `One 8 oz container is essentially a cup (227 g against a measured ${g2(gpc)} g). The Greek-style 5.3 oz single holds 150 g — about ${cups2(150 / gpc)} cup, a generous half-cup — so a recipe wanting 1 cup takes about a container and a half. The classic 6 oz single is 170 g, exactly the 3/4-cup serving Greek labels print, and a 32 oz tub holds about ${cups2(907 / gpc)} cups.`],
+      [`How many grams is 1 cup of kefir?`, `About 243 grams — USDA's measured cup for lowfat kefir, and for kitchen purposes the same as yogurt's ${g2(gpc)} g and milk's 240 g. Kefir is drinkable fermented milk, so unlike spoonable yogurt it pours and measures like a liquid: read it at eye level in a liquid measuring cup, or weigh it. It also stands in for buttermilk cup for cup — America's Test Kitchen rates it one of the closest substitutes.`],
+      [`How much does a cup of frozen yogurt weigh?`, `About 174 grams hard-packed (USDA; the survey database lists 175 g) and only about 144 g for soft-serve — far below the ${g2(gpc)} g of a cup of regular yogurt. Freezing removes nothing; churning adds air, and soft-serve carries the most of it. It is the same volume-versus-weight trap as whipped cream: churn and freeze a cup of yogurt and you get well over a cup of frozen yogurt.`],
+    );
+  }
   if (ing.slug === "chopped-nuts") {
     faq.push(
       [`How many grams is 1 cup of chopped nuts?`, `About ${g2(gpc)} grams — the working figure for the generic "1 cup chopped nuts" a cookie, brownie or banana-bread recipe means. USDA measured the common ones individually and they land in a tight band: chopped pecans ${nutG("pecan-chopped")} g per cup, chopped hazelnuts ${nutG("hazelnut-chopped")} g, chopped walnuts ${nutG("walnut-chopped")} g, walnut pieces ${nutG("walnut-pieces")} g and chopped black walnuts ${nutG("black-walnut-chopped")} g. Anything in that ${nutG("pecan-chopped")}–${nutG("black-walnut-chopped")} g range is defensible, so half a cup is about ${g2(gpc / 2)} g and a quarter cup about ${g2(gpc / 4)} g whichever nut you use.`],
@@ -674,7 +730,18 @@ ${ing.blurb ? `<h2>Measuring ${esc(ing.name.toLowerCase())} accurately</h2>\n<p>
 <h2>No, there's no butter in buttermilk (and how to fake it with milk)</h2>
 <p>Searching for the ratio of milk to butter in a cup of buttermilk? The honest answer is that <strong>buttermilk contains no butter at all</strong> — a cup of it is all cultured milk, zero grams butter. Modern commercial buttermilk is milk fermented with lactic-acid bacteria, typically around 1% fat — <em>leaner</em> than the whole <a href="/cups-to-grams/milk/">milk</a> it's made from (3.25%). The name is a fossil: traditional buttermilk was the thin liquid left over after churning cream into butter. On weight, <strong>1 cup of buttermilk is about ${g2(gpc)} g</strong> by King Arthur's chart convention (the value this page uses), while USDA's measured figure is <strong>245 g</strong> — so published weights honestly run ${g2(gpc)}–245 g per US cup. A tablespoon is about 15 g; a 250 mL metric cup holds about ${Math.round(gpc / 236.588 * 250)} g.</p>
 <p>Out of buttermilk? The standard substitute is <strong>1 tablespoon (15 g) of lemon juice or white vinegar per 1 cup of milk</strong>, left to stand 5–15 minutes until it thickens slightly, used cup for cup. (Sources split on a trivial detail: King Arthur stirs the acid into a full cup of milk, while university extension charts put the acid in first and fill to the 1-cup line — the difference is one tablespoon of liquid and won't change a bake.) King Arthur's no-acid alternative is <strong>1 3/4 teaspoons of cream of tartar</strong> dissolved in a cup of milk. Worth knowing: America's Test Kitchen rates this "clabbered milk" the <em>weakest</em> of the substitutes — thinner batter, flatter pancakes — and prefers plain yogurt thinned with milk, or kefir straight across. Whatever you use, don't swap in plain milk untouched: in King Arthur's bake-off it produced the densest, palest results of all.</p>
-<p>The acidity is the point, not a side effect. Buttermilk sits around pH 4.4–4.8, and that sourness is what fires the baking soda in pancakes, biscuits and soda bread — the classic pairing is about <strong>1/2 teaspoon of baking soda per cup of buttermilk</strong> (working recipes range roughly 1/4 to 1/2 tsp). It's the same acid-plus-soda chemistry behind <a href="/baking-powder-substitute/">substituting for baking powder</a>: lose the acid and the leavening math changes with it.</p>` : ""}${ing.slug === "heavy-cream" ? `
+<p>The acidity is the point, not a side effect. Buttermilk sits around pH 4.4–4.8, and that sourness is what fires the baking soda in pancakes, biscuits and soda bread — the classic pairing is about <strong>1/2 teaspoon of baking soda per cup of buttermilk</strong> (working recipes range roughly 1/4 to 1/2 tsp). It's the same acid-plus-soda chemistry behind <a href="/baking-powder-substitute/">substituting for baking powder</a>: lose the acid and the leavening math changes with it.</p>` : ""}${ing.slug === "yogurt" ? `
+<h2>Greek, skyr, kefir or frozen: what a cup of each yogurt weighs</h2>
+<p>The surprise in the yogurt aisle is how little the style matters on a scale. <strong>1 cup of plain yogurt is about ${g2(gpc)} g</strong> whether it is whole-milk, low-fat or nonfat — USDA publishes the same measured cup for all three — and the strained styles land within a few grams of it. <strong>Thick is not heavy:</strong> Greek yogurt and skyr have much of their whey strained out, yet a cup of either weighs the same to slightly <em>less</em> than a cup of regular yogurt. For reference, yogurt's ${g2(gpc)} g sits just above <a href="/cups-to-grams/milk/">milk</a>'s 240 g and water's 237 g — fermenting milk barely changes its density, and neither does straining it.</p>
+${yogurtTypesTable()}
+<p class="note">Sources: USDA FoodData Central measured cup portions (plain yogurt #171284 whole / #170886 low fat / #170887 skim; kefir #170904; Greek per USDA's survey database, food code 11411400; frozen yogurt USDA hard-packed and soft-serve entries). Greek and skyr label figures are Fage, Chobani and Siggi's serving weights (3/4 cup = 170 g). Half-cup, quarter-cup and 100 g columns are computed from the cup weight.</p>
+<p>The one genuine disagreement in the table is Greek yogurt, and it is worth understanding rather than averaging. USDA's lab fills a measuring cup and gets <strong>245 g — identical to unstrained yogurt</strong>, which makes sense: strained yogurt is concentrated milk, and milk solids are scarcely denser than the whey that left. Brand labels print 3/4 cup = 170 g (<strong>227 g per cup</strong>, the old 8-oz convention King Arthur's chart also uses) — and a home-scooped cup of thick Greek yogurt really can come up that light, because the stiff paste bridges and traps air pockets where pourable yogurt settles flat. The whole spread is about 7%: spoon it in, press out the gaps and level, and the chart above holds; weigh when the ratio matters.</p>
+<p>The rows that break the pattern do it for opposite reasons. <strong>Kefir</strong> barely breaks it at all: drinkable and thin, it weighs 243 g per cup (USDA) and measures like milk, in a liquid cup at eye level. <strong>Frozen yogurt is the true outlier</strong> — churning folds in air, so a hard-packed cup weighs about 174 g and soft-serve only about 144 g, the same air that makes a cup of whipped <a href="/cups-to-grams/heavy-cream/">cream</a> weigh half a cup of liquid cream. And because every spoonable dairy here sits in a narrow 227–245 g band, yogurt swaps cup for cup <em>or</em> gram for gram with <a href="/cups-to-grams/sour-cream/">sour cream</a> (230 g) and buttermilk — the two answers agree; the <a href="/ingredient-substitution-chart/">ingredient substitution chart</a> covers which of those swaps also changes the chemistry.</p>
+<h2>Yogurt container sizes in grams — and how many make a cup</h2>
+<p>Recipes ask for cups; yogurt arrives in containers. US singles come in four standard fills, and none of them is exactly a measured cup of yogurt:</p>
+${yogurtContainersTable(gpc)}
+<p class="note">Label fill weights as printed on US containers (USDA container portions and brand labels). Cup equivalents are computed at ${g2(gpc)} g per cup.</p>
+<p>The near-miss worth knowing: <strong>an 8 oz container is not quite a cup of yogurt</strong> — 227 g against a measured ${g2(gpc)} g, about a heaped tablespoon short. That gap is harmless in pancakes or a marinade and worth closing in anything set or custardy. The Greek-style 5.3 oz single (150 g) is a generous half-cup, so "1 cup yogurt" means about a container and a half; the classic 6 oz cup (170 g) is exactly the 3/4-cup serving printed on Greek labels; and a 32 oz tub holds about ${cups2(907 / gpc)} cups. Working backwards from what is left in the tub? The <a href="/grams-to-cups/">grams to cups converter</a> takes any weight straight off the scale.</p>` : ""}${ing.slug === "heavy-cream" ? `
 <h2>Heavy, whipping, half-and-half or double: every dairy cream weighs about the same</h2>
 <p>Cartons use half a dozen names for fluid cream, but on the scale they are nearly interchangeable: every published weight falls between about <strong>227 and 242 g per US cup</strong> — a spread smaller than ordinary measuring error. USDA's measured figures cluster tightly (heavy cream 238 g, whipping cream 239 g, light cream 240 g, half-and-half 242 g), while King Arthur's chart rounds all fluid dairy, <a href="/cups-to-grams/milk/">milk</a> through heavy cream, to 227 g (8 oz). This page uses a mid-range <strong>${g2(gpc)} g</strong>, so <strong>half a cup of any dairy cream is about ${g2(gpc / 2)} g</strong>, a tablespoon about 15 g, and a 250 mL metric cup about ${Math.round(gpc / 236.588 * 250)} g. What genuinely separates the creams is milkfat, which US law defines exactly:</p>
 <table><thead><tr><th>Cream</th><th>US milkfat (FDA)</th><th>USDA grams per cup</th></tr></thead><tbody>
