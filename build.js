@@ -3313,12 +3313,49 @@ ${faq.length ? `<h2>Frequently asked questions</h2>\n${faq.map(([q, a]) => `<det
 
 function pizzaDoughPage() {
   const title = "Pizza Dough Calculator — Flour, Water, Salt & Yeast by Baker's % | ExactCup";
-  const description = "Free pizza dough calculator. Enter how many dough balls, their weight and hydration, and get exact flour, water, salt, yeast and oil amounts in grams.";
+  const description = "Free pizza dough calculator. Flour, water, salt and yeast in grams by baker's percentage — plus how much water for any amount of flour (750 g flour ≈ 465 g water at 62%) and hydration by style, Neapolitan to Sicilian.";
   const canonical = "/pizza-dough-calculator/";
+  // Flour-first tables: everything below is water = flour × hydration (plus the calculator's
+  // default 2.5% salt / 0.3% yeast for the yield table) — no external data.
+  const SALT_PCT = 2.5, YEAST_PCT = 0.3, H_DEFAULT = 62;
+  const HYD_COLS = [60, 62, 65, 70];
+  const FLOURS = [250, 500, 750, 1000, 1500, 2000];
+  const fmt1 = (x) => String(Math.round(x * 10) / 10);
+  const waterRows = FLOURS.map((fl) => `<tr><td class="num"><strong>${fl} g flour</strong></td>${HYD_COLS.map((h) => `<td class="num">${Math.round(fl * h / 100)} g</td>`).join("")}</tr>`).join("");
+  const ballCount = (total) => {
+    const n = total / 275, lo = Math.floor(n), hi = Math.ceil(n);
+    return n - lo < 0.25 ? String(lo) : hi - n < 0.25 ? String(hi) : `${lo}–${hi}`;
+  };
+  const yieldRows = FLOURS.filter((fl) => fl >= 500).map((fl) => {
+    const total = fl * (1 + H_DEFAULT / 100 + SALT_PCT / 100 + YEAST_PCT / 100);
+    return `<tr><td class="num"><strong>${fl} g</strong></td><td class="num">${Math.round(fl * H_DEFAULT / 100)} g</td><td class="num">${Math.round(fl * SALT_PCT / 100)} g</td><td class="num">${fmt1(fl * YEAST_PCT / 100)} g</td><td class="num">${Math.round(total)} g</td><td class="num">${ballCount(total)}</td></tr>`;
+  }).join("");
+  // Style hydrations computed from published gram amounts (verified 2026-08-29):
+  // AVPN Disciplinare 2024 = 1 L water per 1.6–1.8 kg flour; NY = King Arthur 206/360 g +
+  // Serious Eats (Kenji) 420/630 g; grandma = KA 283/452 g; pan = Kenji 275/400 g + KA 170/240 g;
+  // Detroit = Kenji 220/300 g; Sicilian = KA 397/540 g.
+  const STYLES = [
+    ["Neapolitan — official AVPN rules", 55.6, 62.5, "1 L water per 1.6–1.8 kg flour (AVPN Disciplinare)"],
+    ["New York style", 57.2, 66.7, "King Arthur 57% · Serious Eats (Kenji) 67%"],
+    ["Grandma-style pan", 62.6, 62.6, "King Arthur — 283 g water / 452 g flour"],
+    ["Pan / focaccia-style", 68.8, 70.8, "Serious Eats pan 69% · King Arthur pan 71%"],
+    ["Detroit style", 73.3, 73.3, "Serious Eats — 220 g water / 300 g flour"],
+    ["Sicilian", 73.5, 73.5, "King Arthur — 397 g water / 540 g flour"],
+  ];
+  const styleRows = STYLES.map(([name, lo, hi, src]) => {
+    const wLo = Math.round(750 * lo / 100), wHi = Math.round(750 * hi / 100);
+    return `<tr><td>${esc(name)}</td><td class="num">${lo === hi ? `${fmt1(lo)}%` : `${fmt1(lo)}–${fmt1(hi)}%`}</td><td class="num">${wLo === wHi ? `${wLo} g` : `${wLo}–${wHi} g`}</td><td>${esc(src)}</td></tr>`;
+  }).join("");
+  const w750 = Math.round(750 * H_DEFAULT / 100);
+  const total750 = Math.round(750 * (1 + H_DEFAULT / 100 + SALT_PCT / 100 + YEAST_PCT / 100));
   const faq = [
-    ["What hydration should pizza dough be?", "Neapolitan dough is typically 60–65% hydration; New-York style around 62–65%; high-hydration/airy doughs can reach 70%+. Beginners should start near 62%."],
+    ["What hydration should pizza dough be?", "Most pizza dough sits between about 56% and 74% hydration, and the style decides where. The official AVPN rules for true Neapolitan work out to 55.6–62.5% (1 liter of water per 1.6–1.8 kg of flour); New York style runs about 57–67%; pan styles like Detroit and Sicilian run 69–74%. If you're starting out, 62% is a good middle — enough water for an open crumb, still easy to stretch by hand."],
+    ["How much water do I need for 750 g of flour?", "Multiply the flour by the hydration: at 62%, 750 g of flour takes 465 g of water (750 × 0.62). For official-spec Neapolitan that drops to 417–469 g, New York style is 429–500 g, and a wet Detroit or Sicilian pan dough takes 550–551 g. With 2.5% salt (19 g) and 0.3% instant yeast (2.3 g) on top, 750 g of flour at 62% makes about 1236 g of dough — four generous 309 g balls or five 247 g balls."],
+    ["How many pizzas does 500 g or 1 kg of flour make?", "At 62% hydration with standard salt and yeast, 500 g of flour makes about 824 g of dough — three 275 g balls, i.e. three 12-inch pizzas. A full kilo makes about 1648 g, or six. It scales linearly: every 250 g of flour is roughly another 412 g of dough, about one and a half pizzas."],
+    ["What is the ratio of flour to water for pizza dough?", "By weight, the everyday middle is about 8:5 flour to water — 500 g flour to 310 g water, which is 62% hydration — with real recipes ranging from roughly 9:5 (dry Neapolitan) to 4:3 (Sicilian pan). Always work by weight, not volume: a cup of flour can swing by ~25 g depending on how you scoop, which moves the hydration by several points before you've measured anything."],
     ["How much does a pizza dough ball weigh?", "A typical 12-inch pizza uses a 250–280 g ball. Personal pizzas use ~180–220 g, large pizzas ~300 g."],
-    ["How much salt and yeast go in pizza dough?", "Salt is usually about 2–3% of the flour weight, and instant dry yeast roughly 0.2–0.5% for a slow rise (more for a fast same-day dough)."],
+    ["How much salt and yeast go in pizza dough?", "Salt is usually about 2–3% of the flour weight, and instant dry yeast roughly 0.2–0.5% for a slow rise (more for a fast same-day dough). The AVPN Neapolitan rules dose salt by the water instead — 40–60 g per liter — which works out to about 2.2–3.7% of the flour, the top of the usual range."],
+    ["Does olive oil count toward hydration?", "By convention, no — hydration is water divided by flour, and oil is listed separately. Kenji López-Alt's New York dough is 67% water plus 32 g of olive oil (about 5% of the flour) on top; King Arthur's crusts do the same. True AVPN Neapolitan goes further: the official rules forbid any fat or sugar in the dough at all."],
   ];
   const jsonLd = [faqLd(faq), appLd("Pizza Dough Calculator", description, canonical)];
   const f = (lab, id, val, step) => `<div class="field"><label for="${id}">${lab}</label><input id="${id}" type="number" inputmode="decimal" value="${val}" step="${step || "any"}" min="0"></div>`;
@@ -3335,9 +3372,20 @@ function pizzaDoughPage() {
   </tbody></table>
 </div>
 <p class="note">Percentages are baker's percentages (relative to flour weight) — the standard way pizzaioli and bakers scale dough. Adjust hydration up for a lighter, airier crust; down for an easier-to-handle dough.</p>
+<h2 id="water-for-flour">Starting from flour: how much water for pizza dough?</h2>
+<p>The calculator above works from the number of dough balls, but most doughs start the other way round — with a bag of flour on the counter. The arithmetic is one multiplication: <strong>water = flour weight &times; hydration</strong>. At 62% hydration, the calculator's everyday default, <strong>750 g of flour takes ${w750} g of water</strong> (750 &times; 0.62); a 500 g bag takes 310 g and a full kilo 620 g. And since water weighs 1 g per mL, ${w750} g is exactly ${w750} mL &mdash; though a scale beats a measuring jug for accuracy.</p>
+<table><thead><tr><th>Flour</th>${HYD_COLS.map((h) => `<th>Water at ${h}%</th>`).join("")}</tr></thead><tbody>${waterRows}</tbody></table>
+<p>Add the salt and yeast &mdash; 2.5% and 0.3% of the flour, the defaults above &mdash; and the same flour amounts turn into finished dough like this:</p>
+<table><thead><tr><th>Flour</th><th>Water (62%)</th><th>Salt</th><th>Yeast</th><th>Total dough</th><th>&asymp; 275 g balls</th></tr></thead><tbody>${yieldRows}</tbody></table>
+<p class="note">So 750 g of flour becomes about ${total750} g of dough &mdash; four generous ${Math.round(total750 / 4)} g balls, or five ${Math.round(total750 / 5)} g balls for thinner 12-inch pizzas. Every cell is computed from the percentages, so the tables always agree with the calculator.</p>
+<h2 id="style-hydration">How much water is really a style decision</h2>
+<p>There is no single right answer to &ldquo;how much water for 750 g of flour&rdquo;, because hydration is the main thing separating the pizza styles. The official AVPN rulebook for true Neapolitan doses by water &mdash; 1 liter per 1.6&ndash;1.8 kg of flour, &ldquo;depending on absorption&rdquo; &mdash; which works out to <strong>55.6&ndash;62.5%</strong>, drier than the 60&ndash;65% figure usually passed around for it. A Detroit or Sicilian pan pizza runs near <strong>74%</strong>. So the same 750 g of flour legitimately takes anywhere from 417 g to 551 g of water &mdash; a third more at the wet end.</p>
+<table><thead><tr><th>Style</th><th>Hydration</th><th>Water for 750 g flour</th><th>Anchored to</th></tr></thead><tbody>${styleRows}</tbody></table>
+<p class="note">Percentages computed from the published gram amounts of each source (AVPN Disciplinare 2024; King Arthur Baking; Serious Eats / J. Kenji L&oacute;pez-Alt), not copied from stated ranges. Even King Arthur's basic pizza crust prints its water as a range &mdash; 198&ndash;255 g on 360 g of flour, i.e. 55&ndash;71% &mdash; because wetter bakes airier and crisper in a pan while drier is easier to stretch by hand.</p>
+<p>Two conventions to know when comparing recipes. <strong>Oil doesn't count toward hydration</strong> &mdash; Kenji's New York dough is 67% water <em>plus</em> 32 g of olive oil (&asymp;5% of the flour) listed separately, and the AVPN rules forbid any fat or sugar in a true Neapolitan dough entirely. And AVPN doses <strong>salt by the water, not the flour</strong>: 40&ndash;60 g per liter, about 2.2&ndash;3.7% of the flour &mdash; the top of the usual 2&ndash;3% range.</p>
 <h2>Frequently asked questions</h2>
 ${faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("\n")}
-<p style="margin-top:16px">Need to weigh by cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>.</p>`;
+<p style="margin-top:16px">Need to weigh flour by cups? Use the <a href="/cups-to-grams/all-purpose-flour/">flour cups-to-grams converter</a>. Building a bread formula instead? The <a href="/bakers-percentage-calculator/">baker's percentage calculator</a> keeps weights and percentages in sync. Making sourdough pizza? The <a href="/sourdough-hydration-calculator/">sourdough hydration calculator</a> counts the flour and water hiding in your starter &mdash; King Arthur's sourdough crust works out to about 62%.</p>`;
   return { canonical, html: layout({ title, description, canonical, bodyHtml: body, jsonLd, cfg: { type: "pizza" } }) };
 }
 
