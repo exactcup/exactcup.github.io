@@ -3915,7 +3915,108 @@ function apiRootDoc() {
     attribution: API_ATTRIBUTION,
     dataset: SITE.baseUrl + "/ingredient-density-data/",
     source_repository: "https://github.com/exactcup/ingredient-density-dataset",
+    openapi_spec: SITE.baseUrl + API_OPENAPI_PATH,
+    postman_collection: SITE.baseUrl + API_POSTMAN_PATH,
     endpoints: API_ENDPOINTS.map(([path, description]) => ({ path, url: SITE.baseUrl + path, description })),
+  };
+}
+// Machine-readable descriptions of the API, for tooling and directory listings
+// (Postman's Public API Network, spec-requiring API directories, codegen). Both
+// live at /api/ (not /api/v1/) because they describe v1 rather than being part
+// of its data surface.
+const API_OPENAPI_PATH = "/api/openapi.json";
+const API_POSTMAN_PATH = "/api/exactcup.postman_collection.json";
+function apiOpenApiSpec() {
+  const ingredientProps = {
+    slug: { type: "string", description: "Stable identifier; also the URL segment on exactcup.github.io." },
+    name: { type: "string" },
+    category: { type: "string", enum: Object.keys(DATA.categories) },
+    category_name: { type: "string" },
+    aliases: { type: "array", items: { type: "string" } },
+    grams_per_us_cup: { type: "number", description: "Weight in grams of one level US customary cup (236.588 mL)." },
+    grams_per_us_tablespoon: { type: "number" },
+    grams_per_us_teaspoon: { type: "number" },
+    grams_per_ml: { type: "number", description: "Density in g/mL — multiply by any volume in mL to get grams." },
+    ounces_per_us_cup: { type: "number" },
+    url: { type: "string", format: "uri" },
+  };
+  const jsonOf = (schema) => ({ "application/json": { schema } });
+  const ref = (n) => ({ $ref: "#/components/schemas/" + n });
+  const get = (summary, description, schema, parameters) => ({
+    get: Object.assign({ summary, description, responses: { 200: { description: "OK", content: jsonOf(schema) } } },
+      parameters ? { parameters } : {}),
+  });
+  return {
+    openapi: "3.0.3",
+    info: {
+      title: "ExactCup Ingredient Density API",
+      version: API_VERSION,
+      description: "Free read-only JSON API giving the weight in grams of one US cup (and per tablespoon, teaspoon and mL) for " +
+        DATA.ingredients.length + " cooking and baking ingredients. No API key, no sign-up, no rate limit, CORS enabled. " +
+        "Static files on GitHub Pages. Data CC BY 4.0 — attribution with a link to " + SITE.baseUrl + "/ is required.",
+      license: Object.assign({}, API_LICENSE),
+      contact: { name: SITE.brand, url: SITE.baseUrl + "/api/" },
+    },
+    externalDocs: { description: "Human documentation", url: SITE.baseUrl + "/api/" },
+    servers: [{ url: SITE.baseUrl }],
+    paths: {
+      [API_BASE + "index.json"]: get("API metadata and endpoint list",
+        "Name, version, license, attribution requirements and every endpoint URL.", { type: "object" }),
+      [API_BASE + "ingredients.json"]: get("All ingredients",
+        "Every ingredient with grams per US cup, tablespoon, teaspoon and mL.",
+        { type: "object", properties: { count: { type: "integer" }, ingredients: { type: "array", items: ref("Ingredient") } } }),
+      [API_BASE + "ingredients/{slug}.json"]: get("One ingredient with conversion tables",
+        "One ingredient plus precomputed cups→grams, tablespoons→grams and grams→cups tables.",
+        ref("IngredientDetail"),
+        [{ name: "slug", in: "path", required: true,
+           schema: { type: "string", enum: DATA.ingredients.map((i) => i.slug) } }]),
+      [API_BASE + "categories.json"]: get("Ingredient categories",
+        "Category names with the ingredient slugs in each.", { type: "object" }),
+      [API_BASE + "units.json"]: get("Unit tables",
+        "Volume units in mL (US, metric, imperial, Australian) and weight units in grams, with conversion formulas.",
+        { type: "object" }),
+    },
+    components: {
+      schemas: {
+        Ingredient: { type: "object", properties: ingredientProps },
+        IngredientDetail: {
+          allOf: [ref("Ingredient"), { type: "object", properties: {
+            conversions: { type: "object", properties: {
+              cups_to_grams: { type: "array", items: { type: "object", properties: { cups: { type: "string" }, grams: { type: "number" } } } },
+              tablespoons_to_grams: { type: "array", items: { type: "object", properties: { tablespoons: { type: "number" }, grams: { type: "number" } } } },
+              grams_to_cups: { type: "array", items: { type: "object", properties: { grams: { type: "number" }, cups: { type: "number" } } } },
+            } },
+            source: { type: "string", format: "uri" },
+            license: { type: "object" },
+            attribution: { type: "object" },
+          } }],
+        },
+      },
+    },
+  };
+}
+function apiPostmanCollection() {
+  const req = (name, description, url) => ({
+    name,
+    request: { method: "GET", header: [], url, description },
+    response: [],
+  });
+  return {
+    info: {
+      name: "ExactCup Ingredient Density API",
+      description: "Free, key-less JSON API for cooking ingredient densities — grams per US cup, tablespoon, teaspoon and mL for " +
+        DATA.ingredients.length + " ingredients. No auth, no rate limit, CORS enabled. Docs: " + SITE.baseUrl + "/api/ — " +
+        "data CC BY 4.0, attribution with a link to " + SITE.baseUrl + "/ required.",
+      schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    },
+    variable: [
+      { key: "baseUrl", value: SITE.baseUrl + API_BASE.replace(/\/$/, "") },
+      { key: "slug", value: "honey", description: "Any ingredient slug from ingredients.json (all-purpose-flour, granulated-sugar, butter…)" },
+    ],
+    item: API_ENDPOINTS.map(([p, d]) => {
+      const tail = p.replace(API_BASE, "").replace("{slug}", "{{slug}}");
+      return req("GET " + p.replace(API_BASE, "/"), d, "{{baseUrl}}/" + tail);
+    }),
   };
 }
 // Map of output path (relative to dist/) -> file contents.
@@ -3946,6 +4047,8 @@ function apiFiles() {
     },
   }));
   DATA.ingredients.forEach((i) => { files[API_BASE + "ingredients/" + i.slug + ".json"] = J(apiIngredientDetail(i)); });
+  files[API_OPENAPI_PATH] = J(apiOpenApiSpec());
+  files[API_POSTMAN_PATH] = J(apiPostmanCollection());
   return files;
 }
 
@@ -4008,6 +4111,12 @@ function apiDocsPage() {
 <h2>Endpoints</h2>
 <div class="tw"><table><thead><tr><th>Endpoint</th><th>Returns</th></tr></thead><tbody>${endpointRows}</tbody></table></div>
 <p>Base URL: <code>${SITE.baseUrl}${API_BASE}</code> &mdash; start at <a href="${API_BASE}index.json">index.json</a>, which lists everything above. Browse the raw files: <a href="${API_BASE}ingredients.json">ingredients.json</a> &middot; <a href="${API_BASE}categories.json">categories.json</a> &middot; <a href="${API_BASE}units.json">units.json</a>.</p>
+<h2>OpenAPI spec &amp; Postman collection</h2>
+<p>Machine-readable descriptions of the API, for client generation or one-click exploring:</p>
+<ul>
+<li><a href="${API_OPENAPI_PATH}">openapi.json</a> &mdash; OpenAPI 3.0 spec (every endpoint, response schemas, all ${DATA.ingredients.length} ingredient slugs as an enum). Imports into Postman, Insomnia, Bruno or any OpenAPI toolchain.</li>
+<li><a href="${API_POSTMAN_PATH}">exactcup.postman_collection.json</a> &mdash; ready-made Postman collection (v2.1). In Postman: <em>Import &rarr; Link</em> and paste <code>${SITE.baseUrl}${API_POSTMAN_PATH}</code>.</li>
+</ul>
 <h2>The ingredient object</h2>
 <div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>${fieldRows}</tbody></table></div>
 <h2>Converting any unit</h2>
