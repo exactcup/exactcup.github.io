@@ -3043,6 +3043,21 @@ const SF_SYRUPS = [
 ];
 const sfCup = (s) => Math.round((s.g / s.ml) * 236.588);
 
+// Sugar-chart composition rows: [slug, sugars g per 100 g, kcal per 100 g].
+// Both figures are USDA FoodData Central SR Legacy measured values, verified
+// via the FDC API 2026-08-30: granulated #169655 (99.8 g / 387 kcal), brown
+// #168833 (97.0 / 380), powdered #169656 (97.8 / 389), honey #169640
+// (82.1 / 304), maple syrup #169661 (60.5 / 260). Caster sugar is granulated
+// sucrose milled finer, so it carries granulated's figures.
+const SUGAR_COMPOSITION = [
+  ["granulated-sugar", 99.8, 387],
+  ["caster-sugar", 99.8, 387],
+  ["brown-sugar", 97.0, 380],
+  ["powdered-sugar", 97.8, 389],
+  ["honey", 82.1, 304],
+  ["maple-syrup", 60.5, 260],
+];
+
 const CATEGORY_FAQ = {
   flour: [
     ["How many grams is 1 cup of flour?", "One cup of all-purpose flour weighs about 120 g. Bread flour and cake flour are also 120 g per cup, while whole wheat and self-rising flour are 113 g. Starches differ more: cornstarch is 112 g and coconut flour 128 g."],
@@ -3114,7 +3129,7 @@ function categoryPage(key) {
   // dairy gets a hand-written description surfacing the cheese cup-equivalents table
   // (targets the observed query class "cheese cup equivalents chart").
   const description = key === "sugar"
-    ? `Free sugar conversion chart: grams per cup for granulated, brown, caster and powdered sugar, honey, maple syrup and molasses — plus every cup fraction (3/4 cup of sugar is 150 g), what sugar-free and diet syrups weigh (1 cup of Cary's is 237 g), and how many grams of sugar a cup actually contains.`
+    ? `Free sugar conversion chart: grams per cup for granulated, brown, caster and powdered sugar, honey, maple syrup and molasses — plus every cup fraction (3/4 cup of sugar is 150 g), what sugar-free and diet syrups weigh (1 cup of Cary's is 237 g), and a grams & calories chart (half a cup of sugar is 100 g, about 387 kcal).`
     : key === "dairy"
     ? `Free dairy conversion chart: grams per cup for butter, milk, cream, yogurt and every cheese — plus a cheese cup equivalents table (4 oz block = 1 cup shredded = 113 g; grated parmesan, crumbled feta, cream cheese and more).`
     : key === "baking"
@@ -3145,6 +3160,7 @@ function categoryPage(key) {
       ["How many grams is 1/3 cup of Cary's sugar-free syrup?", `About ${Math.round(sf(0) / 3)} g — call it 80 g if you use the label's rounded 240 mL cup. Cary's sugar-free syrup weighs essentially what water weighs: its Nutrition Facts serving is 1/4 cup (60 mL) at 60 g, a density of exactly 1.00 g/mL, so a full US cup is about ${sf(0)} g. Regular maple syrup is a third heavier — 1/3 cup of it is about ${Math.round(w("maple-syrup") / 3)} g.`],
       ["Does sugar-free syrup weigh less than regular syrup?", `It depends which kind of sugar-free. Water-based sugar-free syrups (Cary's, Log Cabin Sugar Free) run about ${sf(0)}–${sf(1)} g per cup — roughly a quarter to a third lighter than regular pancake syrup at ${sf(4)}–${sf(5)} g or pure maple at ${g2(w("maple-syrup"))} g — because the dissolved sugar is what makes real syrup heavy. But keto fiber syrups sweetened with monk fruit (ChocZero) weigh about ${sf(3)} g per cup, the same as the real thing: dissolved soluble fiber is as dense as dissolved sugar. Lite syrup sits between at about ${sf(2)} g.`],
       ["How much does a cup of sugar-free pancake syrup weigh?", `About ${sf(0)}–${sf(1)} g for the common water-based kind — Cary's measures ${sf(0)} g per US cup (60 g per 1/4-cup label serving) and Log Cabin Sugar Free about ${sf(1)} g. That is essentially the weight of a cup of water, and it is correct: with the sugar removed, the syrup is water plus gums, and gums thicken without adding weight. Only fiber-based keto syrups break the rule, at around ${sf(3)} g per cup.`],
+      ["How many calories are in half a cup of sugar?", `About 387 kcal — and it needs no arithmetic, because half a US cup of granulated sugar weighs almost exactly 100 g (the full cup is ${g2(w("granulated-sugar"))} g) and USDA FoodData Central measures granulated sugar at 387 kcal per 100 g. For the others on this chart, half a cup of packed brown sugar is ${g2(w("brown-sugar") / 2)} g ≈ ${Math.round(w("brown-sugar") / 2 * 3.80)} kcal, powdered sugar ${g2(w("powdered-sugar") / 2)} g ≈ ${Math.round(w("powdered-sugar") / 2 * 3.89)} kcal, honey ${g2(w("honey") / 2)} g ≈ ${Math.round(w("honey") / 2 * 3.04)} kcal and maple syrup ${g2(w("maple-syrup") / 2)} g ≈ ${Math.round(w("maple-syrup") / 2 * 2.60)} kcal. A single tablespoon of granulated sugar (${g2(w("granulated-sugar") / 16)} g) is about ${Math.round(w("granulated-sugar") / 16 * 3.87)} kcal, and a teaspoon about ${Math.round(w("granulated-sugar") / 48 * 3.87)}.`],
     );
   }
   if (key === "grain") {
@@ -3197,15 +3213,16 @@ function categoryPage(key) {
 <p class="note">Every cell is computed from the same verified grams-per-cup weight as the chart above (&frac34; cup = weight &times; 0.75, 1 tbsp = weight &divide; 16), so the two tables can never disagree. Brown sugar is packed; powdered sugar unsifted — see the section below for why those two words move the number so much. For an amount that is not in the table, the converter at the top of the page takes any number, and the <a href="/tablespoons-to-grams/">tablespoons to grams converter</a> handles spoon amounts.</p>
 <h2 id="grams-of-sugar-in-a-cup">How many grams of sugar are actually in a cup?</h2>
 <p>Two different questions hide inside that one. <em>What does a cup weigh</em> is the chart above — ${g2(w("granulated-sugar"))}&nbsp;g for granulated. <em>How much of that weight is sugar</em> is a composition question, and for dry sugars the answer is: nearly all of it. USDA FoodData Central measures granulated sugar at 99.8&nbsp;g of sugars per 100&nbsp;g, so a cup is about ${Math.round(w("granulated-sugar") * 0.998)}&nbsp;g of sugars and the two questions collapse into the same answer. The sweeteners where they come apart are the ones carrying water or an additive.</p>
-<div class="tw"><table><thead><tr><th>Sweetener</th><th>1 cup weighs</th><th>Sugars per 100 g</th><th>Sugars in 1 cup</th></tr></thead><tbody>${
-  [["granulated-sugar", 99.8], ["caster-sugar", 99.8], ["brown-sugar", 97.0], ["powdered-sugar", 97.8], ["honey", 82.1], ["maple-syrup", 60.5]]
-    .map(([slug, pct]) => {
+<div class="tw"><table><thead><tr><th>Sweetener</th><th>1 cup weighs</th><th>Sugars per 100 g</th><th>Sugars in 1 cup</th><th>Calories per 100 g</th><th>Calories in 1 cup</th></tr></thead><tbody>${
+  SUGAR_COMPOSITION
+    .map(([slug, pct, kcal]) => {
       const it = items.find((x) => x.slug === slug);
-      return `<tr><td><a href="/cups-to-grams/${slug}/">${esc(it.name)}</a></td><td class="num">${g2(it.gramsPerCup)} g</td><td class="num">${pct} g</td><td class="num">&asymp;${Math.round(it.gramsPerCup * pct / 100)} g</td></tr>`;
+      return `<tr><td><a href="/cups-to-grams/${slug}/">${esc(it.name)}</a></td><td class="num">${g2(it.gramsPerCup)} g</td><td class="num">${pct} g</td><td class="num">&asymp;${Math.round(it.gramsPerCup * pct / 100)} g</td><td class="num">${kcal} kcal</td><td class="num">&asymp;${Math.round(it.gramsPerCup * kcal / 100)} kcal</td></tr>`;
     }).join("")
 }</tbody></table></div>
-<p class="note">Composition figures are USDA FoodData Central (SR Legacy) measured values: granulated sugar 99.8&nbsp;g sugars per 100&nbsp;g (#169655), brown sugar 97.0 (#168833), powdered sugar 97.8 (#169656 &mdash; the balance is the cornstarch added to stop it caking), honey 82.1 (#169640), maple syrup 60.5 (#169661). Caster sugar is the same sucrose as granulated, milled finer, so it carries the same 99.8%. The last column multiplies this page\u2019s cup weight by that percentage. These are composition numbers from the same source as the weights — not nutrition advice.</p>
+<p class="note">Composition figures are USDA FoodData Central (SR Legacy) measured values: granulated sugar 99.8&nbsp;g sugars per 100&nbsp;g (#169655), brown sugar 97.0 (#168833), powdered sugar 97.8 (#169656 &mdash; the balance is the cornstarch added to stop it caking), honey 82.1 (#169640), maple syrup 60.5 (#169661). The energy figures are the same entries’ measured values &mdash; granulated 387&nbsp;kcal per 100&nbsp;g, brown 380, powdered 389, honey 304, maple syrup 260. Caster sugar is the same sucrose as granulated, milled finer, so it carries granulated’s figures. The &ldquo;in 1 cup&rdquo; columns multiply this page\u2019s cup weight by the per-100&nbsp;g value. These are composition numbers from the same source as the weights — not nutrition advice.</p>
 <p>The counterintuitive result: <strong>syrups are watered-down sugar, yet a cup of them can deliver more sugar, not less.</strong> Honey is only 82% sugars by weight, but a cup holds ${g2(w("honey"))}&nbsp;g of it, so the cup carries about ${Math.round(w("honey") * 0.821)}&nbsp;g of sugars — roughly ${Math.round((w("honey") * 0.821 / (w("granulated-sugar") * 0.998) - 1) * 100)}% more than a cup of granulated sugar. Maple syrup goes the other way: a ${g2(w("maple-syrup"))}&nbsp;g cup is only 60.5% sugars, or about ${Math.round(w("maple-syrup") * 0.605)}&nbsp;g — slightly <em>less</em> sugar than a cup of granulated, and the rest is water. It is the reason honey and syrup swaps are never one-for-one; the <a href="/sugar-to-honey/">sugar to honey conversion</a> works through the ratio and the liquid adjustment it forces.</p>
+<p>The calories column hides one genuinely convenient coincidence: <strong>half a cup of granulated sugar weighs almost exactly 100&nbsp;g</strong> (the full cup is ${g2(w("granulated-sugar"))}&nbsp;g), so the per-100&nbsp;g energy figure — 387&nbsp;kcal — <em>is</em> the half-cup answer with no arithmetic at all. It also settles an argument that only exists because of cups: gram for gram, honey carries <em>less</em> energy than sugar (304 vs 387&nbsp;kcal per 100&nbsp;g — about a fifth of honey is water), but a cup of honey weighs ${g2(w("honey"))}&nbsp;g against sugar's ${g2(w("granulated-sugar"))}&nbsp;g, so the cup of honey delivers about ${Math.round(w("honey") * 3.04)}&nbsp;kcal — ${Math.round((w("honey") * 3.04 / (w("granulated-sugar") * 3.87) - 1) * 100)}% more than the cup of sugar. Same lesson as the rest of the page: cups compare volumes, but every real question is about weight.</p>
 <h2 id="packed-sifted">Packed, loose or sifted — where cup measures of sugar go wrong</h2>
 <p>Granulated and caster sugar are forgiving: the crystals barely compress, so scoop, fill and sweep the top level and you land within a percent or two (King Arthur lists 198&nbsp;g a cup, USDA measures 200 — that is the whole disagreement). Two sugars on this chart are not forgiving at all.</p>
 <p><strong>Brown sugar is measured packed.</strong> Press it into the cup with the back of a spoon until it holds the cup\u2019s shape when you turn it out — nearly every recipe written in cups assumes exactly that. The gap is the largest on this page: USDA measures a packed cup at 220&nbsp;g and an <em>unpacked</em> cup at just 145&nbsp;g. A loosely filled cup is about a third short, which is enough to change a cookie dough\u2019s texture outright. This chart uses King Arthur\u2019s packed figure, ${g2(w("brown-sugar"))}&nbsp;g; treat 213–220&nbsp;g as the honest range for a packed cup, and note that light and dark brown sugar weigh the same — only the molasses content differs.</p>
