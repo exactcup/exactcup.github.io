@@ -490,6 +490,48 @@ function yogurtContainersTable(gpc) {
   return `<table><thead><tr><th>Container</th><th>Label weight</th><th>&asymp; US cups</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Cornstarch is the one pantry staple where the two authorities genuinely
+// disagree, and the gap is method, not error. King Arthur's chart spoons and
+// sweeps: 1/4 cup = 1 oz = 28 g -> 112 g/cup (ingredients.json, this page).
+// USDA SR Legacy #169698 measures a dipped/settled cup at 128 g, and the US
+// Nutrition Facts panels (Argo, Bob's Red Mill) print 1 tbsp = 8 g, which is
+// exactly 128 / 16 - the label method. Both columns are computed from their
+// cup figure so the table can never disagree with itself. Verified 2026-09-02.
+const CORNSTARCH_USDA_CUP = 128;
+const CORNSTARCH_MEASURES = [
+  ["1 tsp", 1 / 48], ["1 tbsp", 1 / 16], ["2 tbsp", 1 / 8], ["¼ cup", 0.25],
+  ["⅓ cup", 1 / 3], ["½ cup", 0.5], ["⅔ cup", 2 / 3], ["¾ cup", 0.75],
+  ["1 cup", 1], ["1¼ cups", 1.25], ["1½ cups", 1.5], ["2 cups", 2],
+];
+function cornstarchTwoWaysTable(gpc) {
+  const rows = CORNSTARCH_MEASURES.map(([label, c]) =>
+    `<tr><td>${label}</td><td class="num">${g2(gpc * c)} g</td><td class="num">${g2(CORNSTARCH_USDA_CUP * c)} g</td></tr>`
+  ).join("");
+  return `<table><thead><tr><th>Measure</th><th>Spooned &amp; levelled (King Arthur, ${g2(gpc)} g/cup)</th><th>Dipped / label method (USDA, ${CORNSTARCH_USDA_CUP} g/cup)</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+// Starches people thicken with, per US cup. Rows with a slug read from
+// ingredients.json; potato starch (King Arthur chart, 1 cup = 5 3/8 oz = 152 g)
+// and US whole-kernel corn flour (Bob's Red Mill label, 1/4 cup = 31 g) have no
+// page of their own and are typed here with their source.
+const STARCH_TYPES = [
+  ["Cornstarch (this page) — spooned", { slug: "cornstarch" }, null],
+  ["Cornstarch — dipped / label method (USDA)", CORNSTARCH_USDA_CUP, null],
+  ["Arrowroot starch (powder)", { slug: "arrowroot-powder" }, "/cups-to-grams/arrowroot-powder/"],
+  ["Tapioca starch / tapioca flour", { slug: "tapioca-flour" }, "/cups-to-grams/tapioca-flour/"],
+  ["Potato starch (King Arthur)", 152, null],
+  ["All-purpose flour (for the thickener swap)", { slug: "all-purpose-flour" }, "/cups-to-grams/all-purpose-flour/"],
+  ["US corn flour — whole-kernel, not a starch", 124, null],
+  ["Cornmeal", { slug: "cornmeal" }, "/cups-to-grams/cornmeal/"],
+];
+function starchTypesTable() {
+  const rows = STARCH_TYPES.map(([label, w, href]) => {
+    const g = typeof w === "number" ? w : ingBySlug(w.slug).gramsPerCup;
+    const name = href ? `<a href="${href}">${label}</a>` : label;
+    return `<tr><td>${name}</td><td class="num">${g2(g)} g</td><td class="num">${g2(g / 16)} g</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Starch</th><th>Grams per US cup</th><th>Grams per tbsp</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 // Genuinely-relevant tool links per ingredient category. Also flows crawl
 // equity from the most-crawled cluster (ingredient pages) to the tool pages,
 // which are otherwise only linked from the homepage. Every tool page appears in
@@ -533,6 +575,8 @@ function ingredientPage(ing) {
     ? `How many grams is 1 cup of chopped nuts? About ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Full chart plus USDA cup weights for chopped walnuts, pecans, hazelnuts, slivered almonds and ground nuts.`
     : ing.slug === "rolled-oats"
     ? `How many grams is a cup of oats? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g — rolled or quick. A 250 mL metric (NZ/AU) cup = ${Math.round(gpc / 236.588 * 250)} g. Full chart plus jumbo, porridge and steel-cut oat weights.`
+    : ing.slug === "cornstarch"
+    ? `How many grams is a cup of cornstarch? ${g2(gpc)} g spooned (King Arthur) or ${CORNSTARCH_USDA_CUP} g dipped (USDA) — 1 tbsp = ${g2(gpc / 16)}–${g2(CORNSTARCH_USDA_CUP / 16)} g, 1/2 cup = ${g2(gpc / 2)} g. Full chart, why the two figures differ, cornflour vs corn flour, and every starch per cup.`
     : ing.slug === "yogurt"
     ? `How many grams is 1 cup of yogurt? About ${g2(gpc)} g plain (USDA) — Greek yogurt labels work out to 227 g. Full chart plus Greek, skyr, kefir and frozen yogurt weights and every container size in grams.`
     : `How many grams is a cup of ${ing.name.toLowerCase()}? 1 cup = ${g2(gpc)} g, 1/2 cup = ${g2(gpc / 2)} g, 1/4 cup = ${g2(gpc / 4)} g. Free cups-to-grams converter with a full conversion chart.`;
@@ -664,6 +708,22 @@ function ingredientPage(ing) {
       [`How much does a cup of frozen yogurt weigh?`, `About 174 grams hard-packed (USDA; the survey database lists 175 g) and only about 144 g for soft-serve — far below the ${g2(gpc)} g of a cup of regular yogurt. Freezing removes nothing; churning adds air, and soft-serve carries the most of it. It is the same volume-versus-weight trap as whipped cream: churn and freeze a cup of yogurt and you get well over a cup of frozen yogurt.`],
     );
   }
+  if (ing.slug === "cornstarch") {
+    const usda = CORNSTARCH_USDA_CUP;
+    const apg = ingBySlug("all-purpose-flour").gramsPerCup;
+    const saltTsp = g2(ingBySlug("salt").gramsPerCup / 48);
+    const dredge = g2(apg + gpc / 2);
+    faq.push(
+      [`Is 1 cup of cornstarch 112 grams or 128 grams?`, `Both are real measurements of a level US cup — they differ in how the cup was filled. King Arthur's chart spoons cornstarch gently into the cup and sweeps it level: 1/4 cup = 1 oz = 28 g, so ${g2(gpc)} g per cup (the figure this page uses). USDA's lab measures a dipped, settled cup at ${usda} g. Cornstarch is a very fine powder that packs down as it fills, so dipping the cup into the box runs about 14% heavier than spooning. If your recipe comes from a US baking site written in cups, use ${g2(gpc)} g; if you are working from a nutrition label, use ${usda} g.`],
+      [`How many grams is 1 tablespoon of cornstarch on the nutrition label?`, `8 grams. Argo and Bob's Red Mill both print a serving of 1 tbsp (8 g) — and 8 g × 16 tablespoons is exactly USDA's ${usda} g cup, because labels use the dipped-spoon method. A spooned tablespoon per King Arthur's chart is about ${g2(gpc / 16)} g. For thickening a sauce the difference is invisible; for a recipe given in grams, weigh it.`],
+      [`How many cups is 56 grams of cornstarch?`, `Half a cup, spooned and levelled. 56 g is 2 oz, and King Arthur's chart puts 1/4 cup of cornstarch at 1 oz (28 g), so 2 oz is 1/2 cup exactly — which is why 56 g turns up so often in recipes converted from ounces. Measured by the label method (8 g per tablespoon) it is 7 tablespoons, or about ${cups2(56 / usda)} cup.`],
+      [`Is cornflour the same as cornstarch?`, `In the UK, Ireland, Australia, New Zealand, India and South Africa, yes — "cornflour" is the pure white starch this page is about, and every figure here applies as written (UK packs such as Brown & Polson print no per-spoon weight, so use the table above). In the United States "corn flour" is a different product: finely ground whole corn kernels, more like fine cornmeal. It weighs about the same per cup (Bob's Red Mill's label works out to ~124 g), but it tastes of corn, does not turn clear and will not thicken a sauce.`],
+      [`How much does 1 cup of flour plus 1/2 cup of cornstarch weigh?`, `About ${dredge} grams — ${g2(apg)} g of all-purpose flour plus ${g2(gpc / 2)} g of cornstarch. Add the seasoning a typical crispy-coating or fried-chicken dredge calls for and you are at roughly ${g2(dredge + ingBySlug("salt").gramsPerCup / 48 + 2.3)} g: 1 teaspoon of table salt is about ${saltTsp} g and 1 teaspoon of ground black pepper about 2.3 g (USDA). The recipe weight calculator totals any list like this in one go.`],
+      [`Does cornstarch weigh the same as flour per cup?`, `Nearly, but not quite: a spooned cup of cornstarch is about ${g2(gpc)} g against ${g2(apg)} g for all-purpose flour, so cornstarch is about 7% lighter. That matters if you are swapping thickeners by weight — the familiar "1 tablespoon cornstarch replaces 2 tablespoons flour" is a volume rule, and by weight it works out to about 47% as much cornstarch, not 50%.`],
+      [`Do arrowroot, tapioca and potato starch weigh the same as cornstarch?`, `Arrowroot and tapioca starch do, near enough: about ${g2(ingBySlug("arrowroot-powder").gramsPerCup)} g and ${g2(ingBySlug("tapioca-flour").gramsPerCup)} g per cup against cornstarch's ${g2(gpc)}–${usda} g. Potato starch is the heavy one — King Arthur's chart lists 152 g per cup, and Bob's Red Mill's label (1 tbsp = 12 g) implies heavier still — so weigh it rather than assuming. Volume-for-volume swaps between these starches are a technique question (arrowroot and tapioca thicken at lower temperatures and go stringy if boiled), not a weight one.`],
+      [`How many cups of cornstarch are in a 16 oz box?`, `About ${cups2(16 * OZ / gpc)} cups spooned and levelled, or about ${cups2(16 * OZ / usda)} cups by the dipped, label method — a 16 oz box holds ${Math.round(16 * OZ)} g. Either way, one box is a little over 3½ to 4 cups, which is ${Math.round(16 * OZ / usda * 16)}–${Math.round(16 * OZ / gpc * 16)} tablespoons of thickener.`],
+    );
+  }
   if (ing.slug === "chopped-nuts") {
     faq.push(
       [`How many grams is 1 cup of chopped nuts?`, `About ${g2(gpc)} grams — the working figure for the generic "1 cup chopped nuts" a cookie, brownie or banana-bread recipe means. USDA measured the common ones individually and they land in a tight band: chopped pecans ${nutG("pecan-chopped")} g per cup, chopped hazelnuts ${nutG("hazelnut-chopped")} g, chopped walnuts ${nutG("walnut-chopped")} g, walnut pieces ${nutG("walnut-pieces")} g and chopped black walnuts ${nutG("black-walnut-chopped")} g. Anything in that ${nutG("pecan-chopped")}–${nutG("black-walnut-chopped")} g range is defensible, so half a cup is about ${g2(gpc / 2)} g and a quarter cup about ${g2(gpc / 4)} g whichever nut you use.`],
@@ -788,7 +848,21 @@ ${mixinSwapTable(gpc)}
 ${riceTypesTable()}
 <p class="note">Uncooked weights. USDA FoodData Central for the grain classes; basmati, jasmine and risotto rices are mapped to their grain class (brand labels printing a 1/4-cup serving mostly run 45–52 g, or 180–208 g per cup). Half-cup and 100 g figures are computed from the cup weight.</p>
 <p>Two rows above are worth a second look. <strong>Brown rice weighs the same as white</strong> at the same grain length (${g2(gpc)} g per cup long-grain, 190 g medium) — the bran adds cooking time and water, not weight — so recipes swap by volume or weight without recalculating. <strong>Instant rice is the outlier at about 95 g per cup</strong>, roughly half of regular rice: it is pre-cooked and dried, so its grains are puffed and airy. Swapping it cup for cup by weight is the single most common rice-conversion mistake. Wild rice, at 160 g per cup, is not really rice at all — it is the seed of an aquatic grass.</p>
-<p>Cooking rather than baking? A <strong>rice-cooker cup is 180 mL</strong> (the Japanese <em>gō</em>), about three-quarters of a US cup — roughly <strong>${Math.round(gpc / 236.588 * 180)} g</strong> of long-grain rice or ${Math.round(200 / 236.588 * 180)} g of short-grain, which is why a "5-cup" cooker holds less than five US cups. A 250 mL metric cup (UK, Australia, New Zealand) holds about ${Math.round(gpc / 236.588 * 250)} g. And weigh rice <em>dry, before rinsing</em>: rinsed grains hold surface and absorbed water (soaking can add around 20% to the weight), so a drained cup is no longer ${g2(gpc)} g. Want the cooked amount instead? A cup of dry rice cooks up to roughly 3 cups — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math both ways, and the <a href="/portion-calculator/">portion calculator</a> turns it into grams of dry rice per person.</p>` : ""}${ing.slug === "chopped-nuts" ? `
+<p>Cooking rather than baking? A <strong>rice-cooker cup is 180 mL</strong> (the Japanese <em>gō</em>), about three-quarters of a US cup — roughly <strong>${Math.round(gpc / 236.588 * 180)} g</strong> of long-grain rice or ${Math.round(200 / 236.588 * 180)} g of short-grain, which is why a "5-cup" cooker holds less than five US cups. A 250 mL metric cup (UK, Australia, New Zealand) holds about ${Math.round(gpc / 236.588 * 250)} g. And weigh rice <em>dry, before rinsing</em>: rinsed grains hold surface and absorbed water (soaking can add around 20% to the weight), so a drained cup is no longer ${g2(gpc)} g. Want the cooked amount instead? A cup of dry rice cooks up to roughly 3 cups — the <a href="/dry-to-cooked/">dry-to-cooked converter</a> does that math both ways, and the <a href="/portion-calculator/">portion calculator</a> turns it into grams of dry rice per person.</p>` : ""}${ing.slug === "cornstarch" ? `
+<h2>112 g or 128 g? Why the two authorities disagree on a cup of cornstarch</h2>
+<p>Look cornstarch up in two reference charts and you will get two answers, and neither is a typo. <strong>King Arthur Baking's chart lists 1/4 cup at 1 oz (28 g)</strong>, which is ${g2(gpc)} g per cup and the figure this page and its calculator use. <strong>USDA's FoodData Central measures the same level cup at ${CORNSTARCH_USDA_CUP} g.</strong> The difference is how the cup was filled: King Arthur spoons the powder in gently and sweeps it level; USDA's figure is a dipped, settled cup. The US nutrition labels agree with USDA — Argo and Bob's Red Mill both print <strong>1 tablespoon = 8 g</strong>, and 8 × 16 is exactly ${CORNSTARCH_USDA_CUP}.</p>
+<p>Cornstarch exaggerates this because it is one of the finest powders in the kitchen. It cakes in the box, settles as it fills, and a cup dipped into the container compresses the last quarter far more than the first. The same thing happens to flour — King Arthur's own test shows a fluffed cup at 120 g and a condensed one at up to 160 g — but cornstarch's gap between methods, about 14%, is smaller and far more consistent. Here is every common measure both ways:</p>
+${cornstarchTwoWaysTable(gpc)}
+<p class="note">Left column computed from King Arthur's spoon-and-sweep chart (1/4 cup = 28 g); right column from USDA FoodData Central #169698 (1 cup = ${CORNSTARCH_USDA_CUP} g), which is also what Argo and Bob's Red Mill labels print per tablespoon. Ounce equivalents: 1/4 cup = 1 oz spooned.</p>
+<p>Which column to use? <strong>If the recipe was written in cups on a US baking site, use the spooned figure</strong> — that is the convention those recipes were developed with. If you are reconciling a nutrition label or a calorie count, use the USDA figure, because that is the method the label assumes. For thickening it genuinely does not matter: the 1 g between a spooned and a dipped tablespoon is invisible in a pot of gravy, and the <a href="/cake-flour-substitute/">cake-flour substitute</a> is 2 tablespoons per cup of flour whichever way you fill the spoon. As a sanity check, any level US cup that weighs between about 110 and 130 g is a legitimate measurement; a 250 mL metric cup (UK, Australia, NZ) lands at ${Math.round(gpc / 236.588 * 250)}–${Math.round(CORNSTARCH_USDA_CUP / 236.588 * 250)} g. Below 100 g the cup was sifted or under-filled; above 140 g it was packed down or a metric cup was dipped.</p>
+<h2>Cornflour, corn flour, maizena or cornstarch: which is which</h2>
+<p>The naming is the trap, not the weight. In the <strong>UK, Ireland, Australia, New Zealand, India and South Africa, "cornflour" is cornstarch</strong> — Brown &amp; Polson's pack describes itself as "pure fine white corn starch" — so this page applies exactly as written. Those packs give nutrition per 100 g only, with no per-spoon weight, which is why the table above spells out the teaspoon and tablespoon. <strong>Maizena</strong>, the brand name much of Latin America, Spain, Portugal and South Africa use as a generic word, is cornstarch too.</p>
+<p>In the <strong>United States, "corn flour" is a different ingredient</strong>: finely ground whole corn kernels, germ and bran included — a finer sibling of <a href="/cups-to-grams/cornmeal/">cornmeal</a>, used for cornbread, tortillas and coatings. It happens to weigh about the same per cup (Bob's Red Mill's label serving of 1/4 cup = 31 g works out to roughly 124 g), but it is yellow, tastes of corn, does not turn clear when cooked and will not thicken a sauce. If a US recipe says corn flour and means it, cornstarch is not a substitute, and vice versa. One further wrinkle for Australian readers: some supermarket "cornflour" there is milled from wheat ("wheaten cornflour"). It measures and thickens the same for practical purposes, but it is not gluten-free — check the pack.</p>
+<h2>Cornstarch vs arrowroot, tapioca and potato starch per cup</h2>
+<p>Recipes swap these four thickeners freely, so it helps to know that three of them weigh about the same per cup and one does not:</p>
+${starchTypesTable()}
+<p class="note">King Arthur Baking chart (cornstarch, tapioca starch, potato starch, all-purpose flour); USDA FoodData Central for the dipped cornstarch cup; arrowroot from the spoon-and-level figure on its own page (King Arthur's chart does not list it); US corn flour from Bob's Red Mill's label serving; cornmeal from its own page. Tablespoon column is the cup weight ÷ 16.</p>
+<p><strong>Potato starch is the outlier</strong> — King Arthur weighs it at 152 g per cup, a third heavier than cornstarch, and Bob's Red Mill's label serving (1 tbsp = 12 g) implies heavier still, so weigh it rather than converting by cup. Arrowroot and tapioca sit within a few grams of cornstarch, so a recipe's cup measure carries over; what changes is behaviour, not weight — both thicken at a lower temperature than cornstarch, give a glossier, clearer gel, and turn stringy if boiled hard. Swapping cornstarch for flour is the one exchange that is not weight-for-weight or cup-for-cup: the <a href="/cornstarch-to-flour/">cornstarch to flour converter</a> handles the 1 : 2 volume rule (47% by weight) in both directions. Weighing a whole coating mix — flour, cornstarch, salt, pepper — in one bowl? The <a href="/recipe-weight-calculator/">recipe weight calculator</a> totals the list.</p>` : ""}${ing.slug === "chopped-nuts" ? `
 <h2>How many grams is 1 cup of chopped nuts?</h2>
 <p>About <strong>${g2(gpc)} grams</strong> — that is the figure to use when a recipe just says "1 cup chopped nuts" without naming the nut, and it is close to the truth for all of them. USDA measured the common nuts one at a time and chopped cups sit in a narrow band: <strong>chopped pecans ${nutG("pecan-chopped")} g</strong>, <strong>chopped hazelnuts ${nutG("hazelnut-chopped")} g</strong>, <strong>chopped walnuts ${nutG("walnut-chopped")} g</strong>, walnut pieces ${nutG("walnut-pieces")} g and chopped black walnuts ${nutG("black-walnut-chopped")} g. So <strong>half a cup of chopped nuts is about ${g2(gpc / 2)} g</strong>, a third of a cup ${g2(gpc / 3)} g, a quarter cup ${g2(gpc / 4)} g — and <strong>100 g is about ${cups2(100 / gpc)} cups</strong>. The prep state, not the species, is what really moves the number:</p>
 ${nutFormsTable()}
