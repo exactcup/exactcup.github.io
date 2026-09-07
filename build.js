@@ -1840,6 +1840,7 @@ function butterToOilPage() {
     ["Can I substitute butter for oil — the other direction?", "Yes: use 1/3 more butter than the oil called for (multiply by 4/3), melted and cooled slightly — so 1/2 cup oil becomes 2/3 cup butter. Butter brings water along, so the crumb will be a bit firmer and drier; for the moistest result many bakers just swap melted butter 1:1 for oil."],
     ["Does the 3:4 butter-to-oil ratio work by weight?", "No — the ratio is by volume (cups and tablespoons). By weight, use about 71% of the butter's weight in oil (100 g butter ≈ 71 g oil), because a cup of oil also weighs slightly less than a cup of butter."],
     ["Can I use oil in pie crust or puff pastry?", "No. Flaky pastry depends on cold solid fat forming layers that steam apart in the oven — a liquid oil just coats the flour and turns the crust mealy. Stick with butter (or another solid fat) for pie crusts, croissants and puff pastry."],
+    ["How much oil do I use for 1/4 cup of melted butter?", "3 tablespoons of oil by the 3:4 rule (about 44 mL, or 41 g of olive oil). Melting doesn't change the ratio — the water and milk solids that make butter only about 80% fat are still in it once melted. If the recipe calls for melted butter and you'd rather keep the liquid volume identical, 1/4 cup of oil (the 1:1 convention) also works and gives a slightly richer, moister result; the recipe won't fail either way."],
   ];
   const jsonLd = [
     appLd("Butter to Oil Converter", description, canonical),
@@ -1951,6 +1952,27 @@ function sugarToHoneyPage() {
     const s = h * 1.25;
     return `<tr><td>${lab}</td><td>${fmtTsp(s)}</td><td class="num">${rnd(s / 48 * S_GPC, 0)} g</td><td>${fmtTsp(h * 0.25)}</td></tr>`;
   }).join("\n");
+  // Every-amount table: honey by the ¾ rule plus the two measurable adjustments
+  // scaled to that honey amount — liquid −¼ cup and soda +½ tsp per cup of honey
+  // (NHB / Clemson). Liquid rounds to the nearest ¼ tsp, soda to the nearest ⅛ tsp.
+  const FR8 = ["⅛", "¼", "⅜", "½", "⅝", "¾", "⅞"];
+  const fmtSoda = (tsp) => {
+    const e = Math.round(tsp * 8);
+    if (e === 0) return "a pinch";
+    const whole = Math.floor(e / 8), rem = e % 8;
+    return "+" + (whole ? whole + (rem ? " " : "") : "") + (rem ? FR8[rem - 1] : "") + " tsp";
+  };
+  const scaledRows = [
+    ["⅛ cup (2 tbsp)", 6], ["¼ cup", 12], ["⅓ cup", 16], ["½ cup", 24], ["⅔ cup", 32], ["¾ cup", 36],
+    ["1 cup", 48], ["1¼ cups", 60], ["1½ cups", 72], ["2 cups", 96],
+  ].map(([lab, s]) => {
+    const h = s * R, hc = h / 48;
+    const liq = Math.round(hc * 12 * 4) / 4;
+    return `<tr><td>${lab}</td><td>${fmtTsp(h)}</td><td class="num">${rnd(hc * H_GPC, 0)} g</td><td>−${fmtTsp(liq)}</td><td>${fmtSoda(hc * 0.5)}</td></tr>`;
+  }).join("\n");
+  // Sugar-content sanity check: USDA #169640 honey = 82.12 g sugars per 100 g.
+  const SUGARS = 0.8212;
+  const sug34 = rnd(0.75 * H_GPC * SUGARS, 0), sug12 = rnd(0.5 * H_GPC * SUGARS, 0);
   const faq = [
     ["How much honey do I use instead of 1 cup of sugar?", "Between 1/2 and 3/4 cup. King Arthur Baking's rule is a generous 3/4 cup of honey per cup of sugar; the National Honey Board and Clemson Extension are more conservative and suggest replacing sugar with about half its amount in honey (or replacing only half the sugar). The chart on this page shows both. Whichever you pick, also cut the recipe's liquid, add a little baking soda and lower the oven — see the three adjustments."],
     ["How much honey equals 1/2 cup of sugar?", "By the 3/4 rule, 6 tablespoons of honey (1/4 cup + 2 tbsp, about 128 g). By the conservative 1/2 rule, 1/4 cup (about 85 g)."],
@@ -1964,6 +1986,13 @@ function sugarToHoneyPage() {
     ["My recipe calls for 1 cup of honey — how much sugar do I use instead?", "Going the other direction, use 1 1/4 cups of granulated sugar plus 1/4 cup of extra liquid (water, milk — whatever the recipe uses) for each cup of honey, per Utah State University Extension. You can also leave out any baking soda the recipe added specifically to offset the honey."],
     ["How does honey change the texture and flavor of a bake?", "Expect a moister, slightly denser crumb, a darker color, and a floral note that depends on the honey (clover is mild; buckwheat is bold). Honey is hygroscopic — it pulls in moisture — so honey-sweetened bakes stay soft for days. Cookies are the biggest change: they spread more and turn soft and cakey rather than crisp."],
     ["Is honey safe for everyone?", "One firm exception: never give honey in any form to babies under 12 months — it can contain Clostridium botulinum spores, which baking does not reliably destroy. For everyone else, honey behaves like any other sugar in the diet."],
+    ["How much honey equals 3/4 cup of sugar?", "9 tablespoons of honey (1/2 cup + 1 tbsp, about 191 g) by the 3/4 rule, or 6 tablespoons (about 128 g) by the conservative 1/2 rule. With 9 tablespoons of honey going in, also cut the recipe's other liquid by about 2 tablespoons and add 1/4 teaspoon of baking soda — the scaled table above has every amount."],
+    ["How much honey equals 1/4 cup of sugar?", "3 tablespoons (about 64 g) by the 3/4 rule, or 2 tablespoons (about 43 g) by the 1/2 rule. At this size the adjustments are tiny — about 2 teaspoons less liquid and a pinch (1/8 tsp) of baking soda — and you can skip them without harm."],
+    ["How much honey equals 1/3 cup of sugar?", "1/4 cup of honey (about 85 g) by the 3/4 rule — one of the few amounts that lands on a clean cup measure. By the 1/2 rule it's 2 tablespoons + 2 teaspoons (about 57 g). Cut about 1 tablespoon of liquid and add 1/8 teaspoon of baking soda."],
+    ["How much honey do I use for 2 cups of sugar?", "1 1/2 cups of honey (about 510 g) by the 3/4 rule, or 1 cup (340 g) by the 1/2 rule. That much honey means cutting the liquid by 6 tablespoons (3/8 cup) and adding 3/4 teaspoon of baking soda — and the bake will taste distinctly of honey. For a batch this size, replacing only half the sugar with honey (the National Honey Board's own advice) keeps the flavor balanced and the crumb closer to the original."],
+    ["How much honey replaces 1 tablespoon of sugar?", "2 1/4 teaspoons by the 3/4 rule (about 16 g) — in practice, 2 teaspoons. For tea, coffee or oatmeal just sweeten to taste; the liquid, soda and oven adjustments only matter when you're baking with 1/4 cup or more."],
+    ["Is 3/4 cup of honey really as sweet as 1 cup of sugar?", "Close, and slightly over. A cup of honey weighs 340 g and is about 82% sugars (USDA), so 3/4 cup (255 g) carries about " + sug34 + " g of sugars against the 200 g in a cup of granulated sugar — a 5% over-match before counting that honey's fructose tastes sweeter gram for gram. The 1/2 rule (170 g of honey, about " + sug12 + " g of sugars) is a 30% cut on paper and relies on that extra sweetness to feel equal, which is why it reads as safer and less sweet."],
+    ["Which weighs more per cup, honey or maple syrup?", "Honey. 1 cup of honey is about 340 g (USDA: 339 g) and 1 cup of maple syrup about 322 g (USDA), because maple syrup is roughly a third water while honey is about 17% water. Maple syrup is a common sugar substitute too, but its extra water means this page's honey ratio and liquid cut don't transfer to it — use a chart written for maple syrup."],
   ];
   const jsonLd = [
     appLd("Sugar to Honey Converter", description, canonical),
@@ -1993,6 +2022,14 @@ ${chartRows}
 <tr><td>Lower the oven</td><td>−25°F</td><td>Fructose scorches at lower temperatures</td></tr>
 </tbody></table>
 <p class="note">Two fine points from the sources: if the recipe has <em>no</em> added liquid, King Arthur suggests adding 3–4 tbsp of flour per cup of honey instead of cutting liquid; and skip the extra baking soda when the recipe already uses buttermilk, sour milk or sour cream. Watch for a widespread copy-paste error: many charts say ¼ tsp of soda, but the National Honey Board and Clemson Extension both say <strong>½ tsp per cup of honey</strong>. And King Arthur's ceiling: don't use honey in recipes baked above 350°F.</p>
+<h2>Honey for every sugar amount — with the adjustments scaled</h2>
+<p>Recipes rarely call for exactly 1 cup. This table runs the <strong>¾ rule</strong> for every common sugar amount and scales the two measurable adjustments to the honey actually going in — <strong>−¼ cup of liquid</strong> and <strong>+½ tsp of baking soda</strong> per cup of honey (liquid rounded to the nearest ¼ tsp, soda to the nearest ⅛ tsp). The oven change is the same at every size: 25°F lower.</p>
+<table><thead><tr><th>Sugar</th><th>Honey (¾ rule)</th><th>Honey (g)</th><th>Cut other liquid</th><th>Add baking soda</th></tr></thead><tbody>
+${scaledRows}
+</tbody></table>
+<p class="note">Below about ¼ cup of sugar the adjustments shrink to a couple of teaspoons of liquid and a pinch of soda — skip them. Using the conservative ½ rule instead? Its honey amount is two-thirds of the ¾-rule figure, so scale the liquid cut and the soda down by the same third.</p>
+<h2>Does ¾ cup of honey really match 1 cup of sugar? The sugar-content check</h2>
+<p>You can check the ratio with a scale and the USDA label. A cup of honey weighs <strong>340 g</strong> and is about <strong>82% sugars</strong> (USDA), so ¾ cup — 255 g — carries about <strong>${sug34} g of sugars</strong>, against <strong>200 g</strong> in a cup of granulated sugar. The ¾ rule is a ~5% over-match on sugar content, before counting that honey's fructose tastes sweeter gram for gram. The ½ rule (170 g of honey, about ${sug12} g of sugars) is a 30% cut on paper and leans on that extra sweetness to feel equal — which is exactly why it reads as the safer, less sweet option.</p>
 <h2>Why do you use less honey than sugar?</h2>
 <p>Two reasons. Honey is <strong>sweeter</strong> — the National Honey Board puts it at 1 to 1.5× the sweetness of sugar on a dry-weight basis, because fructose (its dominant sugar) tastes sweeter than sucrose. And a cup of honey simply <strong>contains more sugar</strong>: it weighs 340 g and is about 82% sugars, so a cup carries roughly 278 g of actual sugars versus 200 g in a cup of granulated. Scale the volume down to ½–¾ and the sweetness lands about right.</p>
 <h2>Sugar to honey by weight (grams)</h2>
